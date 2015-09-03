@@ -4,7 +4,6 @@ var Code = require('code');
 var Hapi = require('hapi');
 var Lab = require('lab');
 var Nes = require('../');
-var Ws = require('ws');
 
 
 // Declare internals
@@ -41,26 +40,18 @@ describe('register()', function () {
 
             server.start(function (err) {
 
-                var client = new Ws('http://localhost:' + server.info.port);
+                var client = new Nes.Client();
+                client.connect('http://localhost:' + server.info.port, function () {
 
-                client.on('message', function (data, flags) {
-
-                    var message = JSON.parse(data);
-                    expect(message.payload).to.equal('hello');
-                    expect(message.statusCode).to.equal(200);
-                    expect(message.headers).to.contain({
-                        'content-type': 'text/html; charset=utf-8'
-                    });
-
-                    client.close();
-                    server.stop(done);
-                });
-
-                client.on('open', function () {
-
-                    client.send(JSON.stringify({ method: 'GET', path: '/' }), function (err) {
+                    client.request('GET', '/', function (err, payload, statusCode, headers) {
 
                         expect(err).to.not.exist();
+                        expect(payload).to.equal('hello');
+                        expect(statusCode).to.equal(200);
+                        expect(headers).to.contain({ 'content-type': 'text/html; charset=utf-8' });
+
+                        client.disconnect();
+                        server.stop(done);
                     });
                 });
             });
