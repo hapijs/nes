@@ -203,11 +203,19 @@ describe('Browser', function () {
                     server.start(function (err) {
 
                         var client = new Nes.Client();
+
+                        var logged = false;
+                        client.onerror = function (err) {
+
+                            logged = err.message;
+                        };
+
                         client.connect('http://localhost:' + server.info.port, function () {
 
                             client.request('/', function (err, payload, statusCode, headers) {
 
                                 expect(err).to.not.exist();
+                                expect(logged).to.equal('Unexpected end of input');
 
                                 client.disconnect();
                                 server.stop(done);
@@ -242,11 +250,19 @@ describe('Browser', function () {
                     server.start(function (err) {
 
                         var client = new Nes.Client();
+
+                        var logged = false;
+                        client.onerror = function (err) {
+
+                            logged = err.message;
+                        };
+
                         client.connect('http://localhost:' + server.info.port, function () {
 
                             client.request('/', function (err, payload, statusCode, headers) {
 
                                 expect(err).to.not.exist();
+                                expect(logged).to.equal('Received response for missing request');
 
                                 client.disconnect();
                                 server.stop(done);
@@ -281,11 +297,19 @@ describe('Browser', function () {
                     server.start(function (err) {
 
                         var client = new Nes.Client();
+
+                        var logged = false;
+                        client.onerror = function (err) {
+
+                            logged = err.message;
+                        };
+
                         client.connect('http://localhost:' + server.info.port, function () {
 
                             client.request('/', function (err, payload, statusCode, headers) {
 
                                 expect(err).to.not.exist();
+                                expect(logged).to.be.equal('Received unknown response type: unknown');
 
                                 client.disconnect();
                                 server.stop(done);
