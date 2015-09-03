@@ -40,8 +40,8 @@ describe('register()', function () {
 
             server.start(function (err) {
 
-                var client = new Nes.Client();
-                client.connect('http://localhost:' + server.info.port, function () {
+                var client = new Nes.Client('http://localhost:' + server.info.port);
+                client.connect(function () {
 
                     client.request('/', function (err, payload, statusCode, headers) {
 

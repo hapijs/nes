@@ -20,7 +20,7 @@ var it = lab.it;
 var expect = Code.expect;
 
 
-describe('Manager', function () {
+describe('Listener', function () {
 
     describe('broadcast()', function () {
 

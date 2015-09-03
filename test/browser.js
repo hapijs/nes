@@ -27,9 +27,9 @@ describe('Browser', function () {
 
             it('fails to connect', function (done) {
 
-                var client = new Nes.Client();
+                var client = new Nes.Client('http://no.such.example.com');
 
-                client.connect('http://no.such.example.com', function (err) {
+                client.connect(function (err) {
 
                     expect(err).to.exist();
                     expect(err.message).to.equal('getaddrinfo ENOTFOUND');
@@ -39,9 +39,9 @@ describe('Browser', function () {
 
             it('handles error before open events', function (done) {
 
-                var client = new Nes.Client();
+                var client = new Nes.Client('http://no.such.example.com');
 
-                client.connect('http://no.such.example.com', function (err) {
+                client.connect(function (err) {
 
                     expect(err).to.exist();
                     expect(err.message).to.equal('test');
@@ -73,8 +73,8 @@ describe('Browser', function () {
 
                     server.start(function (err) {
 
-                        var client = new Nes.Client();
-                        client.connect('http://localhost:' + server.info.port, function () {
+                        var client = new Nes.Client('http://localhost:' + server.info.port);
+                        client.connect(function () {
 
                             client.disconnect();
                             client.disconnect();
@@ -118,8 +118,8 @@ describe('Browser', function () {
 
                     server.start(function (err) {
 
-                        var client = new Nes.Client();
-                        client.connect('http://localhost:' + server.info.port, function () {
+                        var client = new Nes.Client('http://localhost:' + server.info.port);
+                        client.connect(function () {
 
                             var a = { b: 1 };
                             a.a = a;
@@ -155,8 +155,8 @@ describe('Browser', function () {
 
                     server.start(function (err) {
 
-                        var client = new Nes.Client();
-                        client.connect('http://localhost:' + server.info.port, function () {
+                        var client = new Nes.Client('http://localhost:' + server.info.port);
+                        client.connect(function () {
 
                             client._ws.send = function () {
 
@@ -202,15 +202,15 @@ describe('Browser', function () {
 
                     server.start(function (err) {
 
-                        var client = new Nes.Client();
+                        var client = new Nes.Client('http://localhost:' + server.info.port);
 
-                        var logged = false;
+                        var logged;
                         client.onerror = function (err) {
 
                             logged = err.message;
                         };
 
-                        client.connect('http://localhost:' + server.info.port, function () {
+                        client.connect(function () {
 
                             client.request('/', function (err, payload, statusCode, headers) {
 
@@ -249,15 +249,15 @@ describe('Browser', function () {
 
                     server.start(function (err) {
 
-                        var client = new Nes.Client();
+                        var client = new Nes.Client('http://localhost:' + server.info.port);
 
-                        var logged = false;
+                        var logged;
                         client.onerror = function (err) {
 
                             logged = err.message;
                         };
 
-                        client.connect('http://localhost:' + server.info.port, function () {
+                        client.connect(function () {
 
                             client.request('/', function (err, payload, statusCode, headers) {
 
@@ -296,24 +296,26 @@ describe('Browser', function () {
 
                     server.start(function (err) {
 
-                        var client = new Nes.Client();
+                        var client = new Nes.Client('http://localhost:' + server.info.port);
 
-                        var logged = false;
+                        var logged;
                         client.onerror = function (err) {
 
-                            logged = err.message;
+                            if (!logged) {
+                                logged = err.message;
+                                return;
+                            }
+
+                            expect(logged).to.equal('Received unknown response type: unknown');
+                            expect(err.message).to.equal('Received response for missing request');
+
+                            client.disconnect();
+                            server.stop(done);
                         };
 
-                        client.connect('http://localhost:' + server.info.port, function () {
+                        client.connect(function () {
 
-                            client.request('/', function (err, payload, statusCode, headers) {
-
-                                expect(err).to.not.exist();
-                                expect(logged).to.be.equal('Received unknown response type: unknown');
-
-                                client.disconnect();
-                                server.stop(done);
-                            });
+                            client.request('/', function (err, payload, statusCode, headers) { });
                         });
                     });
                 });
@@ -344,8 +346,8 @@ describe('Browser', function () {
 
                     server.start(function (err) {
 
-                        var client = new Nes.Client();
-                        client.connect('http://localhost:' + server.info.port, function () {
+                        var client = new Nes.Client('http://localhost:' + server.info.port);
+                        client.connect(function () {
 
                             client.request('/', function (err, payload, statusCode, headers) {
 
