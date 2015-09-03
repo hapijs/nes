@@ -43,7 +43,7 @@ describe('register()', function () {
                 var client = new Nes.Client();
                 client.connect('http://localhost:' + server.info.port, function () {
 
-                    client.request('GET', '/', function (err, payload, statusCode, headers) {
+                    client.request('/', function (err, payload, statusCode, headers) {
 
                         expect(err).to.not.exist();
                         expect(payload).to.equal('hello');
