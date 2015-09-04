@@ -24,415 +24,531 @@ var expect = Code.expect;
 
 describe('authentication', function () {
 
-    it('protects an endpoint', function (done) {
+    describe('cookie', function () {
 
-        var server = new Hapi.Server();
-        server.connection();
+        it('protects an endpoint', function (done) {
 
-        server.auth.scheme('custom', internals.implementation);
-        server.auth.strategy('default', 'custom', true);
+            var server = new Hapi.Server();
+            server.connection();
 
-        server.register({ register: Nes, options: { auth: { password: 'password' } } }, function (err) {
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom', true);
 
-            expect(err).to.not.exist();
+            server.register({ register: Nes, options: { auth: { password: 'password' } } }, function (err) {
 
-            server.route({
-                method: 'GET',
-                path: '/',
-                handler: function (request, reply) {
+                expect(err).to.not.exist();
 
-                    return reply('hello');
-                }
+                server.route({
+                    method: 'GET',
+                    path: '/',
+                    handler: function (request, reply) {
+
+                        return reply('hello');
+                    }
+                });
+
+                server.start(function (err) {
+
+                    server.inject({ url: '/nes/auth', headers: { authorization: 'Custom john' } }, function (res) {
+
+                        expect(res.result.status).to.equal('authenticated');
+
+                        var header = res.headers['set-cookie'][0];
+                        var cookie = header.match(/(?:[^\x00-\x20\(\)<>@\,;\:\\"\/\[\]\?\=\{\}\x7F]+)\s*=\s*(?:([^\x00-\x20\"\,\;\\\x7F]*))/);
+
+                        var client = new Nes.Client('http://localhost:' + server.info.port, { headers: { cookie: 'nes=' + cookie[1] } });
+                        client.connect(function (err) {
+
+                            expect(err).to.not.exist();
+                            client.request('/', function (err, payload, statusCode, headers) {
+
+                                expect(payload).to.equal('hello');
+                                expect(statusCode).to.equal(200);
+                                expect(headers).to.contain({
+                                    'content-type': 'text/html; charset=utf-8'
+                                });
+
+                                client.disconnect();
+                                server.stop(done);
+                            });
+                        });
+                    });
+                });
             });
+        });
 
-            server.start(function (err) {
+        it('errors on missing auth on an authentication endpoint', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom', true);
+
+            server.register({ register: Nes, options: { auth: { password: 'password', route: { mode: 'optional' } } } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.route({
+                    method: 'GET',
+                    path: '/',
+                    handler: function (request, reply) {
+
+                        return reply('hello');
+                    }
+                });
+
+                server.start(function (err) {
+
+                    server.inject('/nes/auth', function (res) {
+
+                        expect(res.result.status).to.equal('unauthenticated');
+
+                        var client = new Nes.Client('http://localhost:' + server.info.port);
+                        client.connect(function (err) {
+
+                            expect(err).to.not.exist();
+                            client.request('/', function (err, payload, statusCode, headers) {
+
+                                expect(statusCode).to.equal(401);
+
+                                client.disconnect();
+                                server.stop(done);
+                            });
+                        });
+                    });
+                });
+            });
+        });
+
+        it('errors on missing auth on an authentication endpoint (other cookies)', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom', true);
+
+            server.register({ register: Nes, options: { auth: { password: 'password', route: { mode: 'optional' } } } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.route({
+                    method: 'GET',
+                    path: '/',
+                    handler: function (request, reply) {
+
+                        return reply('hello');
+                    }
+                });
+
+                server.start(function (err) {
+
+                    server.inject('/nes/auth', function (res) {
+
+                        expect(res.result.status).to.equal('unauthenticated');
+
+                        var client = new Nes.Client('http://localhost:' + server.info.port, { headers: { cookie: 'xnes=123' } });
+                        client.connect(function (err) {
+
+                            expect(err).to.not.exist();
+                            client.request('/', function (err, payload, statusCode, headers) {
+
+                                expect(statusCode).to.equal(401);
+
+                                client.disconnect();
+                                server.stop(done);
+                            });
+                        });
+                    });
+                });
+            });
+        });
+
+        it('overrides cookie path', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom', true);
+
+            server.register({ register: Nes, options: { auth: { password: 'password', path: '/nes/xyz' } } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.route({
+                    method: 'GET',
+                    path: '/',
+                    handler: function (request, reply) {
+
+                        return reply('hello');
+                    }
+                });
 
                 server.inject({ url: '/nes/auth', headers: { authorization: 'Custom john' } }, function (res) {
 
                     expect(res.result.status).to.equal('authenticated');
 
                     var header = res.headers['set-cookie'][0];
-                    var cookie = header.match(/(?:[^\x00-\x20\(\)<>@\,;\:\\"\/\[\]\?\=\{\}\x7F]+)\s*=\s*(?:([^\x00-\x20\"\,\;\\\x7F]*))/);
-
-                    var client = new Nes.Client('http://localhost:' + server.info.port, { headers: { cookie: 'nes=' + cookie[1] } });
-                    client.connect(function (err) {
-
-                        expect(err).to.not.exist();
-                        client.request('/', function (err, payload, statusCode, headers) {
-
-                            expect(payload).to.equal('hello');
-                            expect(statusCode).to.equal(200);
-                            expect(headers).to.contain({
-                                'content-type': 'text/html; charset=utf-8'
-                            });
-
-                            client.disconnect();
-                            server.stop(done);
-                        });
-                    });
+                    expect(header).to.contain('Path=/nes/xyz');
+                    done();
                 });
             });
         });
     });
 
-    it('errors on missing auth on an authentication endpoint', function (done) {
+    describe('token', function () {
 
-        var server = new Hapi.Server();
-        server.connection();
+        it('protects an endpoint', function (done) {
 
-        server.auth.scheme('custom', internals.implementation);
-        server.auth.strategy('default', 'custom', true);
+            var server = new Hapi.Server();
+            server.connection();
 
-        server.register({ register: Nes, options: { auth: { password: 'password', route: { mode: 'optional' } } } }, function (err) {
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom', true);
 
-            expect(err).to.not.exist();
+            server.register({ register: Nes, options: { auth: { type: 'token', password: 'password' } } }, function (err) {
 
-            server.route({
-                method: 'GET',
-                path: '/',
-                handler: function (request, reply) {
+                expect(err).to.not.exist();
 
-                    return reply('hello');
-                }
-            });
+                server.route({
+                    method: 'GET',
+                    path: '/',
+                    handler: function (request, reply) {
 
-            server.start(function (err) {
-
-                server.inject('/nes/auth', function (res) {
-
-                    expect(res.result.status).to.equal('unauthenticated');
-
-                    var client = new Nes.Client('http://localhost:' + server.info.port);
-                    client.connect(function (err) {
-
-                        expect(err).to.not.exist();
-                        client.request('/', function (err, payload, statusCode, headers) {
-
-                            expect(statusCode).to.equal(401);
-
-                            client.disconnect();
-                            server.stop(done);
-                        });
-                    });
+                        return reply('hello');
+                    }
                 });
-            });
-        });
-    });
 
-    it('errors on missing auth on an authentication endpoint (other cookies)', function (done) {
+                server.start(function (err) {
 
-        var server = new Hapi.Server();
-        server.connection();
+                    server.inject({ url: '/nes/auth', headers: { authorization: 'Custom john' } }, function (res) {
 
-        server.auth.scheme('custom', internals.implementation);
-        server.auth.strategy('default', 'custom', true);
+                        expect(res.result.status).to.equal('authenticated');
+                        expect(res.result.token).to.exist();
 
-        server.register({ register: Nes, options: { auth: { password: 'password', route: { mode: 'optional' } } } }, function (err) {
-
-            expect(err).to.not.exist();
-
-            server.route({
-                method: 'GET',
-                path: '/',
-                handler: function (request, reply) {
-
-                    return reply('hello');
-                }
-            });
-
-            server.start(function (err) {
-
-                server.inject('/nes/auth', function (res) {
-
-                    expect(res.result.status).to.equal('unauthenticated');
-
-                    var client = new Nes.Client('http://localhost:' + server.info.port, { headers: { cookie: 'xnes=123' } });
-                    client.connect(function (err) {
-
-                        expect(err).to.not.exist();
-                        client.request('/', function (err, payload, statusCode, headers) {
-
-                            expect(statusCode).to.equal(401);
-
-                            client.disconnect();
-                            server.stop(done);
-                        });
-                    });
-                });
-            });
-        });
-    });
-
-    it('overrides cookie path', function (done) {
-
-        var server = new Hapi.Server();
-        server.connection();
-
-        server.auth.scheme('custom', internals.implementation);
-        server.auth.strategy('default', 'custom', true);
-
-        server.register({ register: Nes, options: { auth: { password: 'password', path: '/nes/xyz' } } }, function (err) {
-
-            expect(err).to.not.exist();
-
-            server.route({
-                method: 'GET',
-                path: '/',
-                handler: function (request, reply) {
-
-                    return reply('hello');
-                }
-            });
-
-            server.inject({ url: '/nes/auth', headers: { authorization: 'Custom john' } }, function (res) {
-
-                expect(res.result.status).to.equal('authenticated');
-
-                var header = res.headers['set-cookie'][0];
-                expect(header).to.contain('Path=/nes/xyz');
-                done();
-            });
-        });
-    });
-
-    it('protects an endpoint (token)', function (done) {
-
-        var server = new Hapi.Server();
-        server.connection();
-
-        server.auth.scheme('custom', internals.implementation);
-        server.auth.strategy('default', 'custom', true);
-
-        server.register({ register: Nes, options: { auth: { type: 'token', password: 'password' } } }, function (err) {
-
-            expect(err).to.not.exist();
-
-            server.route({
-                method: 'GET',
-                path: '/',
-                handler: function (request, reply) {
-
-                    return reply('hello');
-                }
-            });
-
-            server.start(function (err) {
-
-                server.inject({ url: '/nes/auth', headers: { authorization: 'Custom john' } }, function (res) {
-
-                    expect(res.result.status).to.equal('authenticated');
-                    expect(res.result.token).to.exist();
-
-                    var client = new Nes.Client('http://localhost:' + server.info.port);
-                    client.connect(function (err) {
-
-                        expect(err).to.not.exist();
-                        client.authenticate(res.result.token, function (err) {
-
-                            expect(err).to.not.exist();
-                            client.request('/', function (err, payload, statusCode, headers) {
-
-                                expect(payload).to.equal('hello');
-                                expect(statusCode).to.equal(200);
-                                expect(headers).to.contain({
-                                    'content-type': 'text/html; charset=utf-8'
-                                });
-
-                                client.disconnect();
-                                server.stop(done);
-                            });
-                        });
-                    });
-                });
-            });
-        });
-    });
-
-    it('protects an endpoint (token with iron settings)', function (done) {
-
-        var server = new Hapi.Server();
-        server.connection();
-
-        server.auth.scheme('custom', internals.implementation);
-        server.auth.strategy('default', 'custom', true);
-
-        server.register({ register: Nes, options: { auth: { type: 'token', password: 'password', iron: Iron.defaults } } }, function (err) {
-
-            expect(err).to.not.exist();
-
-            server.route({
-                method: 'GET',
-                path: '/',
-                handler: function (request, reply) {
-
-                    return reply('hello');
-                }
-            });
-
-            server.start(function (err) {
-
-                server.inject({ url: '/nes/auth', headers: { authorization: 'Custom john' } }, function (res) {
-
-                    expect(res.result.status).to.equal('authenticated');
-                    expect(res.result.token).to.exist();
-
-                    var client = new Nes.Client('http://localhost:' + server.info.port);
-                    client.connect(function (err) {
-
-                        expect(err).to.not.exist();
-                        client.authenticate(res.result.token, function (err) {
-
-                            expect(err).to.not.exist();
-                            client.request('/', function (err, payload, statusCode, headers) {
-
-                                expect(payload).to.equal('hello');
-                                expect(statusCode).to.equal(200);
-                                expect(headers).to.contain({
-                                    'content-type': 'text/html; charset=utf-8'
-                                });
-
-                                client.disconnect();
-                                server.stop(done);
-                            });
-                        });
-                    });
-                });
-            });
-        });
-    });
-
-    it('errors on invalid token', function (done) {
-
-        var server = new Hapi.Server();
-        server.connection();
-
-        server.auth.scheme('custom', internals.implementation);
-        server.auth.strategy('default', 'custom', true);
-
-        server.register({ register: Nes, options: { auth: { type: 'token', password: 'password' } } }, function (err) {
-
-            expect(err).to.not.exist();
-
-            server.route({
-                method: 'GET',
-                path: '/',
-                handler: function (request, reply) {
-
-                    return reply('hello');
-                }
-            });
-
-            server.start(function (err) {
-
-                var client = new Nes.Client('http://localhost:' + server.info.port);
-                client.connect(function (err) {
-
-                    expect(err).to.not.exist();
-                    client.authenticate('abc', function (err) {
-
-                        expect(err).to.exist();
-                        expect(err.message).to.equal('Invalid token');
-
-                        client.disconnect();
-                        server.stop(done);
-                    });
-                });
-            });
-        });
-    });
-
-    it('errors on missing token', function (done) {
-
-        var server = new Hapi.Server();
-        server.connection();
-
-        server.auth.scheme('custom', internals.implementation);
-        server.auth.strategy('default', 'custom', true);
-
-        server.register({ register: Nes, options: { auth: { type: 'token', password: 'password' } } }, function (err) {
-
-            expect(err).to.not.exist();
-
-            server.route({
-                method: 'GET',
-                path: '/',
-                handler: function (request, reply) {
-
-                    return reply('hello');
-                }
-            });
-
-            server.start(function (err) {
-
-                var client = new Nes.Client('http://localhost:' + server.info.port);
-                client.connect(function (err) {
-
-                    expect(err).to.not.exist();
-                    client.authenticate('', function (err) {
-
-                        expect(err).to.exist();
-                        expect(err.message).to.equal('Authentication missing token');
-
-                        client.disconnect();
-                        server.stop(done);
-                    });
-                });
-            });
-        });
-    });
-
-    it('errors on invalid iron password', function (done) {
-
-        var server = new Hapi.Server();
-        server.connection();
-
-        server.auth.scheme('custom', internals.implementation);
-        server.auth.strategy('default', 'custom', true);
-
-        server.register({ register: Nes, options: { auth: { type: 'token', password: new Buffer('') } } }, function (err) {
-
-            expect(err).to.not.exist();
-            server.inject({ url: '/nes/auth', headers: { authorization: 'Custom john' } }, function (res) {
-
-                expect(res.statusCode).to.equal(500);
-                done();
-            });
-        });
-    });
-
-    it('errors on double authentication', function (done) {
-
-        var server = new Hapi.Server();
-        server.connection();
-
-        server.auth.scheme('custom', internals.implementation);
-        server.auth.strategy('default', 'custom', true);
-
-        server.register({ register: Nes, options: { auth: { type: 'token', password: 'password' } } }, function (err) {
-
-            expect(err).to.not.exist();
-            server.start(function (err) {
-
-                server.inject({ url: '/nes/auth', headers: { authorization: 'Custom john' } }, function (res) {
-
-                    expect(res.result.status).to.equal('authenticated');
-                    expect(res.result.token).to.exist();
-
-                    var client = new Nes.Client('http://localhost:' + server.info.port);
-                    client.connect(function (err) {
-
-                        expect(err).to.not.exist();
-                        client.authenticate(res.result.token, function (err) {
+                        var client = new Nes.Client('http://localhost:' + server.info.port);
+                        client.connect(function (err) {
 
                             expect(err).to.not.exist();
                             client.authenticate(res.result.token, function (err) {
 
-                                expect(err).to.exist();
-                                expect(err.message).to.equal('Connection already authenticated');
+                                expect(err).to.not.exist();
+                                client.request('/', function (err, payload, statusCode, headers) {
+
+                                    expect(payload).to.equal('hello');
+                                    expect(statusCode).to.equal(200);
+                                    expect(headers).to.contain({
+                                        'content-type': 'text/html; charset=utf-8'
+                                    });
+
+                                    client.disconnect();
+                                    server.stop(done);
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+        });
+
+        it('protects an endpoint (token with iron settings)', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom', true);
+
+            server.register({ register: Nes, options: { auth: { type: 'token', password: 'password', iron: Iron.defaults } } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.route({
+                    method: 'GET',
+                    path: '/',
+                    handler: function (request, reply) {
+
+                        return reply('hello');
+                    }
+                });
+
+                server.start(function (err) {
+
+                    server.inject({ url: '/nes/auth', headers: { authorization: 'Custom john' } }, function (res) {
+
+                        expect(res.result.status).to.equal('authenticated');
+                        expect(res.result.token).to.exist();
+
+                        var client = new Nes.Client('http://localhost:' + server.info.port);
+                        client.connect(function (err) {
+
+                            expect(err).to.not.exist();
+                            client.authenticate(res.result.token, function (err) {
+
+                                expect(err).to.not.exist();
+                                client.request('/', function (err, payload, statusCode, headers) {
+
+                                    expect(payload).to.equal('hello');
+                                    expect(statusCode).to.equal(200);
+                                    expect(headers).to.contain({
+                                        'content-type': 'text/html; charset=utf-8'
+                                    });
+
+                                    client.disconnect();
+                                    server.stop(done);
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+        });
+
+        it('errors on invalid token', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom', true);
+
+            server.register({ register: Nes, options: { auth: { type: 'token', password: 'password' } } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.route({
+                    method: 'GET',
+                    path: '/',
+                    handler: function (request, reply) {
+
+                        return reply('hello');
+                    }
+                });
+
+                server.start(function (err) {
+
+                    var client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect(function (err) {
+
+                        expect(err).to.not.exist();
+                        client.authenticate('abc', function (err) {
+
+                            expect(err).to.exist();
+                            expect(err.message).to.equal('Invalid token');
+
+                            client.disconnect();
+                            server.stop(done);
+                        });
+                    });
+                });
+            });
+        });
+
+        it('errors on missing token', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom', true);
+
+            server.register({ register: Nes, options: { auth: { type: 'token', password: 'password' } } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.route({
+                    method: 'GET',
+                    path: '/',
+                    handler: function (request, reply) {
+
+                        return reply('hello');
+                    }
+                });
+
+                server.start(function (err) {
+
+                    var client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect(function (err) {
+
+                        expect(err).to.not.exist();
+                        client.authenticate('', function (err) {
+
+                            expect(err).to.exist();
+                            expect(err.message).to.equal('Authentication missing token');
+
+                            client.disconnect();
+                            server.stop(done);
+                        });
+                    });
+                });
+            });
+        });
+
+        it('errors on invalid iron password', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom', true);
+
+            server.register({ register: Nes, options: { auth: { type: 'token', password: new Buffer('') } } }, function (err) {
+
+                expect(err).to.not.exist();
+                server.inject({ url: '/nes/auth', headers: { authorization: 'Custom john' } }, function (res) {
+
+                    expect(res.statusCode).to.equal(500);
+                    done();
+                });
+            });
+        });
+
+        it('errors on double authentication', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom', true);
+
+            server.register({ register: Nes, options: { auth: { type: 'token', password: 'password' } } }, function (err) {
+
+                expect(err).to.not.exist();
+                server.start(function (err) {
+
+                    server.inject({ url: '/nes/auth', headers: { authorization: 'Custom john' } }, function (res) {
+
+                        expect(res.result.status).to.equal('authenticated');
+                        expect(res.result.token).to.exist();
+
+                        var client = new Nes.Client('http://localhost:' + server.info.port);
+                        client.connect(function (err) {
+
+                            expect(err).to.not.exist();
+                            client.authenticate(res.result.token, function (err) {
+
+                                expect(err).to.not.exist();
+                                client.authenticate(res.result.token, function (err) {
+
+                                    expect(err).to.exist();
+                                    expect(err.message).to.equal('Connection already authenticated');
+
+                                    client.disconnect();
+                                    server.stop(done);
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+        });
+    });
+
+    describe('direct', function () {
+
+        it('protects an endpoint', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom', true);
+
+            server.register({ register: Nes, options: { auth: { type: 'direct', password: 'password' } } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.route({
+                    method: 'GET',
+                    path: '/',
+                    handler: function (request, reply) {
+
+                        return reply('hello');
+                    }
+                });
+
+                server.start(function (err) {
+
+                    var client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect(function (err) {
+
+                        expect(err).to.not.exist();
+                        client.authenticate({ headers: { authorization: 'Custom john' } }, function (err) {
+
+                            expect(err).to.not.exist();
+                            client.request('/', function (err, payload, statusCode, headers) {
+
+                                expect(payload).to.equal('hello');
+                                expect(statusCode).to.equal(200);
+                                expect(headers).to.contain({
+                                    'content-type': 'text/html; charset=utf-8'
+                                });
 
                                 client.disconnect();
                                 server.stop(done);
                             });
+                        });
+                    });
+                });
+            });
+        });
+
+        it('fails authentication', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom', true);
+
+            server.register({ register: Nes, options: { auth: { type: 'direct', password: 'password' } } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.start(function (err) {
+
+                    var client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect(function (err) {
+
+                        expect(err).to.not.exist();
+                        client.authenticate({ headers: { authorization: 'Custom steve' } }, function (err) {
+
+                            expect(err).to.exist();
+                            expect(err.message).to.equal('Unauthorized');
+                            client.disconnect();
+                            server.stop(done);
+                        });
+                    });
+                });
+            });
+        });
+
+        it('fails authentication', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom', true);
+
+            server.register({ register: Nes, options: { auth: { type: 'direct', password: 'password' } } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.start(function (err) {
+
+                    var client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect(function (err) {
+
+                        expect(err).to.not.exist();
+                        client.authenticate('', function (err) {
+
+                            expect(err).to.exist();
+                            expect(err.message).to.equal('Authentication missing credentials');
+                            client.disconnect();
+                            server.stop(done);
                         });
                     });
                 });
@@ -459,7 +575,12 @@ internals.implementation = function (server, options) {
             }
 
             var parts = authorization.split(/\s+/);
-            return reply.continue({ credentials: users[parts[1]] });
+            var user = users[parts[1]];
+            if (!user) {
+                return reply(Boom.unauthorized('Unknown user', 'Custom'));
+            }
+
+            return reply.continue({ credentials: user });
         }
     };
 
