@@ -40,6 +40,7 @@ describe('Browser', function () {
             it('handles error before open events', function (done) {
 
                 var client = new Nes.Client('http://no.such.example.com');
+                client.onError = function (err) { };
 
                 client.connect(function (err) {
 
