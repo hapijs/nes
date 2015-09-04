@@ -60,6 +60,122 @@ describe('Socket', function () {
 
     describe('onMessage()', function () {
 
+        it('supports route id', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+            server.register({ register: Nes, options: {} }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.route({
+                    method: 'GET',
+                    path: '/',
+                    config: {
+                        id: 'resource',
+                        handler: function (request, reply) {
+
+                            return reply('hello');
+                        }
+                    }
+                });
+
+                server.start(function (err) {
+
+                    var client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect(function () {
+
+                        client.request('resource', function (err, payload, statusCode, headers) {
+
+                            expect(err).to.not.exist();
+                            expect(payload).to.equal('hello');
+                            expect(statusCode).to.equal(200);
+                            expect(headers).to.contain({ 'content-type': 'text/html; charset=utf-8' });
+
+                            client.disconnect();
+                            server.stop(done);
+                        });
+                    });
+                });
+            });
+        });
+
+        it('errors on unknown route id', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+            server.register({ register: Nes, options: {} }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.route({
+                    method: 'GET',
+                    path: '/',
+                    config: {
+                        id: 'resource',
+                        handler: function (request, reply) {
+
+                            return reply('hello');
+                        }
+                    }
+                });
+
+                server.start(function (err) {
+
+                    var client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect(function () {
+
+                        client.request('something', function (err, payload, statusCode, headers) {
+
+                            expect(err).to.not.exist();
+                            expect(statusCode).to.equal(404);
+
+                            client.disconnect();
+                            server.stop(done);
+                        });
+                    });
+                });
+            });
+        });
+
+        it('errors on wildcard method route id', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+            server.register({ register: Nes, options: {} }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.route({
+                    method: '*',
+                    path: '/',
+                    config: {
+                        id: 'resource',
+                        handler: function (request, reply) {
+
+                            return reply('hello');
+                        }
+                    }
+                });
+
+                server.start(function (err) {
+
+                    var client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect(function () {
+
+                        client.request('resource', function (err, payload, statusCode, headers) {
+
+                            expect(err).to.not.exist();
+                            expect(statusCode).to.equal(400);
+
+                            client.disconnect();
+                            server.stop(done);
+                        });
+                    });
+                });
+            });
+        });
+
         it('errors on invalid request message', function (done) {
 
             var server = new Hapi.Server();
