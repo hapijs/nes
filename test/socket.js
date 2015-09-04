@@ -127,7 +127,7 @@ describe('Socket', function () {
 
                         client.request('something', function (err, payload, statusCode, headers) {
 
-                            expect(err).to.not.exist();
+                            expect(err).to.exist();
                             expect(statusCode).to.equal(404);
 
                             client.disconnect();
@@ -165,7 +165,7 @@ describe('Socket', function () {
 
                         client.request('resource', function (err, payload, statusCode, headers) {
 
-                            expect(err).to.not.exist();
+                            expect(err).to.exist();
                             expect(statusCode).to.equal(400);
 
                             client.disconnect();
