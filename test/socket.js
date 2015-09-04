@@ -40,7 +40,7 @@ describe('Socket', function () {
 
                         var message = JSON.parse(data);
                         expect(message.statusCode).to.equal(500);
-                        expect(message.type).to.equal('broadcast');
+                        expect(message.nes).to.equal('broadcast');
 
                         client.close();
                         server.stop(done);
@@ -138,7 +138,7 @@ describe('Socket', function () {
                         });
 
                         expect(message.statusCode).to.equal(400);
-                        expect(message.type).to.equal('response');
+                        expect(message.nes).to.equal('response');
 
                         client.close();
                         server.stop(done);
@@ -146,7 +146,7 @@ describe('Socket', function () {
 
                     client.on('open', function () {
 
-                        client.send(JSON.stringify({ type: 'request', method: 'GET', path: '/' }), function (err) {
+                        client.send(JSON.stringify({ nes: 'request', method: 'GET', path: '/' }), function (err) {
 
                             expect(err).to.not.exist();
                         });
@@ -186,7 +186,7 @@ describe('Socket', function () {
                         });
 
                         expect(message.statusCode).to.equal(400);
-                        expect(message.type).to.equal('response');
+                        expect(message.nes).to.equal('response');
 
                         client.close();
                         server.stop(done);
@@ -194,7 +194,7 @@ describe('Socket', function () {
 
                     client.on('open', function () {
 
-                        client.send(JSON.stringify({ id: 1, type: 'request', path: '/' }), function (err) {
+                        client.send(JSON.stringify({ id: 1, nes: 'request', path: '/' }), function (err) {
 
                             expect(err).to.not.exist();
                         });
@@ -241,7 +241,7 @@ describe('Socket', function () {
 
                     client.on('open', function () {
 
-                        client.send(JSON.stringify({ id: 1, type: 'request', method: 'GET' }), function (err) {
+                        client.send(JSON.stringify({ id: 1, nes: 'request', method: 'GET' }), function (err) {
 
                             expect(err).to.not.exist();
                         });
@@ -288,7 +288,7 @@ describe('Socket', function () {
 
                     client.on('open', function () {
 
-                        client.send(JSON.stringify({ id: 1, type: 'unknown' }), function (err) {
+                        client.send(JSON.stringify({ id: 1, nes: 'unknown' }), function (err) {
 
                             expect(err).to.not.exist();
                         });

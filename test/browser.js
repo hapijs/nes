@@ -196,7 +196,7 @@ describe('Browser', function () {
                                 return;
                             }
 
-                            expect(Date.now() - now).to.be.below(90);
+                            expect(Date.now() - now).to.be.below(95);
 
                             client.disconnect();
                             server.stop(done);
@@ -494,7 +494,7 @@ describe('Browser', function () {
                         path: '/',
                         handler: function (request, reply) {
 
-                            request.connection.plugins.nes._listener._sockets[0]._ws.send('{"id":1,"type":"unknown","statusCode":200,"payload":"hello","headers":{}}');
+                            request.connection.plugins.nes._listener._sockets[0]._ws.send('{"id":1,"nes":"unknown","statusCode":200,"payload":"hello","headers":{}}');
 
                             setTimeout(function () {
 
