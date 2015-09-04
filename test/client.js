@@ -534,7 +534,120 @@ describe('Browser', function () {
 
         describe('subscribe()', function () {
 
-            it('subscribes to a channel', function (done) {
+            it('subscribes to a path', function (done) {
+
+                var server = new Hapi.Server();
+                server.connection();
+                server.register({ register: Nes, options: {} }, function (err) {
+
+                    expect(err).to.not.exist();
+
+                    server.subscription('/');
+
+                    server.start(function (err) {
+
+                        var client = new Nes.Client('http://localhost:' + server.info.port);
+                        client.connect(function () {
+
+                            client.subscribe('/', function (err, update) {
+
+                                expect(err).to.not.exist();
+                                expect(update).to.equal('heya');
+                                client.disconnect();
+                                server.stop(done);
+                            });
+
+                            setTimeout(function () {
+
+                                server.publish('/', 'heya');
+                            }, 10);
+                        });
+                    });
+                });
+            });
+
+            it('subscribes to a path (pre connect)', function (done) {
+
+                var server = new Hapi.Server();
+                server.connection();
+                server.register({ register: Nes, options: {} }, function (err) {
+
+                    expect(err).to.not.exist();
+
+                    server.subscription('/');
+
+                    server.start(function (err) {
+
+                        var client = new Nes.Client('http://localhost:' + server.info.port);
+
+                        client.subscribe('/', function (err, update) {
+
+                            expect(err).to.not.exist();
+                            expect(update).to.equal('heya');
+                            client.disconnect();
+                            server.stop(done);
+                        });
+
+                        client.connect(function (err) {
+
+                            expect(err).to.not.exist();
+
+                            setTimeout(function () {
+
+                                server.publish('/', 'heya');
+                            }, 10);
+                        });
+                    });
+                });
+            });
+
+            it('manages multiple subscriptions', function (done) {
+
+                var server = new Hapi.Server();
+                server.connection();
+                server.register({ register: Nes, options: {} }, function (err) {
+
+                    expect(err).to.not.exist();
+
+                    server.subscription('/');
+
+                    server.start(function (err) {
+
+                        var client1 = new Nes.Client('http://localhost:' + server.info.port);
+                        var client2 = new Nes.Client('http://localhost:' + server.info.port);
+
+                        client1.connect(function (err) {
+
+                            expect(err).to.not.exist();
+                            client2.connect(function (err) {
+
+                                expect(err).to.not.exist();
+
+                                client1.subscribe('/', function (err, update) {
+
+                                    expect(err).to.not.exist();
+                                    expect(update).to.equal('heya');
+                                    client1.disconnect();
+                                    server.stop(done);
+                                });
+
+                                client2.subscribe('/', function () { });
+
+                                setTimeout(function () {
+
+                                    client2.disconnect();
+                                    setTimeout(function () {
+
+                                        server.publish('/', 'heya');
+                                    }, 10);
+                                }, 10);
+                            });
+                        });
+                    });
+                });
+            });
+
+            it('errors on unknown path', function (done) {
 
                 var server = new Hapi.Server();
                 server.connection();
@@ -550,6 +663,7 @@ describe('Browser', function () {
                             client.subscribe('/', function (err, update) {
 
                                 expect(err).to.exist();
+                                expect(err.message).to.equal('Not Found');
                                 client.disconnect();
                                 server.stop(done);
                             });
@@ -558,7 +672,7 @@ describe('Browser', function () {
                 });
             });
 
-            it('subscribes and immediately unsubscribe to a channel (all handlers)', function (done) {
+            it('subscribes and immediately unsubscribe to a path (all handlers)', function (done) {
 
                 var server = new Hapi.Server();
                 server.connection();
@@ -588,7 +702,7 @@ describe('Browser', function () {
                 });
             });
 
-            it('subscribes and immediately unsubscribe to a channel (single handler)', function (done) {
+            it('subscribes and immediately unsubscribe to a path (single handler)', function (done) {
 
                 var server = new Hapi.Server();
                 server.connection();
@@ -619,7 +733,7 @@ describe('Browser', function () {
                 });
             });
 
-            it('subscribes and unsubscribes to a channel before connecting', function (done) {
+            it('subscribes and unsubscribes to a path before connecting', function (done) {
 
                 var client = new Nes.Client('http://localhost');
 
@@ -684,26 +798,26 @@ describe('Browser', function () {
                 });
             });
 
-            it('errors on missing criterion', function (done) {
+            it('errors on missing path', function (done) {
 
                 var client = new Nes.Client('http://localhost');
 
                 client.subscribe('', function (err, update) {
 
                     expect(err).to.exist();
-                    expect(err.message).to.equal('Invalid criterion');
+                    expect(err.message).to.equal('Invalid path');
                     done();
                 });
             });
 
-            it('errors on invalid criterion', function (done) {
+            it('errors on invalid path', function (done) {
 
                 var client = new Nes.Client('http://localhost');
 
                 client.subscribe('asd', function (err, update) {
 
                     expect(err).to.exist();
-                    expect(err.message).to.equal('Invalid criterion');
+                    expect(err.message).to.equal('Invalid path');
                     done();
                 });
             });
@@ -727,7 +841,7 @@ describe('Browser', function () {
                 done();
             });
 
-            it('ignores unknown criterion', function (done) {
+            it('ignores unknown path', function (done) {
 
                 var client = new Nes.Client('http://localhost');
 
@@ -744,26 +858,26 @@ describe('Browser', function () {
                 done();
             });
 
-            it('errors on missing criterion', function (done) {
+            it('errors on missing path', function (done) {
 
                 var client = new Nes.Client('http://localhost');
 
                 client.unsubscribe('', function (err, update) {
 
                     expect(err).to.exist();
-                    expect(err.message).to.equal('Invalid criterion');
+                    expect(err.message).to.equal('Invalid path');
                     done();
                 });
             });
 
-            it('errors on invalid criterion', function (done) {
+            it('errors on invalid path', function (done) {
 
                 var client = new Nes.Client('http://localhost');
 
                 client.unsubscribe('asd', function (err, update) {
 
                     expect(err).to.exist();
-                    expect(err.message).to.equal('Invalid criterion');
+                    expect(err.message).to.equal('Invalid path');
                     done();
                 });
             });

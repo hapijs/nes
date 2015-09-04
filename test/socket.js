@@ -35,7 +35,7 @@ describe('Socket', function () {
 
                 server.on('log', function (event, tags) {
 
-                    expect(event.data).to.equal('broadcast');
+                    expect(event.data).to.equal('other');
                     client.disconnect();
                     server.stop(done);
                 });
@@ -49,7 +49,7 @@ describe('Socket', function () {
                         var a = { b: 1 };
                         a.c = a;                    // Circular reference
 
-                        server.broadcast(a);
+                        server.connections[0].plugins.nes._listener._sockets[0].send(a, { id: 1, type: 'other' });
                     });
                 });
             });
