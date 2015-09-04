@@ -20,7 +20,7 @@
     "ws": "0.8.x"
   },
   "peerDependencies": {
-    "hapi": "9.x.x"
+    "hapi": ">=9.1.x"
   },
   "devDependencies": {
     "code": "1.x.x",

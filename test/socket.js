@@ -169,6 +169,31 @@ describe('Socket', function () {
             });
         });
 
+        it('errors on auth endpoint request', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+            server.register({ register: Nes, options: { auth: { password: 'password' } } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.start(function (err) {
+
+                    var client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect(function (err) {
+
+                        expect(err).to.not.exist();
+                        client.request('/nes/auth', function (err, payload, statusCode, headers) {
+
+                            expect(statusCode).to.equal(404);
+                            client.disconnect();
+                            server.stop(done);
+                        });
+                    });
+                });
+            });
+        });
+
         it('errors on missing id', function (done) {
 
             var server = new Hapi.Server();
