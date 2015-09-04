@@ -107,6 +107,68 @@ describe('Socket', function () {
             });
         });
 
+        it('invokes callback on invalid request message', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+
+            var client;
+            var onUnknownMessage = function (message, ws) {
+
+                expect(message).to.equal('some message');
+                client.close();
+                server.stop(done);
+            };
+
+            server.register({ register: Nes, options: { onUnknownMessage: onUnknownMessage } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.start(function (err) {
+
+                    client = new Ws('http://localhost:' + server.info.port);
+                    client.on('open', function () {
+
+                        client.send('some message', function (err) {
+
+                            expect(err).to.not.exist();
+                        });
+                    });
+                });
+            });
+        });
+
+        it('invokes callback on request message missing nes', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+
+            var client;
+            var onUnknownMessage = function (message, ws) {
+
+                expect(message).to.equal('{"a":"b"}');
+                client.close();
+                server.stop(done);
+            };
+
+            server.register({ register: Nes, options: { onUnknownMessage: onUnknownMessage } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.start(function (err) {
+
+                    client = new Ws('http://localhost:' + server.info.port);
+                    client.on('open', function () {
+
+                        client.send('{"a":"b"}', function (err) {
+
+                            expect(err).to.not.exist();
+                        });
+                    });
+                });
+            });
+        });
+
         it('errors on missing id', function (done) {
 
             var server = new Hapi.Server();
