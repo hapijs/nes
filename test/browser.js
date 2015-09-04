@@ -125,7 +125,7 @@ describe('Browser', function () {
                                 expect(e).to.equal(0);
                                 client.disconnect();
                                 server.stop(done);
-                            }, 15);
+                            }, 20);
                         });
                     });
                 });
