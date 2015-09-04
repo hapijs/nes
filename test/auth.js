@@ -495,6 +495,70 @@ describe('authentication', function () {
             });
         });
 
+        it('reconnects automatically', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom', true);
+
+            server.register({ register: Nes, options: { auth: { type: 'direct', password: 'password' } } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.route({
+                    method: 'GET',
+                    path: '/',
+                    handler: function (request, reply) {
+
+                        return reply('hello');
+                    }
+                });
+
+                server.start(function (err) {
+
+                    var client = new Nes.Client('http://localhost:' + server.info.port);
+
+                    var e = 0;
+                    client.onError = function (err) {
+
+                        ++e;
+                    };
+
+                    var c = 0;
+                    client.onConnect = function () {
+
+                        ++c;
+                    };
+
+                    expect(c).to.equal(0);
+                    expect(e).to.equal(0);
+                    client.connect({ delay: 10, auth: { headers: { authorization: 'Custom john' } } }, function () {
+
+                        expect(c).to.equal(1);
+                        expect(e).to.equal(0);
+
+                        client._ws.close();
+                        setTimeout(function () {
+
+                            expect(c).to.equal(2);
+                            expect(e).to.equal(0);
+
+                            client.request('/', function (err, payload, statusCode, headers) {
+
+                                expect(payload).to.equal('hello');
+                                expect(statusCode).to.equal(200);
+
+                                client.disconnect();
+                                server.stop(done);
+                            });
+                        }, 20);
+                    });
+                });
+            });
+        });
+
         it('fails authentication', function (done) {
 
             var server = new Hapi.Server();
