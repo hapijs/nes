@@ -68,7 +68,7 @@ describe('Browser', function () {
 
                 var server = new Hapi.Server();
                 server.connection();
-                server.register({ register: Nes, options: {} }, function (err) {
+                server.register({ register: Nes, options: { auth: false } }, function (err) {
 
                     expect(err).to.not.exist();
 
@@ -92,7 +92,7 @@ describe('Browser', function () {
 
                 var server = new Hapi.Server();
                 server.connection();
-                server.register({ register: Nes, options: {} }, function (err) {
+                server.register({ register: Nes, options: { auth: false } }, function (err) {
 
                     expect(err).to.not.exist();
 
@@ -136,7 +136,7 @@ describe('Browser', function () {
 
                 var server = new Hapi.Server();
                 server.connection();
-                server.register({ register: Nes, options: {} }, function (err) {
+                server.register({ register: Nes, options: { auth: false } }, function (err) {
 
                     expect(err).to.not.exist();
 
@@ -178,7 +178,7 @@ describe('Browser', function () {
 
                 var server = new Hapi.Server();
                 server.connection();
-                server.register({ register: Nes, options: {} }, function (err) {
+                server.register({ register: Nes, options: { auth: false } }, function (err) {
 
                     expect(err).to.not.exist();
 
@@ -212,7 +212,7 @@ describe('Browser', function () {
 
                 var server = new Hapi.Server();
                 server.connection();
-                server.register({ register: Nes, options: {} }, function (err) {
+                server.register({ register: Nes, options: { auth: false } }, function (err) {
 
                     expect(err).to.not.exist();
 
@@ -259,7 +259,7 @@ describe('Browser', function () {
 
                 var server = new Hapi.Server();
                 server.connection();
-                server.register({ register: Nes, options: {} }, function (err) {
+                server.register({ register: Nes, options: { auth: false } }, function (err) {
 
                     expect(err).to.not.exist();
 
@@ -313,7 +313,7 @@ describe('Browser', function () {
 
                 var server = new Hapi.Server();
                 server.connection();
-                server.register({ register: Nes, options: {} }, function (err) {
+                server.register({ register: Nes, options: { auth: false } }, function (err) {
 
                     expect(err).to.not.exist();
 
@@ -350,7 +350,7 @@ describe('Browser', function () {
 
                 var server = new Hapi.Server();
                 server.connection();
-                server.register({ register: Nes, options: {} }, function (err) {
+                server.register({ register: Nes, options: { auth: false } }, function (err) {
 
                     expect(err).to.not.exist();
 
@@ -392,7 +392,7 @@ describe('Browser', function () {
 
                 var server = new Hapi.Server();
                 server.connection();
-                server.register({ register: Nes, options: {} }, function (err) {
+                server.register({ register: Nes, options: { auth: false } }, function (err) {
 
                     expect(err).to.not.exist();
 
@@ -439,7 +439,7 @@ describe('Browser', function () {
 
                 var server = new Hapi.Server();
                 server.connection();
-                server.register({ register: Nes, options: {} }, function (err) {
+                server.register({ register: Nes, options: { auth: false } }, function (err) {
 
                     expect(err).to.not.exist();
 
@@ -486,7 +486,7 @@ describe('Browser', function () {
 
                 var server = new Hapi.Server();
                 server.connection();
-                server.register({ register: Nes, options: {} }, function (err) {
+                server.register({ register: Nes, options: { auth: false } }, function (err) {
 
                     expect(err).to.not.exist();
 
@@ -538,7 +538,7 @@ describe('Browser', function () {
 
                 var server = new Hapi.Server();
                 server.connection();
-                server.register({ register: Nes, options: {} }, function (err) {
+                server.register({ register: Nes, options: { auth: false } }, function (err) {
 
                     expect(err).to.not.exist();
 
@@ -571,7 +571,7 @@ describe('Browser', function () {
 
                 var server = new Hapi.Server();
                 server.connection();
-                server.register({ register: Nes, options: {} }, function (err) {
+                server.register({ register: Nes, options: { auth: false } }, function (err) {
 
                     expect(err).to.not.exist();
 
@@ -603,7 +603,7 @@ describe('Browser', function () {
 
                 var server = new Hapi.Server();
                 server.connection();
-                server.register({ register: Nes, options: {} }, function (err) {
+                server.register({ register: Nes, options: { auth: false } }, function (err) {
 
                     expect(err).to.not.exist();
 
@@ -638,7 +638,7 @@ describe('Browser', function () {
 
                 var server = new Hapi.Server();
                 server.connection();
-                server.register({ register: Nes, options: {} }, function (err) {
+                server.register({ register: Nes, options: { auth: false } }, function (err) {
 
                     expect(err).to.not.exist();
 
@@ -684,7 +684,7 @@ describe('Browser', function () {
 
                 var server = new Hapi.Server();
                 server.connection();
-                server.register({ register: Nes, options: {} }, function (err) {
+                server.register({ register: Nes, options: { auth: false } }, function (err) {
 
                     expect(err).to.not.exist();
 
@@ -716,7 +716,7 @@ describe('Browser', function () {
 
                 var server = new Hapi.Server();
                 server.connection();
-                server.register({ register: Nes, options: {} }, function (err) {
+                server.register({ register: Nes, options: { auth: false } }, function (err) {
 
                     expect(err).to.not.exist();
 
@@ -741,7 +741,7 @@ describe('Browser', function () {
 
                 var server = new Hapi.Server();
                 server.connection();
-                server.register({ register: Nes, options: {} }, function (err) {
+                server.register({ register: Nes, options: { auth: false } }, function (err) {
 
                     expect(err).to.not.exist();
 
@@ -771,7 +771,7 @@ describe('Browser', function () {
 
                 var server = new Hapi.Server();
                 server.connection();
-                server.register({ register: Nes, options: {} }, function (err) {
+                server.register({ register: Nes, options: { auth: false } }, function (err) {
 
                     expect(err).to.not.exist();
 
@@ -841,7 +841,7 @@ describe('Browser', function () {
 
                 var server = new Hapi.Server();
                 server.connection();
-                server.register({ register: Nes, options: {} }, function (err) {
+                server.register({ register: Nes, options: { auth: false } }, function (err) {
 
                     expect(err).to.not.exist();
 

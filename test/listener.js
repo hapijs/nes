@@ -28,7 +28,7 @@ describe('Listener', function () {
 
             var server = new Hapi.Server();
             server.connection();
-            server.register({ register: Nes, options: {} }, function (err) {
+            server.register({ register: Nes, options: { auth: false } }, function (err) {
 
                 expect(err).to.not.exist();
 
@@ -55,7 +55,7 @@ describe('Listener', function () {
 
             var server = new Hapi.Server();
             server.connection();
-            server.register({ register: Nes, options: {} }, function (err) {
+            server.register({ register: Nes, options: { auth: false } }, function (err) {
 
                 expect(err).to.not.exist();
 
@@ -84,7 +84,7 @@ describe('Listener', function () {
             var server = new Hapi.Server();
             var client;
             server.connection();
-            server.register({ register: Nes, options: {} }, function (err) {
+            server.register({ register: Nes, options: { auth: false } }, function (err) {
 
                 expect(err).to.not.exist();
 
@@ -117,7 +117,7 @@ describe('Listener', function () {
 
             var server = new Hapi.Server();
             server.connection();
-            server.register({ register: Nes, options: {} }, function (err) {
+            server.register({ register: Nes, options: { auth: false } }, function (err) {
 
                 expect(err).to.not.exist();
                 server.connection();
@@ -153,7 +153,7 @@ describe('Listener', function () {
 
             var server = new Hapi.Server();
             server.connection();
-            server.register({ register: Nes, options: {} }, function (err) {
+            server.register({ register: Nes, options: { auth: false } }, function (err) {
 
                 expect(err).to.not.exist();
                 server.publish('/', 'ignored');
@@ -165,7 +165,7 @@ describe('Listener', function () {
 
             var server = new Hapi.Server();
             server.connection();
-            server.register({ register: Nes, options: {} }, function (err) {
+            server.register({ register: Nes, options: { auth: false } }, function (err) {
 
                 expect(err).to.not.exist();
                 expect(function () {
@@ -180,7 +180,7 @@ describe('Listener', function () {
 
             var server = new Hapi.Server();
             server.connection();
-            server.register({ register: Nes, options: {} }, function (err) {
+            server.register({ register: Nes, options: { auth: false } }, function (err) {
 
                 expect(err).to.not.exist();
                 expect(function () {

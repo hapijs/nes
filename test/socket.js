@@ -29,7 +29,7 @@ describe('Socket', function () {
             var server = new Hapi.Server();
             var client;
             server.connection();
-            server.register({ register: Nes, options: {} }, function (err) {
+            server.register({ register: Nes, options: { auth: false } }, function (err) {
 
                 expect(err).to.not.exist();
 
@@ -62,7 +62,7 @@ describe('Socket', function () {
 
             var server = new Hapi.Server();
             server.connection();
-            server.register({ register: Nes, options: {} }, function (err) {
+            server.register({ register: Nes, options: { auth: false } }, function (err) {
 
                 expect(err).to.not.exist();
 
@@ -102,7 +102,7 @@ describe('Socket', function () {
 
             var server = new Hapi.Server();
             server.connection();
-            server.register({ register: Nes, options: {} }, function (err) {
+            server.register({ register: Nes, options: { auth: false } }, function (err) {
 
                 expect(err).to.not.exist();
 
@@ -140,7 +140,7 @@ describe('Socket', function () {
 
             var server = new Hapi.Server();
             server.connection();
-            server.register({ register: Nes, options: {} }, function (err) {
+            server.register({ register: Nes, options: { auth: false } }, function (err) {
 
                 expect(err).to.not.exist();
 
@@ -178,7 +178,7 @@ describe('Socket', function () {
 
             var server = new Hapi.Server();
             server.connection();
-            server.register({ register: Nes, options: {} }, function (err) {
+            server.register({ register: Nes, options: { auth: false } }, function (err) {
 
                 expect(err).to.not.exist();
 
@@ -234,7 +234,7 @@ describe('Socket', function () {
                 server.stop(done);
             };
 
-            server.register({ register: Nes, options: { onUnknownMessage: onUnknownMessage } }, function (err) {
+            server.register({ register: Nes, options: { onUnknownMessage: onUnknownMessage, auth: false } }, function (err) {
 
                 expect(err).to.not.exist();
 
@@ -265,7 +265,7 @@ describe('Socket', function () {
                 server.stop(done);
             };
 
-            server.register({ register: Nes, options: { onUnknownMessage: onUnknownMessage } }, function (err) {
+            server.register({ register: Nes, options: { onUnknownMessage: onUnknownMessage, auth: false } }, function (err) {
 
                 expect(err).to.not.exist();
 
@@ -312,7 +312,7 @@ describe('Socket', function () {
 
             var server = new Hapi.Server();
             server.connection();
-            server.register({ register: Nes, options: {} }, function (err) {
+            server.register({ register: Nes, options: { auth: false } }, function (err) {
 
                 expect(err).to.not.exist();
 
@@ -360,7 +360,7 @@ describe('Socket', function () {
 
             var server = new Hapi.Server();
             server.connection();
-            server.register({ register: Nes, options: {} }, function (err) {
+            server.register({ register: Nes, options: { auth: false } }, function (err) {
 
                 expect(err).to.not.exist();
 
@@ -408,7 +408,7 @@ describe('Socket', function () {
 
             var server = new Hapi.Server();
             server.connection();
-            server.register({ register: Nes, options: {} }, function (err) {
+            server.register({ register: Nes, options: { auth: false } }, function (err) {
 
                 expect(err).to.not.exist();
 
@@ -455,7 +455,7 @@ describe('Socket', function () {
 
             var server = new Hapi.Server();
             server.connection();
-            server.register({ register: Nes, options: {} }, function (err) {
+            server.register({ register: Nes, options: { auth: false } }, function (err) {
 
                 expect(err).to.not.exist();
 
