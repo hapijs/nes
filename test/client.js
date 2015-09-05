@@ -283,7 +283,7 @@ describe('Browser', function () {
                             client.request('/', function (err, payload, statusCode, headers) {
 
                                 expect(err).to.exist();
-                                expect(err.message).to.equal('Disconnected');
+                                expect(err.message).to.equal('Request failed - server disconnected');
 
                                 server.stop(done);
                             });
@@ -304,7 +304,7 @@ describe('Browser', function () {
                 client.request('/', function (err, payload, statusCode, headers) {
 
                     expect(err).to.exist();
-                    expect(err.message).to.equal('Disconnected');
+                    expect(err.message).to.equal('Failed to send message - server disconnected');
                     done();
                 });
             });
@@ -495,7 +495,7 @@ describe('Browser', function () {
                         path: '/',
                         handler: function (request, reply) {
 
-                            request.connection.plugins.nes._listener._sockets[0]._ws.send('{"id":1,"nes":"unknown","statusCode":200,"payload":"hello","headers":{}}');
+                            request.connection.plugins.nes._listener._sockets[0]._ws.send('{"id":2,"nes":"unknown","statusCode":200,"payload":"hello","headers":{}}');
 
                             setTimeout(function () {
 
@@ -528,6 +528,243 @@ describe('Browser', function () {
                             client.request('/', function (err, payload, statusCode, headers) { });
                         });
                     });
+                });
+            });
+        });
+
+        describe('subscribe()', function () {
+
+            it('subscribes to a channel', function (done) {
+
+                var server = new Hapi.Server();
+                server.connection();
+                server.register({ register: Nes, options: {} }, function (err) {
+
+                    expect(err).to.not.exist();
+
+                    server.start(function (err) {
+
+                        var client = new Nes.Client('http://localhost:' + server.info.port);
+                        client.connect(function () {
+
+                            client.subscribe('/', function (err, update) {
+
+                                expect(err).to.exist();
+                                client.disconnect();
+                                server.stop(done);
+                            });
+                        });
+                    });
+                });
+            });
+
+            it('subscribes and immediately unsubscribe to a channel (all handlers)', function (done) {
+
+                var server = new Hapi.Server();
+                server.connection();
+                server.register({ register: Nes, options: {} }, function (err) {
+
+                    expect(err).to.not.exist();
+
+                    server.start(function (err) {
+
+                        var client = new Nes.Client('http://localhost:' + server.info.port);
+                        client.connect(function () {
+
+                            client.subscribe('/', function (err, update) {
+
+                                throw new Error('Must not be called');
+                            });
+
+                            client.unsubscribe('/');
+
+                            setTimeout(function () {
+
+                                client.disconnect();
+                                server.stop(done);
+                            }, 20);
+                        });
+                    });
+                });
+            });
+
+            it('subscribes and immediately unsubscribe to a channel (single handler)', function (done) {
+
+                var server = new Hapi.Server();
+                server.connection();
+                server.register({ register: Nes, options: {} }, function (err) {
+
+                    expect(err).to.not.exist();
+
+                    server.start(function (err) {
+
+                        var client = new Nes.Client('http://localhost:' + server.info.port);
+                        client.connect(function () {
+
+                            var handler = function (err, update) {
+
+                                throw new Error('Must not be called');
+                            };
+
+                            client.subscribe('/', handler);
+                            client.unsubscribe('/', handler);
+
+                            setTimeout(function () {
+
+                                client.disconnect();
+                                server.stop(done);
+                            }, 20);
+                        });
+                    });
+                });
+            });
+
+            it('subscribes and unsubscribes to a channel before connecting', function (done) {
+
+                var client = new Nes.Client('http://localhost');
+
+                var handler1 = function () { };
+                var handler2 = function () { };
+                var handler3 = function () { };
+                var handler4 = function () { };
+
+                // Initial subscription
+
+                client.subscribe('/', handler1);
+                client.subscribe('/a', handler2);
+                client.subscribe('/a/b', handler3);
+                client.subscribe('/b/c', handler4);
+
+                // Ignore duplicates
+
+                client.subscribe('/', handler1);
+                client.subscribe('/a', handler2);
+                client.subscribe('/a/b', handler3);
+                client.subscribe('/b/c', handler4);
+
+                // Subscribe to some with additional handlers
+
+                client.subscribe('/a', handler1);
+                client.subscribe('/b/c', handler2);
+
+                // Unsubscribe initial set
+
+                client.unsubscribe('/', handler1);
+                client.unsubscribe('/a', handler2);
+                client.unsubscribe('/a/b', handler3);
+                client.unsubscribe('/b/c', handler4);
+
+                expect(client.subscriptions()).to.deep.equal(['/a', '/b/c']);
+                done();
+            });
+
+            it('errors on subscribe fail', function (done) {
+
+                var server = new Hapi.Server();
+                server.connection();
+                server.register({ register: Nes, options: {} }, function (err) {
+
+                    expect(err).to.not.exist();
+
+                    server.start(function (err) {
+
+                        var client = new Nes.Client('http://localhost:' + server.info.port);
+                        client.connect(function () {
+
+                            client.subscribe('/', function (err, update) {
+
+                                expect(err).to.exist();
+                                client.disconnect();
+                                server.stop(done);
+                            });
+
+                            client._ws.close();
+                        });
+                    });
+                });
+            });
+
+            it('errors on missing criterion', function (done) {
+
+                var client = new Nes.Client('http://localhost');
+
+                client.subscribe('', function (err, update) {
+
+                    expect(err).to.exist();
+                    expect(err.message).to.equal('Invalid criterion');
+                    done();
+                });
+            });
+
+            it('errors on invalid criterion', function (done) {
+
+                var client = new Nes.Client('http://localhost');
+
+                client.subscribe('asd', function (err, update) {
+
+                    expect(err).to.exist();
+                    expect(err.message).to.equal('Invalid criterion');
+                    done();
+                });
+            });
+        });
+
+        describe('unsubscribe()', function () {
+
+            it('drops all handlers', function (done) {
+
+                var client = new Nes.Client('http://localhost');
+
+                var handler1 = function () { };
+                var handler2 = function () { };
+
+                client.subscribe('/a/b', handler1);
+                client.subscribe('/a/b', handler2);
+
+                client.unsubscribe('/a/b');
+
+                expect(client.subscriptions()).to.be.empty();
+                done();
+            });
+
+            it('ignores unknown criterion', function (done) {
+
+                var client = new Nes.Client('http://localhost');
+
+                var handler1 = function () { };
+                var handler2 = function () { };
+
+                client.subscribe('/a/b', handler1);
+                client.subscribe('/b/c', handler2);
+
+                client.unsubscribe('/a/b/c', handler1);
+                client.unsubscribe('/b/c', handler1);
+
+                expect(client.subscriptions()).to.deep.equal(['/a/b', '/b/c']);
+                done();
+            });
+
+            it('errors on missing criterion', function (done) {
+
+                var client = new Nes.Client('http://localhost');
+
+                client.unsubscribe('', function (err, update) {
+
+                    expect(err).to.exist();
+                    expect(err.message).to.equal('Invalid criterion');
+                    done();
+                });
+            });
+
+            it('errors on invalid criterion', function (done) {
+
+                var client = new Nes.Client('http://localhost');
+
+                client.unsubscribe('asd', function (err, update) {
+
+                    expect(err).to.exist();
+                    expect(err.message).to.equal('Invalid criterion');
+                    done();
                 });
             });
         });

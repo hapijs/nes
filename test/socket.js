@@ -27,27 +27,25 @@ describe('Socket', function () {
         it('errors on invalid message', function (done) {
 
             var server = new Hapi.Server();
+            var client;
             server.connection();
             server.register({ register: Nes, options: {} }, function (err) {
 
                 expect(err).to.not.exist();
 
+                server.on('log', function (event, tags) {
+
+                    expect(event.data).to.equal('broadcast');
+                    client.disconnect();
+                    server.stop(done);
+                });
+
                 server.start(function (err) {
 
-                    var client = new Ws('http://localhost:' + server.info.port);
+                    client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect(function (err) {
 
-                    client.on('message', function (data, flags) {
-
-                        var message = JSON.parse(data);
-                        expect(message.statusCode).to.equal(500);
-                        expect(message.nes).to.equal('broadcast');
-
-                        client.close();
-                        server.stop(done);
-                    });
-
-                    client.on('open', function () {
-
+                        expect(err).to.not.exist();
                         var a = { b: 1 };
                         a.c = a;                    // Circular reference
 

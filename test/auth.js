@@ -376,7 +376,7 @@ describe('authentication', function () {
                         client.authenticate('', function (err) {
 
                             expect(err).to.exist();
-                            expect(err.message).to.equal('Authentication missing token');
+                            expect(err.message).to.equal('Authentication missing credentials');
 
                             client.disconnect();
                             server.stop(done);
@@ -553,6 +553,45 @@ describe('authentication', function () {
                                 client.disconnect();
                                 server.stop(done);
                             });
+                        }, 20);
+                    });
+                });
+            });
+        });
+
+        it('does not reconnect when auth fails', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom', true);
+
+            server.register({ register: Nes, options: { auth: { type: 'direct', password: 'password' } } }, function (err) {
+
+                expect(err).to.not.exist();
+                server.start(function (err) {
+
+                    var client = new Nes.Client('http://localhost:' + server.info.port);
+
+                    var c = 0;
+                    client.onConnect = function () {
+
+                        ++c;
+                    };
+
+                    expect(c).to.equal(0);
+                    client.connect({ delay: 10, auth: { headers: { authorization: 'Custom steve' } } }, function (err) {
+
+                        expect(c).to.equal(0);
+
+                        client._ws.close();
+                        setTimeout(function () {
+
+                            expect(c).to.equal(0);
+
+                            client.disconnect();
+                            server.stop(done);
                         }, 20);
                     });
                 });
