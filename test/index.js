@@ -57,4 +57,38 @@ describe('register()', function () {
             });
         });
     });
+
+    it('calls onConnect callback', function (done) {
+
+        var client;
+
+        var onConnect = function (ws) {
+
+            expect(ws).to.exist();
+            client.disconnect();
+            server.stop(done);
+        };
+
+        var server = new Hapi.Server();
+        server.connection();
+        server.register({ register: Nes, options: { onConnect: onConnect } }, function (err) {
+
+            expect(err).to.not.exist();
+
+            server.route({
+                method: 'GET',
+                path: '/',
+                handler: function (request, reply) {
+
+                    return reply('hello');
+                }
+            });
+
+            server.start(function (err) {
+
+                client = new Nes.Client('http://localhost:' + server.info.port);
+                client.connect(function () { });
+            });
+        });
+    });
 });
