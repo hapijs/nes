@@ -657,6 +657,83 @@ describe('authentication', function () {
                 });
             });
         });
+
+        it('subscribes to a path', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom', true);
+
+            server.register({ register: Nes, options: { auth: { type: 'direct', password: 'password' } } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.subscription('/', { auth: true });
+
+                server.start(function (err) {
+
+                    var client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect({ auth: { headers: { authorization: 'Custom john' } } }, function (err) {
+
+                        expect(err).to.not.exist();
+                        client.subscribe('/', function (err, update) {
+
+                            expect(client.subscriptions()).to.deep.equal(['/']);
+                            expect(err).to.not.exist();
+                            expect(update).to.equal('heya');
+                            client.disconnect();
+                            server.stop(done);
+                        });
+
+                        setTimeout(function () {
+
+                            server.publish('/', 'heya');
+                        }, 10);
+                    });
+                });
+            });
+        });
+
+        it('errors on missing auth to subscribes', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom', true);
+
+            server.register({ register: Nes, options: { auth: { type: 'direct', password: 'password' } } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.subscription('/', { auth: true });
+
+                server.start(function (err) {
+
+                    var client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect(function (err) {
+
+                        expect(err).to.not.exist();
+                        client.subscribe('/', function (err, update) {
+
+                            expect(client.subscriptions()).to.deep.equal([]);
+                            expect(err).to.exist();
+                            expect(err.message).to.equal('Unauthorized');
+
+                            client.disconnect();
+                            server.stop(done);
+                        });
+
+                        setTimeout(function () {
+
+                            server.publish('/', 'heya');
+                        }, 10);
+                    });
+                });
+            });
+        });
     });
 });
 
