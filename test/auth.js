@@ -34,7 +34,7 @@ describe('authentication', function () {
             server.auth.scheme('custom', internals.implementation);
             server.auth.strategy('default', 'custom', true);
 
-            server.register({ register: Nes, options: { auth: { password: 'password' } } }, function (err) {
+            server.register({ register: Nes, options: {} }, function (err) {
 
                 expect(err).to.not.exist();
 
