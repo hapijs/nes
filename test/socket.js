@@ -503,7 +503,7 @@ describe('Socket', function () {
 
         it('calls onMessage callback', function (done) {
 
-            var onMessage = function (message, reply) {
+            var onMessage = function (socket, message, reply) {
 
                 expect(message).to.equal('winning');
                 reply('hello');
@@ -536,7 +536,7 @@ describe('Socket', function () {
 
             var client;
 
-            var onMessage = function (message, reply) {
+            var onMessage = function (socket, message, reply) {
 
                 expect(message).to.equal('winning');
                 reply(new Error('failed'));
