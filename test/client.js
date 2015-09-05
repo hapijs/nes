@@ -32,7 +32,7 @@ describe('Browser', function () {
                 client.connect(function (err) {
 
                     expect(err).to.exist();
-                    expect(err.message).to.equal('getaddrinfo ENOTFOUND');
+                    expect(err.message).to.match(/getaddrinfo ENOTFOUND/);
                     done();
                 });
             });
@@ -384,6 +384,126 @@ describe('Browser', function () {
                     });
                 });
             });
+
+            it('ignores incoming message with unknown type', function (done) {
+
+                var server = new Hapi.Server();
+                server.connection();
+                server.register({ register: Nes, options: {} }, function (err) {
+
+                    expect(err).to.not.exist();
+
+                    server.route({
+                        method: 'GET',
+                        path: '/',
+                        handler: function (request, reply) {
+
+                            request.connection.plugins.nes._listener._sockets[0]._ws.send('{"id":1,"nes":"auth","statusCode":200,"payload":"hello","headers":{}}');
+
+                            setTimeout(function () {
+
+                                return reply('hello');
+                            }, 10);
+                        }
+                    });
+
+                    server.start(function (err) {
+
+                        var client = new Nes.Client('http://localhost:' + server.info.port);
+
+                        var logged;
+                        client.onError = function (err) {
+
+                            if (!logged) {
+                                logged = err.message;
+                                return;
+                            }
+
+                            expect(logged).to.equal('Received unexpected response type: auth');
+                            expect(err.message).to.equal('Received response for missing request');
+
+                            client.disconnect();
+                            server.stop(done);
+                        };
+
+                        client.connect(function () {
+
+                            client.request('/', function (err, payload, statusCode, headers) { });
+                        });
+                    });
+                });
+            });
+        });
+
+        describe('authenticate', function () {
+
+            it('errors when disconnected', function (done) {
+
+                var client = new Nes.Client();
+
+                client.authenticate('/', function (err, payload, statusCode, headers) {
+
+                    expect(err).to.exist();
+                    expect(err.message).to.equal('Disconnected');
+                    done();
+                });
+            });
+
+            it('ignores incoming message with unknown type', function (done) {
+
+                var server = new Hapi.Server();
+                server.connection();
+                server.register({ register: Nes, options: { auth: { type: 'token', password: 'password' } } }, function (err) {
+
+                    expect(err).to.not.exist();
+
+                    server.route({
+                        method: 'GET',
+                        path: '/',
+                        handler: function (request, reply) {
+
+                            reply('hello');
+
+                            setTimeout(function () {
+
+                                request.connection.plugins.nes._listener._sockets[0]._ws.send('{"id":1,"nes":"auth","statusCode":200,"payload":"hello","headers":{}}');
+                            }, 10);
+                        }
+                    });
+
+                    server.start(function (err) {
+
+                        var client = new Nes.Client('http://localhost:' + server.info.port);
+
+                        var logged;
+                        client.onError = function (err) {
+
+                            if (!logged) {
+                                logged = err.message;
+                                return;
+                            }
+
+                            expect(logged).to.equal('Received unexpected response type: response');
+                            expect(err.message).to.equal('Received response for missing request');
+
+                            client.disconnect();
+                            server.stop(done);
+                        };
+
+                        var $send = client._send;
+                        client._send = function (request, callback) {
+
+                            // Corrupt the stream
+                            $send.call(client, { nes: 'request', method: 'get', path: '/' }, callback);
+                        };
+
+                        client.connect(function () {
+
+                            client.authenticate('/', function (err, payload, statusCode, headers) { });
+                        });
+                    });
+                });
+            });
         });
 
         describe('_onMessage', function () {
@@ -477,55 +597,6 @@ describe('Browser', function () {
                                 client.disconnect();
                                 server.stop(done);
                             });
-                        });
-                    });
-                });
-            });
-
-            it('ignores incoming message with unknown type', function (done) {
-
-                var server = new Hapi.Server();
-                server.connection();
-                server.register({ register: Nes, options: {} }, function (err) {
-
-                    expect(err).to.not.exist();
-
-                    server.route({
-                        method: 'GET',
-                        path: '/',
-                        handler: function (request, reply) {
-
-                            request.connection.plugins.nes._listener._sockets[0]._ws.send('{"id":1,"nes":"unknown","statusCode":200,"payload":"hello","headers":{}}');
-
-                            setTimeout(function () {
-
-                                return reply('hello');
-                            }, 10);
-                        }
-                    });
-
-                    server.start(function (err) {
-
-                        var client = new Nes.Client('http://localhost:' + server.info.port);
-
-                        var logged;
-                        client.onError = function (err) {
-
-                            if (!logged) {
-                                logged = err.message;
-                                return;
-                            }
-
-                            expect(logged).to.equal('Received unknown response type: unknown');
-                            expect(err.message).to.equal('Received response for missing request');
-
-                            client.disconnect();
-                            server.stop(done);
-                        };
-
-                        client.connect(function () {
-
-                            client.request('/', function (err, payload, statusCode, headers) { });
                         });
                     });
                 });
