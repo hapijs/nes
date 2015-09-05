@@ -542,7 +542,7 @@ describe('Browser', function () {
 
                     expect(err).to.not.exist();
 
-                    server.subscription('/');
+                    server.subscription('/', {});
 
                     server.start(function (err) {
 
@@ -551,6 +551,7 @@ describe('Browser', function () {
 
                             client.subscribe('/', function (err, update) {
 
+                                expect(client.subscriptions()).to.deep.equal(['/']);
                                 expect(err).to.not.exist();
                                 expect(update).to.equal('heya');
                                 client.disconnect();
@@ -561,6 +562,38 @@ describe('Browser', function () {
 
                                 server.publish('/', 'heya');
                             }, 10);
+                        });
+                    });
+                });
+            });
+
+            it('subscribes to a unknown path (pre connect)', function (done) {
+
+                var server = new Hapi.Server();
+                server.connection();
+                server.register({ register: Nes, options: {} }, function (err) {
+
+                    expect(err).to.not.exist();
+
+                    server.subscription('/');
+
+                    server.start(function (err) {
+
+                        var client = new Nes.Client('http://localhost:' + server.info.port);
+
+                        client.subscribe('/b', function (err, update) {
+
+                            expect(err).to.exist();
+                            expect(err.message).to.equal('Not Found');
+                            expect(client.subscriptions()).to.be.empty();
+
+                            client.disconnect();
+                            server.stop(done);
+                        });
+
+                        client.connect(function (err) {
+
+                            expect(err).to.not.exist();
                         });
                     });
                 });
@@ -642,6 +675,38 @@ describe('Browser', function () {
                                     }, 10);
                                 }, 10);
                             });
+                        });
+                    });
+                });
+            });
+
+            it('ignores publish to a unknown path', function (done) {
+
+                var server = new Hapi.Server();
+                server.connection();
+                server.register({ register: Nes, options: {} }, function (err) {
+
+                    expect(err).to.not.exist();
+
+                    server.subscription('/');
+
+                    server.start(function (err) {
+
+                        var client = new Nes.Client('http://localhost:' + server.info.port);
+                        client.connect(function () {
+
+                            client.subscribe('/', function (err, update) { });
+                            delete client._subscriptions['/'];
+
+                            setTimeout(function () {
+
+                                server.publish('/', 'heya');
+                                setTimeout(function () {
+
+                                    client.disconnect();
+                                    server.stop(done);
+                                }, 10);
+                            }, 10);
                         });
                     });
                 });
