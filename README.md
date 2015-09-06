@@ -11,5 +11,45 @@ Lead Maintainer - [Eran Hammer](https://github.com/hueniverse)
 
 ## Example
 
+### Server
+
 ```js
+var Hapi = require('hapi');
+var Nes = require('nes');
+
+var server = new Hapi.Server();
+server.connection();
+
+server.register(Nes, function (err) {
+
+    server.route({
+        method: 'GET',
+        path: '/hello',
+        config: {
+            id: 'hello',
+            handler: function (request, reply) {
+
+                return reply('world!');
+            }
+        }
+    });
+
+    server.start(function (err) { /* ... */ });
+});
+```
+
+### Client
+
+```js
+var Nes = require('nes');
+
+var client = new Nes.Client('ws://localhost');
+client.connect(function (err) {
+
+        client.request('/', function (err, payload) {
+
+            // payload -> 'world!'
+        });
+    });
+});
 ```
