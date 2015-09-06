@@ -77,6 +77,60 @@ describe('authentication', function () {
             });
         });
 
+        it('protects an endpoint (no default auth)', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom');
+
+            server.register({ register: Nes, options: { auth: { type: 'cookie', route: 'default' } } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.route({
+                    method: 'GET',
+                    path: '/',
+                    config: {
+                        auth: 'default',
+                        handler: function (request, reply) {
+
+                            return reply('hello');
+                        }
+                    }
+                });
+
+                server.start(function (err) {
+
+                    server.inject({ url: '/nes/auth', headers: { authorization: 'Custom john' } }, function (res) {
+
+                        expect(res.result.status).to.equal('authenticated');
+
+                        var header = res.headers['set-cookie'][0];
+                        var cookie = header.match(/(?:[^\x00-\x20\(\)<>@\,;\:\\"\/\[\]\?\=\{\}\x7F]+)\s*=\s*(?:([^\x00-\x20\"\,\;\\\x7F]*))/);
+
+                        var client = new Nes.Client('http://localhost:' + server.info.port, { headers: { cookie: 'nes=' + cookie[1] } });
+                        client.connect(function (err) {
+
+                            expect(err).to.not.exist();
+                            client.request('/', function (err, payload, statusCode, headers) {
+
+                                expect(payload).to.equal('hello');
+                                expect(statusCode).to.equal(200);
+                                expect(headers).to.contain({
+                                    'content-type': 'text/html; charset=utf-8'
+                                });
+
+                                client.disconnect();
+                                server.stop(done);
+                            });
+                        });
+                    });
+                });
+            });
+        });
+
         it('errors on missing auth on an authentication endpoint', function (done) {
 
             var server = new Hapi.Server();

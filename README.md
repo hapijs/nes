@@ -73,6 +73,7 @@ server.register(Nes, function (err) {
     server.start(function (err) {
     
         server.publish('/item/5', { id: 5, status: 'complete' });
+        server.publish('/item/6', { id: 6, status: 'initial' });
     });
 });
 ```
@@ -88,6 +89,7 @@ client.connect(function (err) {
     client.subscribe('/item/5', function (err, update) {
 
         // update -> { id: 5, status: 'complete' }
+        // Second publish is not received (doesn't match)
     });
 });
 ```
@@ -140,7 +142,7 @@ var Nes = require('nes');
 var server = new Hapi.Server();
 server.connection();
 
-server.register(Basic, Nes, function (err) {
+server.register([Basic, Nes], function (err) {
 
     // Setup HTTP Basic authentication
 
@@ -166,7 +168,7 @@ server.register(Basic, Nes, function (err) {
         });
     };
     
-    server.auth.strategy('simple', 'basic', { validateFunc: validate });
+    server.auth.strategy('simple', 'basic', 'required', { validateFunc: validate });
     
     // Configure route with authentication
     
@@ -175,7 +177,6 @@ server.register(Basic, Nes, function (err) {
         path: '/h',
         config: {
             id: 'hello',
-            auth: 'simple',
             handler: function (request, reply) {
 
                 return reply('Hello ' + request.auth.credentials.name);
