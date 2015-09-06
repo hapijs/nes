@@ -221,68 +221,6 @@ describe('Socket', function () {
             });
         });
 
-        it('invokes callback on invalid request message', function (done) {
-
-            var server = new Hapi.Server();
-            server.connection();
-
-            var client;
-            var onUnknownMessage = function (message, ws) {
-
-                expect(message).to.equal('some message');
-                client.close();
-                server.stop(done);
-            };
-
-            server.register({ register: Nes, options: { onUnknownMessage: onUnknownMessage, auth: false } }, function (err) {
-
-                expect(err).to.not.exist();
-
-                server.start(function (err) {
-
-                    client = new Ws('http://localhost:' + server.info.port);
-                    client.on('open', function () {
-
-                        client.send('some message', function (err) {
-
-                            expect(err).to.not.exist();
-                        });
-                    });
-                });
-            });
-        });
-
-        it('invokes callback on request message missing nes', function (done) {
-
-            var server = new Hapi.Server();
-            server.connection();
-
-            var client;
-            var onUnknownMessage = function (message, ws) {
-
-                expect(message).to.equal('{"a":"b"}');
-                client.close();
-                server.stop(done);
-            };
-
-            server.register({ register: Nes, options: { onUnknownMessage: onUnknownMessage, auth: false } }, function (err) {
-
-                expect(err).to.not.exist();
-
-                server.start(function (err) {
-
-                    client = new Ws('http://localhost:' + server.info.port);
-                    client.on('open', function () {
-
-                        client.send('{"a":"b"}', function (err) {
-
-                            expect(err).to.not.exist();
-                        });
-                    });
-                });
-            });
-        });
-
         it('errors on auth endpoint request', function (done) {
 
             var server = new Hapi.Server();
@@ -339,7 +277,7 @@ describe('Socket', function () {
                         });
 
                         expect(message.statusCode).to.equal(400);
-                        expect(message.nes).to.equal('response');
+                        expect(message.type).to.equal('response');
 
                         client.close();
                         server.stop(done);
@@ -347,7 +285,7 @@ describe('Socket', function () {
 
                     client.on('open', function () {
 
-                        client.send(JSON.stringify({ nes: 'request', method: 'GET', path: '/' }), function (err) {
+                        client.send(JSON.stringify({ type: 'request', method: 'GET', path: '/' }), function (err) {
 
                             expect(err).to.not.exist();
                         });
@@ -387,7 +325,7 @@ describe('Socket', function () {
                         });
 
                         expect(message.statusCode).to.equal(400);
-                        expect(message.nes).to.equal('response');
+                        expect(message.type).to.equal('response');
 
                         client.close();
                         server.stop(done);
@@ -395,7 +333,7 @@ describe('Socket', function () {
 
                     client.on('open', function () {
 
-                        client.send(JSON.stringify({ id: 1, nes: 'request', path: '/' }), function (err) {
+                        client.send(JSON.stringify({ id: 1, type: 'request', path: '/' }), function (err) {
 
                             expect(err).to.not.exist();
                         });
@@ -442,7 +380,7 @@ describe('Socket', function () {
 
                     client.on('open', function () {
 
-                        client.send(JSON.stringify({ id: 1, nes: 'request', method: 'GET' }), function (err) {
+                        client.send(JSON.stringify({ id: 1, type: 'request', method: 'GET' }), function (err) {
 
                             expect(err).to.not.exist();
                         });
@@ -489,7 +427,7 @@ describe('Socket', function () {
 
                     client.on('open', function () {
 
-                        client.send(JSON.stringify({ id: 1, nes: 'unknown' }), function (err) {
+                        client.send(JSON.stringify({ id: 1, type: 'unknown' }), function (err) {
 
                             expect(err).to.not.exist();
                         });
