@@ -149,6 +149,41 @@ describe('Listener', function () {
 
     describe('publish()', function () {
 
+        it('publishes to a parameterized path', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+
+            server.register({ register: Nes, options: { auth: false } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.subscription('/a/{id}');
+
+                server.start(function (err) {
+
+                    var client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect(function (err) {
+
+                        expect(err).to.not.exist();
+                        client.subscribe('/a/b', function (err, update) {
+
+                            expect(err).to.not.exist();
+                            expect(update).to.equal('2');
+                            client.disconnect();
+                            server.stop(done);
+                        });
+
+                        setTimeout(function () {
+
+                            server.publish('/a/a', '1');
+                            server.publish('/a/b', '2');
+                        }, 10);
+                    });
+                });
+            });
+        });
+
         it('ignores unknown path', function (done) {
 
             var server = new Hapi.Server();
