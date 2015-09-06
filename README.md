@@ -9,3 +9,7 @@ flexible and organic extension.
 
 Lead Maintainer - [Eran Hammer](https://github.com/hueniverse)
 
+## Example
+
+```js
+```

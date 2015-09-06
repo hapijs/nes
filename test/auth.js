@@ -34,7 +34,7 @@ describe('authentication', function () {
             server.auth.scheme('custom', internals.implementation);
             server.auth.strategy('default', 'custom', true);
 
-            server.register({ register: Nes, options: {} }, function (err) {
+            server.register({ register: Nes, options: { auth: { type: 'cookie' } } }, function (err) {
 
                 expect(err).to.not.exist();
 
@@ -85,7 +85,7 @@ describe('authentication', function () {
             server.auth.scheme('custom', internals.implementation);
             server.auth.strategy('default', 'custom', true);
 
-            server.register({ register: Nes, options: { auth: { password: 'password', route: { mode: 'optional' } } } }, function (err) {
+            server.register({ register: Nes, options: { auth: { type: 'cookie', password: 'password', route: { mode: 'optional' } } } }, function (err) {
 
                 expect(err).to.not.exist();
 
@@ -129,7 +129,7 @@ describe('authentication', function () {
             server.auth.scheme('custom', internals.implementation);
             server.auth.strategy('default', 'custom', true);
 
-            server.register({ register: Nes, options: { auth: { password: 'password', route: { mode: 'optional' } } } }, function (err) {
+            server.register({ register: Nes, options: { auth: { type: 'cookie', password: 'password', route: { mode: 'optional' } } } }, function (err) {
 
                 expect(err).to.not.exist();
 
@@ -173,7 +173,7 @@ describe('authentication', function () {
             server.auth.scheme('custom', internals.implementation);
             server.auth.strategy('default', 'custom', true);
 
-            server.register({ register: Nes, options: { auth: { password: 'password', path: '/nes/xyz' } } }, function (err) {
+            server.register({ register: Nes, options: { auth: { type: 'cookie', password: 'password', path: '/nes/xyz' } } }, function (err) {
 
                 expect(err).to.not.exist();
 
@@ -456,7 +456,7 @@ describe('authentication', function () {
             server.auth.scheme('custom', internals.implementation);
             server.auth.strategy('default', 'custom', true);
 
-            server.register({ register: Nes, options: { auth: { type: 'direct', password: 'password' } } }, function (err) {
+            server.register(Nes, function (err) {
 
                 expect(err).to.not.exist();
 
