@@ -696,6 +696,49 @@ describe('authentication', function () {
             });
         });
 
+        it('subscribes to a path with filter', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom', true);
+
+            server.register({ register: Nes, options: { auth: { type: 'direct', password: 'password' } } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                var filter = function (path, update, options, next) {
+
+                    return next(options.credentials.id === update);
+                };
+
+                server.subscription('/', { filter: filter });
+
+                server.start(function (err) {
+
+                    var client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect({ auth: { headers: { authorization: 'Custom john' } } }, function (err) {
+
+                        expect(err).to.not.exist();
+                        client.subscribe('/', function (err, update) {
+
+                            expect(err).to.not.exist();
+                            expect(update).to.equal('john');
+                            client.disconnect();
+                            server.stop(done);
+                        });
+
+                        setTimeout(function () {
+
+                            server.publish('/', 'steve');
+                            server.publish('/', 'john');
+                        }, 10);
+                    });
+                });
+            });
+        });
+
         it('errors on missing auth to subscribe (default)', function (done) {
 
             var server = new Hapi.Server();
