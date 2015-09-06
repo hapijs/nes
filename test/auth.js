@@ -553,7 +553,7 @@ describe('authentication', function () {
                                 client.disconnect();
                                 server.stop(done);
                             });
-                        }, 20);
+                        }, 30);
                     });
                 });
             });
@@ -696,7 +696,7 @@ describe('authentication', function () {
             });
         });
 
-        it('errors on missing auth to subscribe', function (done) {
+        it('errors on missing auth to subscribe (default)', function (done) {
 
             var server = new Hapi.Server();
             server.connection();
@@ -734,6 +734,591 @@ describe('authentication', function () {
                 });
             });
         });
+
+        it('errors on missing auth to subscribe (config)', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom');
+
+            server.register({ register: Nes, options: { auth: { type: 'direct', password: 'password' } } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.subscription('/', { auth: { mode: 'required' } });
+
+                server.start(function (err) {
+
+                    var client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect(function (err) {
+
+                        expect(err).to.not.exist();
+                        client.subscribe('/', function (err, update) {
+
+                            expect(err).to.exist();
+                            expect(err.message).to.equal('Unauthorized');
+                            expect(client.subscriptions()).to.deep.equal([]);
+
+                            client.disconnect();
+                            server.stop(done);
+                        });
+
+                        setTimeout(function () {
+
+                            server.publish('/', 'heya');
+                        }, 10);
+                    });
+                });
+            });
+        });
+
+        it('does not require auth to subscribe without a default', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom');
+
+            server.register({ register: Nes, options: { auth: { type: 'direct', password: 'password' } } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.subscription('/');
+
+                server.start(function (err) {
+
+                    var client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect(function (err) {
+
+                        expect(err).to.not.exist();
+                        client.subscribe('/', function (err, update) {
+
+                            expect(err).to.not.exist();
+                            expect(update).to.equal('heya');
+                            expect(client.subscriptions()).to.deep.equal(['/']);
+
+                            client.disconnect();
+                            server.stop(done);
+                        });
+
+                        setTimeout(function () {
+
+                            server.publish('/', 'heya');
+                        }, 10);
+                    });
+                });
+            });
+        });
+
+        it('does not require auth to subscribe with optional auth', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom', 'optional');
+
+            server.register({ register: Nes, options: { auth: { type: 'direct', password: 'password' } } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.subscription('/');
+
+                server.start(function (err) {
+
+                    var client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect(function (err) {
+
+                        expect(err).to.not.exist();
+                        client.subscribe('/', function (err, update) {
+
+                            expect(err).to.not.exist();
+                            expect(update).to.equal('heya');
+                            expect(client.subscriptions()).to.deep.equal(['/']);
+
+                            client.disconnect();
+                            server.stop(done);
+                        });
+
+                        setTimeout(function () {
+
+                            server.publish('/', 'heya');
+                        }, 10);
+                    });
+                });
+            });
+        });
+
+        it('matches entity (user)', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom', true);
+
+            server.register({ register: Nes, options: { auth: { type: 'direct', password: 'password' } } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.subscription('/', { auth: { entity: 'user' } });
+
+                server.start(function (err) {
+
+                    var client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect({ auth: { headers: { authorization: 'Custom john' } } }, function (err) {
+
+                        expect(err).to.not.exist();
+                        client.subscribe('/', function (err, update) {
+
+                            expect(err).to.not.exist();
+                            expect(update).to.equal('heya');
+                            expect(client.subscriptions()).to.deep.equal(['/']);
+
+                            client.disconnect();
+                            server.stop(done);
+                        });
+
+                        setTimeout(function () {
+
+                            server.publish('/', 'heya');
+                        }, 10);
+                    });
+                });
+            });
+        });
+
+        it('matches entity (app)', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom', true);
+
+            server.register({ register: Nes, options: { auth: { type: 'direct', password: 'password' } } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.subscription('/', { auth: { entity: 'app' } });
+
+                server.start(function (err) {
+
+                    var client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect({ auth: { headers: { authorization: 'Custom app' } } }, function (err) {
+
+                        expect(err).to.not.exist();
+                        client.subscribe('/', function (err, update) {
+
+                            expect(err).to.not.exist();
+                            expect(update).to.equal('heya');
+                            expect(client.subscriptions()).to.deep.equal(['/']);
+
+                            client.disconnect();
+                            server.stop(done);
+                        });
+
+                        setTimeout(function () {
+
+                            server.publish('/', 'heya');
+                        }, 10);
+                    });
+                });
+            });
+        });
+
+        it('errors on wrong entity (user)', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom', true);
+
+            server.register({ register: Nes, options: { auth: { type: 'direct', password: 'password' } } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.subscription('/', { auth: { entity: 'app' } });
+
+                server.start(function (err) {
+
+                    var client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect({ auth: { headers: { authorization: 'Custom john' } } }, function (err) {
+
+                        expect(err).to.not.exist();
+                        client.subscribe('/', function (err, update) {
+
+                            expect(err).to.exist();
+                            expect(err.message).to.equal('User credentials cannot be used on an application subscription');
+                            expect(client.subscriptions()).to.deep.equal([]);
+
+                            client.disconnect();
+                            server.stop(done);
+                        });
+
+                        setTimeout(function () {
+
+                            server.publish('/', 'heya');
+                        }, 10);
+                    });
+                });
+            });
+        });
+
+        it('errors on wrong entity (app)', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom', true);
+
+            server.register({ register: Nes, options: { auth: { type: 'direct', password: 'password' } } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.subscription('/', { auth: { entity: 'user' } });
+
+                server.start(function (err) {
+
+                    var client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect({ auth: { headers: { authorization: 'Custom app' } } }, function (err) {
+
+                        expect(err).to.not.exist();
+                        client.subscribe('/', function (err, update) {
+
+                            expect(err).to.exist();
+                            expect(err.message).to.equal('Application credentials cannot be used on a user subscription');
+                            expect(client.subscriptions()).to.deep.equal([]);
+
+                            client.disconnect();
+                            server.stop(done);
+                        });
+
+                        setTimeout(function () {
+
+                            server.publish('/', 'heya');
+                        }, 10);
+                    });
+                });
+            });
+        });
+
+        it('matches scope (string/string)', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom', true);
+
+            server.register({ register: Nes, options: { auth: { type: 'direct', password: 'password' } } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.subscription('/', { auth: { scope: 'a' } });
+
+                server.start(function (err) {
+
+                    var client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect({ auth: { headers: { authorization: 'Custom john' } } }, function (err) {
+
+                        expect(err).to.not.exist();
+                        client.subscribe('/', function (err, update) {
+
+                            expect(err).to.not.exist();
+                            expect(update).to.equal('heya');
+                            expect(client.subscriptions()).to.deep.equal(['/']);
+
+                            client.disconnect();
+                            server.stop(done);
+                        });
+
+                        setTimeout(function () {
+
+                            server.publish('/', 'heya');
+                        }, 10);
+                    });
+                });
+            });
+        });
+
+        it('matches scope (array/string)', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom', true);
+
+            server.register({ register: Nes, options: { auth: { type: 'direct', password: 'password' } } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.subscription('/', { auth: { scope: ['x', 'a'] } });
+
+                server.start(function (err) {
+
+                    var client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect({ auth: { headers: { authorization: 'Custom john' } } }, function (err) {
+
+                        expect(err).to.not.exist();
+                        client.subscribe('/', function (err, update) {
+
+                            expect(err).to.not.exist();
+                            expect(update).to.equal('heya');
+                            expect(client.subscriptions()).to.deep.equal(['/']);
+
+                            client.disconnect();
+                            server.stop(done);
+                        });
+
+                        setTimeout(function () {
+
+                            server.publish('/', 'heya');
+                        }, 10);
+                    });
+                });
+            });
+        });
+
+        it('matches scope (string/array)', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom', true);
+
+            server.register({ register: Nes, options: { auth: { type: 'direct', password: 'password' } } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.subscription('/', { auth: { scope: 'a' } });
+
+                server.start(function (err) {
+
+                    var client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect({ auth: { headers: { authorization: 'Custom ed' } } }, function (err) {
+
+                        expect(err).to.not.exist();
+                        client.subscribe('/', function (err, update) {
+
+                            expect(err).to.not.exist();
+                            expect(update).to.equal('heya');
+                            expect(client.subscriptions()).to.deep.equal(['/']);
+
+                            client.disconnect();
+                            server.stop(done);
+                        });
+
+                        setTimeout(function () {
+
+                            server.publish('/', 'heya');
+                        }, 10);
+                    });
+                });
+            });
+        });
+
+        it('matches scope (array/array)', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom', true);
+
+            server.register({ register: Nes, options: { auth: { type: 'direct', password: 'password' } } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.subscription('/', { auth: { scope: ['b', 'a'] } });
+
+                server.start(function (err) {
+
+                    var client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect({ auth: { headers: { authorization: 'Custom ed' } } }, function (err) {
+
+                        expect(err).to.not.exist();
+                        client.subscribe('/', function (err, update) {
+
+                            expect(err).to.not.exist();
+                            expect(update).to.equal('heya');
+                            expect(client.subscriptions()).to.deep.equal(['/']);
+
+                            client.disconnect();
+                            server.stop(done);
+                        });
+
+                        setTimeout(function () {
+
+                            server.publish('/', 'heya');
+                        }, 10);
+                    });
+                });
+            });
+        });
+
+        it('matches scope (dynamic)', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom', true);
+
+            server.register({ register: Nes, options: { auth: { type: 'direct', password: 'password' } } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.subscription('/{id}', { auth: { scope: ['b', '{id}'] } });
+
+                server.start(function (err) {
+
+                    var client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect({ auth: { headers: { authorization: 'Custom ed' } } }, function (err) {
+
+                        expect(err).to.not.exist();
+                        client.subscribe('/5', function (err, update) {
+
+                            expect(err).to.not.exist();
+                            expect(update).to.equal('heya');
+                            expect(client.subscriptions()).to.deep.equal(['/5']);
+
+                            client.disconnect();
+                            server.stop(done);
+                        });
+
+                        setTimeout(function () {
+
+                            server.publish('/5', 'heya');
+                        }, 10);
+                    });
+                });
+            });
+        });
+
+        it('errors on wrong scope (string/string)', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom', true);
+
+            server.register({ register: Nes, options: { auth: { type: 'direct', password: 'password' } } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.subscription('/', { auth: { scope: 'b' } });
+
+                server.start(function (err) {
+
+                    var client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect({ auth: { headers: { authorization: 'Custom john' } } }, function (err) {
+
+                        expect(err).to.not.exist();
+                        client.subscribe('/', function (err, update) {
+
+                            expect(err).to.exist();
+                            expect(err.message).to.equal('Insufficient scope, expected any of: b');
+                            expect(client.subscriptions()).to.deep.equal([]);
+
+                            client.disconnect();
+                            server.stop(done);
+                        });
+
+                        setTimeout(function () {
+
+                            server.publish('/', 'heya');
+                        }, 10);
+                    });
+                });
+            });
+        });
+
+        it('errors on wrong scope (string/array)', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom', true);
+
+            server.register({ register: Nes, options: { auth: { type: 'direct', password: 'password' } } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.subscription('/', { auth: { scope: 'x' } });
+
+                server.start(function (err) {
+
+                    var client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect({ auth: { headers: { authorization: 'Custom ed' } } }, function (err) {
+
+                        expect(err).to.not.exist();
+                        client.subscribe('/', function (err, update) {
+
+                            expect(err).to.exist();
+                            expect(err.message).to.equal('Insufficient scope, expected any of: x');
+                            expect(client.subscriptions()).to.deep.equal([]);
+
+                            client.disconnect();
+                            server.stop(done);
+                        });
+
+                        setTimeout(function () {
+
+                            server.publish('/', 'heya');
+                        }, 10);
+                    });
+                });
+            });
+        });
+
+        it('errors on wrong scope (string/none)', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom', true);
+
+            server.register({ register: Nes, options: { auth: { type: 'direct', password: 'password' } } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.subscription('/', { auth: { scope: 'x' } });
+
+                server.start(function (err) {
+
+                    var client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect({ auth: { headers: { authorization: 'Custom app' } } }, function (err) {
+
+                        expect(err).to.not.exist();
+                        client.subscribe('/', function (err, update) {
+
+                            expect(err).to.exist();
+                            expect(err.message).to.equal('Insufficient scope, expected any of: x');
+                            expect(client.subscriptions()).to.deep.equal([]);
+
+                            client.disconnect();
+                            server.stop(done);
+                        });
+
+                        setTimeout(function () {
+
+                            server.publish('/', 'heya');
+                        }, 10);
+                    });
+                });
+            });
+        });
     });
 });
 
@@ -742,7 +1327,16 @@ internals.implementation = function (server, options) {
 
     var users = {
         john: {
-            id: 'john'
+            id: 'john',
+            user: true,
+            scope: 'a'
+        },
+        ed: {
+            id: 'ed',
+            scope: ['a', 'b', 5]
+        },
+        app: {
+            id: 'app'
         }
     };
 

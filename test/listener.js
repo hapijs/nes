@@ -191,4 +191,36 @@ describe('Listener', function () {
             });
         });
     });
+
+    describe('subscribe()', function () {
+
+        it('errors on path with query', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+            server.register({ register: Nes, options: { auth: false } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.subscription('/');
+
+                server.start(function (err) {
+
+                    var client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect(function (err) {
+
+                        expect(err).to.not.exist();
+                        client.subscribe('/?5', function (err, update) {
+
+                            expect(err).to.exist();
+                            expect(err.message).to.equal('Subscription path cannot contain query');
+
+                            client.disconnect();
+                            server.stop(done);
+                        });
+                    });
+                });
+            });
+        });
+    });
 });
