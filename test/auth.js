@@ -31,10 +31,10 @@ describe('authentication', function () {
             var server = new Hapi.Server();
             server.connection();
 
-            server.auth.scheme('custom', internals.implementation);
-            server.auth.strategy('default', 'custom', true);
-
             server.register({ register: Nes, options: { auth: { type: 'cookie' } } }, function (err) {
+
+                server.auth.scheme('custom', internals.implementation);
+                server.auth.strategy('default', 'custom', true);
 
                 expect(err).to.not.exist();
 

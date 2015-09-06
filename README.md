@@ -126,3 +126,78 @@ client.connect(function (err) {
     });
 });
 ```
+
+### Route authentication
+
+#### Server
+
+```js
+var Hapi = require('hapi');
+var Basic = require('hapi-auth-basic');
+var Bcrypt = require('bcrypt');
+var Nes = require('nes');
+
+var server = new Hapi.Server();
+server.connection();
+
+server.register(Basic, Nes, function (err) {
+
+    // Setup HTTP Basic authentication
+
+    var users = {
+        john: {
+            username: 'john',
+            password: '$2a$10$iqJSHD.BGr0E2IxQwYgJmeP3NvhPrXAeLSaGCj6IR/XU5QtjVu5Tm',   // 'secret'
+            name: 'John Doe',
+            id: '2133d32a'
+        }
+    };
+
+    var validate = function (request, username, password, callback) {
+
+        var user = users[username];
+        if (!user) {
+            return callback(null, false);
+        }
+
+        Bcrypt.compare(password, user.password, function (err, isValid) {
+
+            callback(err, isValid, { id: user.id, name: user.name });
+        });
+    };
+    
+    server.auth.strategy('simple', 'basic', { validateFunc: validate });
+    
+    // Configure route with authentication
+    
+    server.route({
+        method: 'GET',
+        path: '/h',
+        config: {
+            id: 'hello',
+            auth: 'simple',
+            handler: function (request, reply) {
+
+                return reply('Hello ' + request.auth.credentials.name);
+            }
+        }
+    });
+
+    server.start(function (err) { /* ... */ });
+});
+```
+
+#### Client
+
+```js
+var Nes = require('nes');
+
+var client = new Nes.Client('ws://localhost');
+client.connect({ headers: { authorization: 'Basic am9objpzZWNyZXQ=' } }, function (err) {
+
+    client.request('hello', function (err, payload) {   // Can also request '/h'
+
+        // payload -> 'Hello John Doe'
+    });
+});
+```
