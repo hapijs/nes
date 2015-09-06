@@ -4,7 +4,7 @@
 - [Server](#server)
     - [`server.broadcast(message)`](#serverbroadcastmessage)
     - [`server.subscription(path, [options])`](#serversubscriptionpath-options)
-    - [`server.publish(path, message)`](#serverpublishpathmessage)
+    - [`server.publish(path, message)`](#serverpublishpath-message)
 - [Client](#client)
     - [`new Client([options], callback)`](#new-clientoptions-callback)
 - [`client.onError`](#clientonerror)
