@@ -9,9 +9,11 @@ flexible and organic extension.
 
 Lead Maintainer - [Eran Hammer](https://github.com/hueniverse)
 
-## Example
+## Examples
 
-### Server
+### Route invocation
+
+#### Server
 
 ```js
 var Hapi = require('hapi');
@@ -38,7 +40,7 @@ server.register(Nes, function (err) {
 });
 ```
 
-### Client
+#### Client
 
 ```js
 var Nes = require('nes');
@@ -49,6 +51,78 @@ client.connect(function (err) {
     client.request('hello', function (err, payload) {   // Can also request '/h'
 
         // payload -> 'world!'
+    });
+});
+```
+
+### Subscriptions
+
+#### Server
+
+```js
+var Hapi = require('hapi');
+var Nes = require('nes');
+
+var server = new Hapi.Server();
+server.connection();
+
+server.register(Nes, function (err) {
+
+    server.subscription('/item/{id}');
+
+    server.start(function (err) {
+    
+        server.publish('/item/5', { id: 5, status: 'complete' });
+    });
+});
+```
+
+#### Client
+
+```js
+var Nes = require('nes');
+
+var client = new Nes.Client('ws://localhost');
+client.connect(function (err) {
+
+    client.subscribe('/item/5', function (err, update) {
+
+        // update -> { id: 5, status: 'complete' }
+    });
+});
+```
+
+### Broadcast
+
+#### Server
+
+```js
+var Hapi = require('hapi');
+var Nes = require('nes');
+
+var server = new Hapi.Server();
+server.connection();
+
+server.register(Nes, function (err) {
+
+    server.start(function (err) {
+    
+        server.broadcast('welcome!');
+    });
+});
+```
+
+#### Client
+
+```js
+var Nes = require('nes');
+
+var client = new Nes.Client('ws://localhost');
+client.connect(function (err) {
+
+    client.onBroadcast = function (update) {
+
+        // update -> 'welcome!'
     });
 });
 ```
