@@ -32,7 +32,7 @@ describe('Browser', function () {
                 client.connect(function (err) {
 
                     expect(err).to.exist();
-                    expect(err.message).to.equal('getaddrinfo ENOTFOUND');
+                    expect(err.message).to.match(/getaddrinfo ENOTFOUND/);
                     done();
                 });
             });
