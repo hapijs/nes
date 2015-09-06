@@ -498,4 +498,101 @@ describe('Socket', function () {
             });
         });
     });
+
+    describe('custom messages', function () {
+
+        it('calls onMessage callback', function (done) {
+
+            var onMessage = function (socket, message, reply) {
+
+                expect(message).to.equal('winning');
+                reply('hello');
+            };
+
+            var server = new Hapi.Server();
+            server.connection();
+            server.register({ register: Nes, options: { onMessage: onMessage } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.start(function (err) {
+
+                    var client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect(function () {
+
+                        client.message('winning', function (err, response) {
+
+                            expect(err).to.not.exist();
+                            expect(response).to.equal('hello');
+                            client.disconnect();
+                            server.stop(done);
+                        });
+                    });
+                });
+            });
+        });
+
+        it('it sends errors from callback', function (done) {
+
+            var client;
+
+            var onMessage = function (socket, message, reply) {
+
+                expect(message).to.equal('winning');
+                reply(new Error('failed'));
+            };
+
+            var server = new Hapi.Server();
+            server.connection();
+            server.register({ register: Nes, options: { onMessage: onMessage } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.start(function (err) {
+
+                    client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect(function () {
+
+                        client.message('winning', function (err, response) {
+
+                            expect(err).to.match(/failed/);
+                            expect(response).to.not.exist();
+                            client.disconnect();
+                            server.stop(done);
+                        });
+                    });
+                });
+            });
+        });
+
+        it('errors if missing onMessage callback', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+            server.register({ register: Nes, options: { } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.start(function (err) {
+
+                    var client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect(function () {
+
+                        client.message('winning', function (err, response) {
+
+                            expect(err).to.match(/Custom messages are not supported/);
+                            expect(response).to.deep.equal({
+                                statusCode: 422,
+                                error: 'Unprocessable Entity',
+                                message: 'Custom messages are not supported'
+                            });
+
+                            client.disconnect();
+                            server.stop(done);
+                        });
+                    });
+                });
+            });
+        });
+    });
 });
