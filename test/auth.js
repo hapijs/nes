@@ -670,7 +670,7 @@ describe('authentication', function () {
 
                 expect(err).to.not.exist();
 
-                server.subscription('/', { auth: true });
+                server.subscription('/');
 
                 server.start(function (err) {
 
@@ -696,7 +696,7 @@ describe('authentication', function () {
             });
         });
 
-        it('errors on missing auth to subscribes', function (done) {
+        it('errors on missing auth to subscribe', function (done) {
 
             var server = new Hapi.Server();
             server.connection();
@@ -708,7 +708,7 @@ describe('authentication', function () {
 
                 expect(err).to.not.exist();
 
-                server.subscription('/', { auth: true });
+                server.subscription('/');
 
                 server.start(function (err) {
 
@@ -718,9 +718,9 @@ describe('authentication', function () {
                         expect(err).to.not.exist();
                         client.subscribe('/', function (err, update) {
 
-                            expect(client.subscriptions()).to.deep.equal([]);
                             expect(err).to.exist();
                             expect(err.message).to.equal('Unauthorized');
+                            expect(client.subscriptions()).to.deep.equal([]);
 
                             client.disconnect();
                             server.stop(done);
