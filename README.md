@@ -24,7 +24,7 @@ server.register(Nes, function (err) {
 
     server.route({
         method: 'GET',
-        path: '/hello',
+        path: '/h',
         config: {
             id: 'hello',
             handler: function (request, reply) {
@@ -46,7 +46,7 @@ var Nes = require('nes');
 var client = new Nes.Client('ws://localhost');
 client.connect(function (err) {
 
-        client.request('/', function (err, payload) {
+        client.request('hello', function (err, payload) {   // Can also request '/h'
 
             // payload -> 'world!'
         });
