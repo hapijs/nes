@@ -15,6 +15,7 @@ Lead Maintainer - [Eran Hammer](https://github.com/hueniverse)
     - [Subscriptions](#subscriptions)
     - [Broadcast](#broadcast)
     - [Route authentication](#route-authentication)
+    - [Subscription filter](#subscription-filter)
 
 ## API
 
@@ -155,7 +156,7 @@ server.connection();
 
 server.register([Basic, Nes], function (err) {
 
-    // Setup HTTP Basic authentication
+    // Set up HTTP Basic authentication
 
     var users = {
         john: {
@@ -210,6 +211,85 @@ client.connect({ headers: { authorization: 'Basic am9objpzZWNyZXQ=' } }, functio
     client.request('hello', function (err, payload) {   // Can also request '/h'
 
         // payload -> 'Hello John Doe'
+    });
+});
+```
+
+### Subscription filter
+
+#### Server
+
+```js
+var Hapi = require('hapi');
+var Basic = require('hapi-auth-basic');
+var Bcrypt = require('bcrypt');
+var Nes = require('nes');
+
+var server = new Hapi.Server();
+server.connection();
+
+server.register([Basic, Nes], function (err) {
+
+    // Set up HTTP Basic authentication
+
+    var users = {
+        john: {
+            username: 'john',
+            password: '$2a$10$iqJSHD.BGr0E2IxQwYgJmeP3NvhPrXAeLSaGCj6IR/XU5QtjVu5Tm',   // 'secret'
+            name: 'John Doe',
+            id: '2133d32a'
+        }
+    };
+
+    var validate = function (request, username, password, callback) {
+
+        var user = users[username];
+        if (!user) {
+            return callback(null, false);
+        }
+
+        Bcrypt.compare(password, user.password, function (err, isValid) {
+
+            callback(err, isValid, { id: user.id, name: user.name, username: user.username });
+        });
+    };
+    
+    server.auth.strategy('simple', 'basic', 'required', { validateFunc: validate });
+
+    // Set up subscription
+
+    server.subscription('/items', {
+        filter: function (path, message, options, next) {
+
+            return next(message.updater !== options.credentials.username);
+        }
+    });
+
+    server.start(function (err) {
+    
+        server.publish('/items', { id: 5, status: 'complete', updater: 'john' });
+        server.publish('/items', { id: 6, status: 'initial', updater: 'steve' });
+    });
+});
+
+var removeUpdated = ;
+```
+
+#### Client
+
+```js
+var Nes = require('nes');
+
+var client = new Nes.Client('ws://localhost');
+
+// Authenticate as 'john'
+
+client.connect({ headers: { authorization: 'Basic am9objpzZWNyZXQ=' } }, function (err) {
+
+    client.subscribe('/items', function (err, update) {
+
+        // First publish is not received (filtered due to updater key)
+        // update -> { id: 6, status: 'initial', updater: 'steve' }
     });
 });
 ```
