@@ -6,14 +6,14 @@
     - [`server.subscription(path, [options])`](#serversubscriptionpath-options)
     - [`server.publish(path, message)`](#serverpublishpath-message)
 - [Client](#client)
-    - [`new Client([options], callback)`](#new-clientoptions-callback)
+    - [`new Client(url, [options])`](#new-clienturl-options)
 - [`client.onError`](#clientonerror)
 - [`client.onConnect`](#clientonconnect)
 - [`client.onBroadcast`](#clientonbroadcast)
 - [`client.connect([options], callback)`](#clientconnectoptions-callback)
 - [`client.disconnect()`](#clientdisconnect)
 - [`client.request(options, callback)`](#clientrequestoptions-callback)
-- [`client.message(data, callback)`](#clientmessagedata-callback)
+- [`client.message(message, callback)`](#clientmessagemessage-callback)
 - [`client.authenticate(credentials, callback)`](#clientauthenticatecredentials-callback)
 - [`client.subscribe(path, handler)`](#clientsubscribepath-handler)
 - [`client.unsubscribe(path, [handler])`](#clientunsubscribepath-handler)
@@ -132,31 +132,110 @@ Declares a subscription path client can subscribe to where:
 
 ### `server.publish(path, message)`
 
+Sends a message to all the subscribed clients where:
+- `path` - the subscription path. The path is matched first against the available subscriptions
+  added via `server.subscription()` and then against the specific path provided by each client
+  at the time of registration (only matter when the subscription path contains parameters). When
+  a match is found, the subscription `filter` function is called (if present) to further filter
+  which client should receive which update.
+- `message` - the message sent to the clients. Can be any type which can be safely converted to
+  string using `JSON.stringify()`.
+
 ## Client
 
-### `new Client([options], callback)`
+The client implements the **nes** protocol and provides methods for interacting with the server.
+It supports auto-connect by default as well as authentication.
+
+### `new Client(url, [options])`
+
+Creates a new client object where:
+- `url` - the WebSocket address to connect to (e.g. `'wss://localhost:8000'`).
+- `option` - optional configuration object available only when the client is used in node.js
+  and passed as-is to the [**ws** module](https://www.npmjs.com/package/ws).
 
 ### `client.onError`
 
+A property used to set an error handler with the signature `function(err)`. Invoked whenever an
+error happens that cannot be associated with a pending request with a callback.
+
 ### `client.onConnect`
+
+A property used to set a handler for connection events (initial connection and subsequent
+reconnections) with the signature `function()`.
 
 ### `client.onBroadcast`
 
+A property used to set a broadcast handler with the signature `function(message)`. Invoked whenever
+the server calls `server.broadcast()`.
+
 ### `client.connect([options], callback)`
+
+Connects the client to the server where:
+- `options` - an optional configuration object with the following options:
+    - `auth` - sets the credentials used to automatically call `client.authenticate()` before
+      the connection is deemed open.
+    - `delay` - time in milliseconds to wait between each reconnection attempt. The delay time
+      is cumulative, meaning that if the value is set to `1000` (1 second), the first wait will
+      be 1 seconds, then 2 seconds, 3 seconds, until the `maxDelay` value is reached and then
+      `maxDelay` is used.
+    - `maxDelay` - the maximum delay time in milliseconds between reconnections.
+- `callback` - 
 
 ### `client.disconnect()`
 
-### `client.request(options, callback)`
-
-### `client.message(data, callback)`
+Disconnects the client from the server and stops future reconnects.
 
 ### `client.authenticate(credentials, callback)`
 
+Authenticates the client connection where:
+- `credentials` - when the server is configured for `'token'` type authentication, the value is the
+  token response received from the authentication endpoint (called manually by the application).
+  When the server is configured for `'direct'` type authentication, the value is the credentials
+  expected by the server for the specified authentication strategy used which typically means an
+  object with headers (e.g. `{ headers: { authorization: 'Basic am9objpzZWNyZXQ=' } }`).
+- `callback` - a function using the signature `function(err)` where:
+    - `err` - an authentication error.
+
+### `client.request(options, callback)`
+
+Sends an endpoint request to the server where:
+- `options` - value can be one of:
+    - a string with the requested endpoint path or route id (defaults to a GET method).
+    - an object with the following keys:
+        - `path` - the requested endpoint path or route id.
+        - `method` - the requested HTTP method (can also be any method string supported by the
+          server). Defaults to `'GET'`.
+        - `headers` - an object where each key is a request header and the value the header
+          content. Defaults to no headers.
+        - `payload` - the request payload sent to the server.
+
+### `client.message(message, callback)`
+
+Sends a custom message to the server which is received by the server `onMessage` handler where:
+- `message` - the message sent to the server. Can be any type which can be safely converted to
+  string using `JSON.stringify()`.
+- `callback` - the server response callback using the signature `function(err, message)` where:
+    - `err` - an error response.
+    - `message` - the server response if no error occurred.
+
 ### `client.subscribe(path, handler)`
+
+Subscribes to a server subscription where:
+- `path` - the requested subscription path. Paths are just like HTTP request paths (e.g.
+  `'/item/5'` or `'/updates'` based on the paths supported by the server).
+- `handler` - the function used to receive subscription updates and errors using the
+  signature `function(err, message)` where:
+    - `err` - if present, indicates the subscription request has failed and the handler
+      will not be called again.
+    - `message` - the subscription update sent by the server.
 
 ### `client.unsubscribe(path, [handler])`
 
+Cancels a subscription where:
+- `path` - the subscription path used to subscribe.
+- `handler` - an optional handler used to remove a specific handler from a subscription.
+  Defaults to `null` which removes all existing handlers for the given path.
+
 ### `client.subscriptions()`
 
-
-
+Returns an array of the current subscription paths.
