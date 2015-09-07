@@ -9,6 +9,17 @@ flexible and organic extension.
 
 Lead Maintainer - [Eran Hammer](https://github.com/hueniverse)
 
+- [API](#api)
+- [Examples](#examples)
+    - [Route invocation](#route-invocation)
+    - [Subscriptions](#subscriptions)
+    - [Broadcast](#broadcast)
+    - [Route authentication](#route-authentication)
+
+## API
+
+The full client and server API is available in the [API documentation](https://github.com/hapijs/nes/blob/master/API.md).
+
 ## Examples
 
 ### Route invocation
