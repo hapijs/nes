@@ -286,19 +286,25 @@ describe('authentication', function () {
                         client.connect(function (err) {
 
                             expect(err).to.not.exist();
-                            client.authenticate(res.result.token, function (err) {
+                            client.message('will be rejected', function (err, message) {
 
-                                expect(err).to.not.exist();
-                                client.request('/', function (err, payload, statusCode, headers) {
+                                expect(err).to.exist();
+                                expect(err.message).to.equal('Connection is not authenticated');
 
-                                    expect(payload).to.equal('hello');
-                                    expect(statusCode).to.equal(200);
-                                    expect(headers).to.contain({
-                                        'content-type': 'text/html; charset=utf-8'
+                                client.authenticate(res.result.token, function (err) {
+
+                                    expect(err).to.not.exist();
+                                    client.request('/', function (err, payload, statusCode, headers) {
+
+                                        expect(payload).to.equal('hello');
+                                        expect(statusCode).to.equal(200);
+                                        expect(headers).to.contain({
+                                            'content-type': 'text/html; charset=utf-8'
+                                        });
+
+                                        client.disconnect();
+                                        server.stop(done);
                                     });
-
-                                    client.disconnect();
-                                    server.stop(done);
                                 });
                             });
                         });
@@ -813,10 +819,11 @@ describe('authentication', function () {
                     client.connect(function (err) {
 
                         expect(err).to.not.exist();
+
                         client.subscribe('/', function (err, update) {
 
                             expect(err).to.exist();
-                            expect(err.message).to.equal('Unauthorized');
+                            expect(err.message).to.equal('Connection is not authenticated');
                             expect(client.subscriptions()).to.deep.equal([]);
 
                             client.disconnect();
