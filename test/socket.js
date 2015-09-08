@@ -49,7 +49,7 @@ describe('Socket', function () {
                         var a = { b: 1 };
                         a.c = a;                    // Circular reference
 
-                        server.connections[0].plugins.nes._listener._sockets[0].send(a, { id: 1, type: 'other' });
+                        server.connections[0].plugins.nes._listener._sockets[0]._send(a, { id: 1, type: 'other' });
                     });
                 });
             });
