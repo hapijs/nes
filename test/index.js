@@ -58,11 +58,11 @@ describe('register()', function () {
         });
     });
 
-    it('calls onConnect callback', function (done) {
+    it('calls onConnection callback', function (done) {
 
         var client;
 
-        var onConnect = function (ws) {
+        var onConnection = function (ws) {
 
             expect(ws).to.exist();
             client.disconnect();
@@ -71,7 +71,7 @@ describe('register()', function () {
 
         var server = new Hapi.Server();
         server.connection();
-        server.register({ register: Nes, options: { onConnect: onConnect, auth: false } }, function (err) {
+        server.register({ register: Nes, options: { onConnection: onConnection, auth: false } }, function (err) {
 
             expect(err).to.not.exist();
 

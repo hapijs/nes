@@ -294,6 +294,47 @@ describe('Socket', function () {
             });
         });
 
+        it('errors on uninitialized connection', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+            server.register({ register: Nes, options: { auth: false } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.route({
+                    method: 'GET',
+                    path: '/',
+                    handler: function (request, reply) {
+
+                        return reply('hello');
+                    }
+                });
+
+                server.start(function (err) {
+
+                    var client = new Ws('http://localhost:' + server.info.port);
+
+                    client.on('message', function (data, flags) {
+
+                        var message = JSON.parse(data);
+                        expect(message.error).to.equal('Connection is not initialized');
+
+                        client.close();
+                        server.stop(done);
+                    });
+
+                    client.on('open', function () {
+
+                        client.send(JSON.stringify({ id: 1, type: 'request', path: '/' }), function (err) {
+
+                            expect(err).to.not.exist();
+                        });
+                    });
+                });
+            });
+        });
+
         it('errors on missing method', function (done) {
 
             var server = new Hapi.Server();
@@ -318,6 +359,10 @@ describe('Socket', function () {
                     client.on('message', function (data, flags) {
 
                         var message = JSON.parse(data);
+                        if (message.id !== 2) {
+                            return;
+                        }
+
                         expect(message.payload).to.deep.equal({
                             statusCode: 400,
                             error: 'Bad Request',
@@ -333,9 +378,13 @@ describe('Socket', function () {
 
                     client.on('open', function () {
 
-                        client.send(JSON.stringify({ id: 1, type: 'request', path: '/' }), function (err) {
+                        client.send(JSON.stringify({ id: 1, type: 'hello' }), function (err) {
 
                             expect(err).to.not.exist();
+                            client.send(JSON.stringify({ id: 2, type: 'request', path: '/' }), function (err) {
+
+                                expect(err).to.not.exist();
+                            });
                         });
                     });
                 });
@@ -366,6 +415,10 @@ describe('Socket', function () {
                     client.on('message', function (data, flags) {
 
                         var message = JSON.parse(data);
+                        if (message.id !== 2) {
+                            return;
+                        }
+
                         expect(message.payload).to.deep.equal({
                             statusCode: 400,
                             error: 'Bad Request',
@@ -373,6 +426,7 @@ describe('Socket', function () {
                         });
 
                         expect(message.statusCode).to.equal(400);
+                        expect(message.type).to.equal('response');
 
                         client.close();
                         server.stop(done);
@@ -380,9 +434,13 @@ describe('Socket', function () {
 
                     client.on('open', function () {
 
-                        client.send(JSON.stringify({ id: 1, type: 'request', method: 'GET' }), function (err) {
+                        client.send(JSON.stringify({ id: 1, type: 'hello' }), function (err) {
 
                             expect(err).to.not.exist();
+                            client.send(JSON.stringify({ id: 2, type: 'request', method: 'GET' }), function (err) {
+
+                                expect(err).to.not.exist();
+                            });
                         });
                     });
                 });
@@ -413,6 +471,10 @@ describe('Socket', function () {
                     client.on('message', function (data, flags) {
 
                         var message = JSON.parse(data);
+                        if (message.id !== 2) {
+                            return;
+                        }
+
                         expect(message.payload).to.deep.equal({
                             statusCode: 400,
                             error: 'Bad Request',
@@ -420,6 +482,7 @@ describe('Socket', function () {
                         });
 
                         expect(message.statusCode).to.equal(400);
+                        expect(message.type).to.equal('response');
 
                         client.close();
                         server.stop(done);
@@ -427,9 +490,13 @@ describe('Socket', function () {
 
                     client.on('open', function () {
 
-                        client.send(JSON.stringify({ id: 1, type: 'unknown' }), function (err) {
+                        client.send(JSON.stringify({ id: 1, type: 'hello' }), function (err) {
 
                             expect(err).to.not.exist();
+                            client.send(JSON.stringify({ id: 2, type: 'unknown' }), function (err) {
+
+                                expect(err).to.not.exist();
+                            });
                         });
                     });
                 });
@@ -508,7 +575,7 @@ describe('Socket', function () {
 
             var server = new Hapi.Server();
             server.connection();
-            server.register({ register: Nes, options: { } }, function (err) {
+            server.register({ register: Nes, options: {} }, function (err) {
 
                 expect(err).to.not.exist();
 

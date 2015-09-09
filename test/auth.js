@@ -283,29 +283,19 @@ describe('authentication', function () {
                         expect(res.result.token).to.exist();
 
                         var client = new Nes.Client('http://localhost:' + server.info.port);
-                        client.connect(function (err) {
+                        client.connect({ auth: res.result.token }, function (err) {
 
                             expect(err).to.not.exist();
-                            client.message('will be rejected', function (err, message) {
+                            client.request('/', function (err, payload, statusCode, headers) {
 
-                                expect(err).to.exist();
-                                expect(err.message).to.equal('Connection is not authenticated');
-
-                                client.authenticate(res.result.token, function (err) {
-
-                                    expect(err).to.not.exist();
-                                    client.request('/', function (err, payload, statusCode, headers) {
-
-                                        expect(payload).to.equal('hello');
-                                        expect(statusCode).to.equal(200);
-                                        expect(headers).to.contain({
-                                            'content-type': 'text/html; charset=utf-8'
-                                        });
-
-                                        client.disconnect();
-                                        server.stop(done);
-                                    });
+                                expect(payload).to.equal('hello');
+                                expect(statusCode).to.equal(200);
+                                expect(headers).to.contain({
+                                    'content-type': 'text/html; charset=utf-8'
                                 });
+
+                                client.disconnect();
+                                server.stop(done);
                             });
                         });
                     });
@@ -342,23 +332,19 @@ describe('authentication', function () {
                         expect(res.result.token).to.exist();
 
                         var client = new Nes.Client('http://localhost:' + server.info.port);
-                        client.connect(function (err) {
+                        client.connect({ auth: res.result.token }, function (err) {
 
                             expect(err).to.not.exist();
-                            client.authenticate(res.result.token, function (err) {
+                            client.request('/', function (err, payload, statusCode, headers) {
 
-                                expect(err).to.not.exist();
-                                client.request('/', function (err, payload, statusCode, headers) {
-
-                                    expect(payload).to.equal('hello');
-                                    expect(statusCode).to.equal(200);
-                                    expect(headers).to.contain({
-                                        'content-type': 'text/html; charset=utf-8'
-                                    });
-
-                                    client.disconnect();
-                                    server.stop(done);
+                                expect(payload).to.equal('hello');
+                                expect(statusCode).to.equal(200);
+                                expect(headers).to.contain({
+                                    'content-type': 'text/html; charset=utf-8'
                                 });
+
+                                client.disconnect();
+                                server.stop(done);
                             });
                         });
                     });
@@ -390,17 +376,13 @@ describe('authentication', function () {
                 server.start(function (err) {
 
                     var client = new Nes.Client('http://localhost:' + server.info.port);
-                    client.connect(function (err) {
+                    client.connect({ auth: 'abc' }, function (err) {
 
-                        expect(err).to.not.exist();
-                        client.authenticate('abc', function (err) {
+                        expect(err).to.exist();
+                        expect(err.message).to.equal('Invalid token');
 
-                            expect(err).to.exist();
-                            expect(err.message).to.equal('Invalid token');
-
-                            client.disconnect();
-                            server.stop(done);
-                        });
+                        client.disconnect();
+                        server.stop(done);
                     });
                 });
             });
@@ -430,17 +412,13 @@ describe('authentication', function () {
                 server.start(function (err) {
 
                     var client = new Nes.Client('http://localhost:' + server.info.port);
-                    client.connect(function (err) {
+                    client.connect({ auth: '' }, function (err) {
 
-                        expect(err).to.not.exist();
-                        client.authenticate('', function (err) {
+                        expect(err).to.exist();
+                        expect(err.message).to.equal('Connection requires authentication');
 
-                            expect(err).to.exist();
-                            expect(err.message).to.equal('Authentication missing credentials');
-
-                            client.disconnect();
-                            server.stop(done);
-                        });
+                        client.disconnect();
+                        server.stop(done);
                     });
                 });
             });
@@ -484,20 +462,16 @@ describe('authentication', function () {
                         expect(res.result.token).to.exist();
 
                         var client = new Nes.Client('http://localhost:' + server.info.port);
-                        client.connect(function (err) {
+                        client.connect({ auth: res.result.token }, function (err) {
 
                             expect(err).to.not.exist();
-                            client.authenticate(res.result.token, function (err) {
+                            client._hello(res.result.token, function (err) {
 
-                                expect(err).to.not.exist();
-                                client.authenticate(res.result.token, function (err) {
+                                expect(err).to.exist();
+                                expect(err.message).to.equal('Connection already initialized');
 
-                                    expect(err).to.exist();
-                                    expect(err.message).to.equal('Connection already authenticated');
-
-                                    client.disconnect();
-                                    server.stop(done);
-                                });
+                                client.disconnect();
+                                server.stop(done);
                             });
                         });
                     });
@@ -532,23 +506,19 @@ describe('authentication', function () {
                 server.start(function (err) {
 
                     var client = new Nes.Client('http://localhost:' + server.info.port);
-                    client.connect(function (err) {
+                    client.connect({ auth: { headers: { authorization: 'Custom john' } } }, function (err) {
 
                         expect(err).to.not.exist();
-                        client.authenticate({ headers: { authorization: 'Custom john' } }, function (err) {
+                        client.request('/', function (err, payload, statusCode, headers) {
 
-                            expect(err).to.not.exist();
-                            client.request('/', function (err, payload, statusCode, headers) {
-
-                                expect(payload).to.equal('hello');
-                                expect(statusCode).to.equal(200);
-                                expect(headers).to.contain({
-                                    'content-type': 'text/html; charset=utf-8'
-                                });
-
-                                client.disconnect();
-                                server.stop(done);
+                            expect(payload).to.equal('hello');
+                            expect(statusCode).to.equal(200);
+                            expect(headers).to.contain({
+                                'content-type': 'text/html; charset=utf-8'
                             });
+
+                            client.disconnect();
+                            server.stop(done);
                         });
                     });
                 });
@@ -673,16 +643,12 @@ describe('authentication', function () {
                 server.start(function (err) {
 
                     var client = new Nes.Client('http://localhost:' + server.info.port);
-                    client.connect(function (err) {
+                    client.connect({ auth: { headers: { authorization: 'Custom steve' } } }, function (err) {
 
-                        expect(err).to.not.exist();
-                        client.authenticate({ headers: { authorization: 'Custom steve' } }, function (err) {
-
-                            expect(err).to.exist();
-                            expect(err.message).to.equal('Unauthorized');
-                            client.disconnect();
-                            server.stop(done);
-                        });
+                        expect(err).to.exist();
+                        expect(err.message).to.equal('Unauthorized');
+                        client.disconnect();
+                        server.stop(done);
                     });
                 });
             });
@@ -703,16 +669,12 @@ describe('authentication', function () {
                 server.start(function (err) {
 
                     var client = new Nes.Client('http://localhost:' + server.info.port);
-                    client.connect(function (err) {
+                    client.connect({ auth: '' }, function (err) {
 
-                        expect(err).to.not.exist();
-                        client.authenticate('', function (err) {
-
-                            expect(err).to.exist();
-                            expect(err.message).to.equal('Authentication missing credentials');
-                            client.disconnect();
-                            server.stop(done);
-                        });
+                        expect(err).to.exist();
+                        expect(err.message).to.equal('Connection requires authentication');
+                        client.disconnect();
+                        server.stop(done);
                     });
                 });
             });
@@ -793,46 +755,6 @@ describe('authentication', function () {
 
                             server.publish('/', 'steve');
                             server.publish('/', 'john');
-                        }, 10);
-                    });
-                });
-            });
-        });
-
-        it('errors on missing auth to subscribe (default)', function (done) {
-
-            var server = new Hapi.Server();
-            server.connection();
-
-            server.auth.scheme('custom', internals.implementation);
-            server.auth.strategy('default', 'custom', true);
-
-            server.register({ register: Nes, options: { auth: { type: 'direct', password: 'password' } } }, function (err) {
-
-                expect(err).to.not.exist();
-
-                server.subscription('/');
-
-                server.start(function (err) {
-
-                    var client = new Nes.Client('http://localhost:' + server.info.port);
-                    client.connect(function (err) {
-
-                        expect(err).to.not.exist();
-
-                        client.subscribe('/', function (err, update) {
-
-                            expect(err).to.exist();
-                            expect(err.message).to.equal('Connection is not authenticated');
-                            expect(client.subscriptions()).to.deep.equal([]);
-
-                            client.disconnect();
-                            server.stop(done);
-                        });
-
-                        setTimeout(function () {
-
-                            server.publish('/', 'heya');
                         }, 10);
                     });
                 });

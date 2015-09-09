@@ -110,23 +110,23 @@ describe('Browser', function () {
                         client.onConnect = function () {
 
                             ++c;
+                            if (c === 2) {
+                                expect(e).to.equal(0);
+                                client.disconnect();
+                                server.stop(done);
+                            }
                         };
 
                         expect(c).to.equal(0);
                         expect(e).to.equal(0);
-                        client.connect({ delay: 10 }, function () {
+                        client.connect({ delay: 10 }, function (err) {
+
+                            expect(err).to.not.exist();
 
                             expect(c).to.equal(1);
                             expect(e).to.equal(0);
 
                             client._ws.close();
-                            setTimeout(function () {
-
-                                expect(c).to.equal(2);
-                                expect(e).to.equal(0);
-                                client.disconnect();
-                                server.stop(done);
-                            }, 20);
                         });
                     });
                 });
