@@ -219,6 +219,50 @@ describe('authentication', function () {
             });
         });
 
+        it('errors on double auth', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+
+            server.register({ register: Nes, options: { auth: { type: 'cookie' } } }, function (err) {
+
+                server.auth.scheme('custom', internals.implementation);
+                server.auth.strategy('default', 'custom', true);
+
+                expect(err).to.not.exist();
+
+                server.route({
+                    method: 'GET',
+                    path: '/',
+                    handler: function (request, reply) {
+
+                        return reply('hello');
+                    }
+                });
+
+                server.start(function (err) {
+
+                    server.inject({ url: '/nes/auth', headers: { authorization: 'Custom john' } }, function (res) {
+
+                        expect(res.result.status).to.equal('authenticated');
+
+                        var header = res.headers['set-cookie'][0];
+                        var cookie = header.match(/(?:[^\x00-\x20\(\)<>@\,;\:\\"\/\[\]\?\=\{\}\x7F]+)\s*=\s*(?:([^\x00-\x20\"\,\;\\\x7F]*))/);
+
+                        var client = new Nes.Client('http://localhost:' + server.info.port, { headers: { cookie: 'nes=' + cookie[1] } });
+                        client.connect({ auth: 'something' }, function (err) {
+
+                            expect(err).to.exist();
+                            expect(err.message).to.equal('Connection already authenticated');
+
+                            client.disconnect();
+                            server.stop(done);
+                        });
+                    });
+                });
+            });
+        });
+
         it('overrides cookie path', function (done) {
 
             var server = new Hapi.Server();
