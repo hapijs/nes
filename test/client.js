@@ -2,6 +2,7 @@
 
 var Code = require('code');
 var Hapi = require('hapi');
+var Boom = require('boom');
 var Lab = require('lab');
 var Nes = require('../');
 
@@ -365,6 +366,76 @@ describe('Browser', function () {
                                 expect(payload).to.equal('hello');
                                 expect(statusCode).to.equal(200);
                                 expect(headers).to.contain({ 'content-type': 'text/html; charset=utf-8' });
+
+                                client.disconnect();
+                                server.stop(done);
+                            });
+                        });
+                    });
+                });
+            });
+
+            it('reconstructs boom objects with message', function (done) {
+
+                var server = new Hapi.Server();
+                server.connection();
+                server.register({ register: Nes, options: { auth: false } }, function (err) {
+
+                    expect(err).to.not.exist();
+
+                    server.route({
+                        method: 'GET',
+                        path: '/',
+                        handler: function (request, reply) {
+
+                            return reply(Boom.notFound('Failed'));
+                        }
+                    });
+
+                    server.start(function (err) {
+
+                        var client = new Nes.Client('http://localhost:' + server.info.port);
+                        client.connect(function () {
+
+                            client.request({ path: '/' }, function (err, payload, statusCode, headers) {
+
+                                expect(err).to.match(/Failed/);
+                                expect(statusCode).to.equal(404);
+
+                                client.disconnect();
+                                server.stop(done);
+                            });
+                        });
+                    });
+                });
+            });
+
+            it('reconstructs boom objects without message', function (done) {
+
+                var server = new Hapi.Server();
+                server.connection();
+                server.register({ register: Nes, options: { auth: false } }, function (err) {
+
+                    expect(err).to.not.exist();
+
+                    server.route({
+                        method: 'GET',
+                        path: '/',
+                        handler: function (request, reply) {
+
+                            return reply(Boom.notFound());
+                        }
+                    });
+
+                    server.start(function (err) {
+
+                        var client = new Nes.Client('http://localhost:' + server.info.port);
+                        client.connect(function () {
+
+                            client.request({ path: '/' }, function (err, payload, statusCode, headers) {
+
+                                expect(err).to.match(/Not Found/);
+                                expect(statusCode).to.equal(404);
 
                                 client.disconnect();
                                 server.stop(done);
