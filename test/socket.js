@@ -437,7 +437,7 @@ describe('Socket', function () {
         });
     });
 
-    describe('custom messages', function () {
+    describe('_processMessage()', function () {
 
         it('calls onMessage callback', function (done) {
 
@@ -493,7 +493,8 @@ describe('Socket', function () {
 
                         client.message('winning', function (err, response) {
 
-                            expect(err).to.match(/failed/);
+                            expect(err).to.exist();
+                            expect(err.message).to.equal('failed');
                             expect(response).to.not.exist();
                             client.disconnect();
                             server.stop(done);
@@ -518,12 +519,8 @@ describe('Socket', function () {
 
                         client.message('winning', function (err, response) {
 
-                            expect(err).to.match(/Custom messages are not supported/);
-                            expect(response).to.deep.equal({
-                                statusCode: 422,
-                                error: 'Unprocessable Entity',
-                                message: 'Custom messages are not supported'
-                            });
+                            expect(err).to.exist();
+                            expect(err.message).to.equal('Custom messages are not supported');
 
                             client.disconnect();
                             server.stop(done);
