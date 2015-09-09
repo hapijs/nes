@@ -14,7 +14,6 @@
 - [`client.disconnect()`](#clientdisconnect)
 - [`client.request(options, callback)`](#clientrequestoptions-callback)
 - [`client.message(message, callback)`](#clientmessagemessage-callback)
-- [`client.authenticate(credentials, callback)`](#clientauthenticatecredentials-callback)
 - [`client.subscribe(path, handler)`](#clientsubscribepath-handler)
 - [`client.unsubscribe(path, [handler])`](#clientunsubscribepath-handler)
 - [`client.subscriptions()`](#clientsubscriptions)
@@ -38,12 +37,11 @@ method. The plugin accepts the following optional registration options:
         - `type` - the type of authentication flow supported by the server. Each type has a very different
           security profile. The following types are supported:
             - `'direct'` - the plugin configures an internal authentication endpoint which is only called
-              internally by the plugin when the client provides its authentication credentials (via
-              [`client.authenticate()`](#clientauthenticatecredentials-callback) or by passing an `auth`
-              option to [`client.connect()](#clientconnectoptions-callback)). The endpoint returns a
-              copy of the credentials object (along with any artifacts) to the plugin which is then
-              used for all subsequent client requests and subscriptions. This type requires exposing the
-              underlying credentials to the application. This is the default value.
+              internally by the plugin when the client provides its authentication credentials (or by
+              passing an `auth` option to [`client.connect()](#clientconnectoptions-callback)). The
+              endpoint returns a copy of the credentials object (along with any artifacts) to the plugin
+              which is then used for all subsequent client requests and subscriptions. This type requires
+              exposing the underlying credentials to the application. This is the default value.
             - `'cookie'` - the plugin configures a public authentication endpoint which must be called
               by the client application manually before it calls [`client.connect()](#clientconnectoptions-callback).
               When the endpoint is called with valid credentials, it sets a cookie with the provided
@@ -54,11 +52,10 @@ method. The plugin accepts the following optional registration options:
             - `'token'` - the plugin configures a public authentication endpoint which must be called
               by the client application manually before it calls [`client.connect()](#clientconnectoptions-callback).
               When the endpoint is called with valid credentials, it returns an encrypted authentication
-              token which the client can use to authenticate the connection by passing it to the
-              [`client.authenticate()`](#clientauthenticatecredentials-callback) method or by passing
-              an `auth` option to [`client.connect()](#clientconnectoptions-callback) with the token.
-              This type is useful when the client-side application needs to manage its credentials
-              differently than relying on cookies (e.g. non-browser clients).
+              token which the client can use to authenticate the connection by passing an `auth` option
+              to [`client.connect()](#clientconnectoptions-callback) with the token. This type is useful
+              when the client-side application needs to manage its credentials differently than relying
+              on cookies (e.g. non-browser clients).
         - `endpoint` - the HTTP path of the authentication endpoint. Note that even though the `'direct'`
           type does not exposes the endpoint, it is still created internally and registered using the
           provided path. Change it only if the default path creates a conflict. Defaults to `'/nes/auth'`.
@@ -172,8 +169,12 @@ the server calls `server.broadcast()`.
 
 Connects the client to the server where:
 - `options` - an optional configuration object with the following options:
-    - `auth` - sets the credentials used to automatically call `client.authenticate()` before
-      the connection is deemed open.
+    - `auth` - sets the credentials used to authenticate. when the server is configured for
+      `'token'` type authentication, the value is the token response received from the
+      authentication endpoint (called manually by the application). When the server is
+      configured for `'direct'` type authentication, the value is the credentials expected
+      by the server for the specified authentication strategy used which typically means an
+      object with headers (e.g. `{ headers: { authorization: 'Basic am9objpzZWNyZXQ=' } }`).
     - `delay` - time in milliseconds to wait between each reconnection attempt. The delay time
       is cumulative, meaning that if the value is set to `1000` (1 second), the first wait will
       be 1 seconds, then 2 seconds, 3 seconds, until the `maxDelay` value is reached and then
@@ -184,17 +185,6 @@ Connects the client to the server where:
 ### `client.disconnect()`
 
 Disconnects the client from the server and stops future reconnects.
-
-### `client.authenticate(credentials, callback)`
-
-Authenticates the client connection where:
-- `credentials` - when the server is configured for `'token'` type authentication, the value is the
-  token response received from the authentication endpoint (called manually by the application).
-  When the server is configured for `'direct'` type authentication, the value is the credentials
-  expected by the server for the specified authentication strategy used which typically means an
-  object with headers (e.g. `{ headers: { authorization: 'Basic am9objpzZWNyZXQ=' } }`).
-- `callback` - a function using the signature `function(err)` where:
-    - `err` - an authentication error.
 
 ### `client.request(options, callback)`
 
