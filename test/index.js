@@ -58,6 +58,48 @@ describe('register()', function () {
         });
     });
 
+    it('accepts a custom adapter', function (done) {
+
+        var server = new Hapi.Server();
+        var adapter = new Nes.Adapter();
+        server.connection();
+        server.register({ register: Nes, options: { adapter: adapter, auth: false } }, function (err) {
+
+            expect(err).to.not.exist();
+
+            server.start(function (err) {
+
+                expect(server.plugins.nes._adapter).to.equal(adapter);
+                server.stop(done);
+            });
+        });
+    });
+
+    it('logs adapter errors', function (done) {
+
+        var server = new Hapi.Server();
+        var adapter = new Nes.Adapter();
+        server.connection();
+        server.register({ register: Nes, options: { adapter: adapter, auth: false } }, function (err) {
+
+            expect(err).to.not.exist();
+
+            server.on('log', function (event, tags) {
+
+                expect(event.data.message).to.equal('Hello');
+                server.stop(done);
+            });
+
+            server.start(function (err) {
+
+                expect(err).to.not.exist();
+                expect(server.plugins.nes._adapter).to.equal(adapter);
+
+                adapter.emit('error', new Error('Hello'));
+            });
+        });
+    });
+
     it('calls onConnect callback', function (done) {
 
         var client;
