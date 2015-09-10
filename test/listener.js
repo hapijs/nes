@@ -298,4 +298,26 @@ describe('Listener', function () {
             });
         });
     });
+
+    describe('_generateId()', function () {
+
+        it('rolls over when reached max sockets per millisecond', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+            server.register({ register: Nes, options: { auth: false } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                var listener = server.connections[0].plugins.nes._listener;
+                listener._socketCounter = 99999;
+                var id = listener._generateId();
+                expect(id.split(':')[4]).to.equal('99999');
+                id = listener._generateId();
+                expect(id.split(':')[4]).to.equal('10000');
+
+                done();
+            });
+        });
+    });
 });
