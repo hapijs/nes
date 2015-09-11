@@ -30,7 +30,7 @@ method. The plugin accepts the following optional registration options:
 - `onConnect` - a function with the signature `function(ws)` invoked for each incoming client
   connection where:
     - `ws` - the WebSocket connection object.
-- `onMessage` - a function with the signature `function(socket message, next)` used to receive custom
+- `onMessage` - a function with the signature `function(socket, message, next)` used to receive custom
   client messages (when the client calls [`client.message()`](#clientmessagedata-callback)) where:
     - `socket` - the [`Socket`](#socket) object of the message source.
     - `message` - the message sent by the client.
