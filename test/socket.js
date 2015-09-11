@@ -1,5 +1,6 @@
 // Load modules
 
+var Boom = require('boom');
 var Code = require('code');
 var Hapi = require('hapi');
 var Lab = require('lab');
@@ -79,12 +80,12 @@ describe('Socket', function () {
                     client.connect(function (err) {
 
                         expect(err).to.not.exist();
-                        var a = { b: 1 };
+                        var a = { id: 1, type: 'other' };
                         a.c = a;                    // Circular reference
 
                         server.connections[0].plugins.nes._listener._sockets.forEach(function (socket) {
 
-                            socket._send(a, { id: 1, type: 'other' });
+                            socket._send(a);
                         });
                     });
                 });
@@ -313,7 +314,7 @@ describe('Socket', function () {
                         });
 
                         expect(message.statusCode).to.equal(400);
-                        expect(message.type).to.equal('response');
+                        expect(message.type).to.equal('request');
 
                         client.close();
                         server.stop(done);
@@ -354,7 +355,7 @@ describe('Socket', function () {
                     client.on('message', function (data, flags) {
 
                         var message = JSON.parse(data);
-                        expect(message.error).to.equal('Connection is not initialized');
+                        expect(message.payload.message).to.equal('Connection is not initialized');
 
                         client.close();
                         server.stop(done);
@@ -406,7 +407,7 @@ describe('Socket', function () {
                         });
 
                         expect(message.statusCode).to.equal(400);
-                        expect(message.type).to.equal('response');
+                        expect(message.type).to.equal('request');
 
                         client.close();
                         server.stop(done);
@@ -462,7 +463,7 @@ describe('Socket', function () {
                         });
 
                         expect(message.statusCode).to.equal(400);
-                        expect(message.type).to.equal('response');
+                        expect(message.type).to.equal('request');
 
                         client.close();
                         server.stop(done);
@@ -518,7 +519,7 @@ describe('Socket', function () {
                         });
 
                         expect(message.statusCode).to.equal(400);
-                        expect(message.type).to.equal('response');
+                        expect(message.type).to.equal('unknown');
 
                         client.close();
                         server.stop(done);
@@ -798,7 +799,7 @@ describe('Socket', function () {
             });
         });
 
-        it('it sends errors from callback', function (done) {
+        it('sends errors from callback (raw)', function (done) {
 
             var client;
 
@@ -822,7 +823,43 @@ describe('Socket', function () {
                         client.message('winning', function (err, response) {
 
                             expect(err).to.exist();
+                            expect(err.message).to.equal('An internal server error occurred');
+                            expect(err.statusCode).to.equal(500);
+                            expect(response).to.not.exist();
+                            client.disconnect();
+                            server.stop(done);
+                        });
+                    });
+                });
+            });
+        });
+
+        it('sends errors from callback (boom)', function (done) {
+
+            var client;
+
+            var onMessage = function (socket, message, reply) {
+
+                expect(message).to.equal('winning');
+                reply(Boom.badRequest('failed'));
+            };
+
+            var server = new Hapi.Server();
+            server.connection();
+            server.register({ register: Nes, options: { onMessage: onMessage } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.start(function (err) {
+
+                    client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect(function () {
+
+                        client.message('winning', function (err, response) {
+
+                            expect(err).to.exist();
                             expect(err.message).to.equal('failed');
+                            expect(err.statusCode).to.equal(400);
                             expect(response).to.not.exist();
                             client.disconnect();
                             server.stop(done);
@@ -848,7 +885,8 @@ describe('Socket', function () {
                         client.message('winning', function (err, response) {
 
                             expect(err).to.exist();
-                            expect(err.message).to.equal('Custom messages are not supported');
+                            expect(err.message).to.equal('Not Implemented');
+                            expect(err.statusCode).to.equal(501);
 
                             client.disconnect();
                             server.stop(done);

@@ -62,6 +62,7 @@ describe('authentication', function () {
                             expect(err).to.not.exist();
                             client.request('/', function (err, payload, statusCode, headers) {
 
+                                expect(err).to.not.exist();
                                 expect(payload).to.equal('hello');
                                 expect(statusCode).to.equal(200);
                                 expect(headers).to.contain({
@@ -116,6 +117,7 @@ describe('authentication', function () {
                             expect(err).to.not.exist();
                             client.request('/', function (err, payload, statusCode, headers) {
 
+                                expect(err).to.not.exist();
                                 expect(payload).to.equal('hello');
                                 expect(statusCode).to.equal(200);
                                 expect(headers).to.contain({
@@ -164,7 +166,9 @@ describe('authentication', function () {
                             expect(err).to.not.exist();
                             client.request('/', function (err, payload, statusCode, headers) {
 
-                                expect(statusCode).to.equal(401);
+                                expect(err).to.exist();
+                                expect(err.message).to.equal('Missing authentication');
+                                expect(err.statusCode).to.equal(401);
 
                                 client.disconnect();
                                 server.stop(done);
@@ -208,7 +212,9 @@ describe('authentication', function () {
                             expect(err).to.not.exist();
                             client.request('/', function (err, payload, statusCode, headers) {
 
-                                expect(statusCode).to.equal(401);
+                                expect(err).to.exist();
+                                expect(err.message).to.equal('Missing authentication');
+                                expect(err.statusCode).to.equal(401);
 
                                 client.disconnect();
                                 server.stop(done);
@@ -254,6 +260,7 @@ describe('authentication', function () {
 
                             expect(err).to.exist();
                             expect(err.message).to.equal('Connection already authenticated');
+                            expect(err.statusCode).to.equal(400);
 
                             client.disconnect();
                             server.stop(done);
@@ -332,6 +339,7 @@ describe('authentication', function () {
                             expect(err).to.not.exist();
                             client.request('/', function (err, payload, statusCode, headers) {
 
+                                expect(err).to.not.exist();
                                 expect(payload).to.equal('hello');
                                 expect(statusCode).to.equal(200);
                                 expect(headers).to.contain({
@@ -381,6 +389,7 @@ describe('authentication', function () {
                             expect(err).to.not.exist();
                             client.request('/', function (err, payload, statusCode, headers) {
 
+                                expect(err).to.not.exist();
                                 expect(payload).to.equal('hello');
                                 expect(statusCode).to.equal(200);
                                 expect(headers).to.contain({
@@ -424,6 +433,7 @@ describe('authentication', function () {
 
                         expect(err).to.exist();
                         expect(err.message).to.equal('Invalid token');
+                        expect(err.statusCode).to.equal(401);
 
                         client.disconnect();
                         server.stop(done);
@@ -460,6 +470,7 @@ describe('authentication', function () {
 
                         expect(err).to.exist();
                         expect(err.message).to.equal('Connection requires authentication');
+                        expect(err.statusCode).to.equal(401);
 
                         client.disconnect();
                         server.stop(done);
@@ -513,6 +524,7 @@ describe('authentication', function () {
 
                                 expect(err).to.exist();
                                 expect(err.message).to.equal('Connection already initialized');
+                                expect(err.statusCode).to.equal(400);
 
                                 client.disconnect();
                                 server.stop(done);
@@ -555,6 +567,7 @@ describe('authentication', function () {
                         expect(err).to.not.exist();
                         client.request('/', function (err, payload, statusCode, headers) {
 
+                            expect(err).to.not.exist();
                             expect(payload).to.equal('hello');
                             expect(statusCode).to.equal(200);
                             expect(headers).to.contain({
@@ -621,6 +634,7 @@ describe('authentication', function () {
 
                             client.request('/', function (err, payload, statusCode, headers) {
 
+                                expect(err).to.not.exist();
                                 expect(payload).to.equal('hello');
                                 expect(statusCode).to.equal(200);
 
@@ -746,8 +760,8 @@ describe('authentication', function () {
                         expect(err).to.not.exist();
                         client.subscribe('/', function (err, update) {
 
-                            expect(client.subscriptions()).to.deep.equal(['/']);
                             expect(err).to.not.exist();
+                            expect(client.subscriptions()).to.deep.equal(['/']);
                             expect(update).to.equal('heya');
                             client.disconnect();
                             server.stop(done);

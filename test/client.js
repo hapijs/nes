@@ -661,8 +661,6 @@ describe('Browser', function () {
 
                     expect(err).to.not.exist();
 
-                    server.subscription('/');
-
                     server.start(function (err) {
 
                         var client = new Nes.Client('http://localhost:' + server.info.port);
@@ -671,16 +669,14 @@ describe('Browser', function () {
 
                             expect(err).to.exist();
                             expect(err.message).to.equal('Not Found');
+                            expect(err.statusCode).to.equal(404);
                             expect(client.subscriptions()).to.be.empty();
 
                             client.disconnect();
                             server.stop(done);
                         });
 
-                        client.connect(function (err) {
-
-                            expect(err).to.not.exist();
-                        });
+                        client.connect(function (err) { });
                     });
                 });
             });
@@ -931,19 +927,26 @@ describe('Browser', function () {
 
                     expect(err).to.not.exist();
 
+                    server.subscription('/');
+
                     server.start(function (err) {
 
                         var client = new Nes.Client('http://localhost:' + server.info.port);
                         client.connect(function () {
 
+                            client._ws.send = function () {
+
+                                throw new Error('failed');
+                            };
+
                             client.subscribe('/', function (err, update) {
 
                                 expect(err).to.exist();
+                                expect(err.message).to.equal('failed');
+
                                 client.disconnect();
                                 server.stop(done);
                             });
-
-                            client._ws.close();
                         });
                     });
                 });
