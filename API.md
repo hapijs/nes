@@ -227,7 +227,7 @@ Sends an endpoint request to the server where:
         - `method` - the requested HTTP method (can also be any method string supported by the
           server). Defaults to `'GET'`.
         - `headers` - an object where each key is a request header and the value the header
-          content. Defaults to no headers.
+          content. Cannot include an Authorization header. Defaults to no headers.
         - `payload` - the request payload sent to the server.
 
 ### `client.message(message, callback)`
