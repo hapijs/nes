@@ -267,7 +267,7 @@ describe('Listener', function () {
         });
     });
 
-    describe('subscribe()', function () {
+    describe('_subscribe()', function () {
 
         it('subscribes to two paths on same subscription', function (done) {
 
@@ -311,6 +311,50 @@ describe('Listener', function () {
 
                             server.publish('/5', 'a');
                             server.publish('/6', 'b');
+                        }, 10);
+                    });
+                });
+            });
+        });
+
+        it('errors on double subscribe to same paths', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+            server.register({ register: Nes, options: { auth: false } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.subscription('/{id}', {});
+
+                server.start(function (err) {
+
+                    var client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect(function () {
+
+                        var called = false;
+                        client.subscribe('/5', function (err, update) {
+
+                            if (!called) {
+                                called = true;
+
+                                var request = {
+                                    type: 'sub',
+                                    path: '/5'
+                                };
+
+                                return client._send(request);
+                            }
+
+                            expect(err).to.exist();
+                            expect(err.message).to.equal('Client already subscribed');
+                            client.disconnect();
+                            server.stop(done);
+                        });
+
+                        setTimeout(function () {
+
+                            server.publish('/5', 'a');
                         }, 10);
                     });
                 });
