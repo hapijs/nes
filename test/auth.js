@@ -756,7 +756,7 @@ describe('authentication', function () {
                         setTimeout(function () {
 
                             server.publish('/', 'heya');
-                        }, 10);
+                        }, 20);
                     });
                 });
             });
@@ -799,7 +799,7 @@ describe('authentication', function () {
 
                             server.publish('/', 'steve');
                             server.publish('/', 'john');
-                        }, 10);
+                        }, 20);
                     });
                 });
             });
@@ -838,7 +838,7 @@ describe('authentication', function () {
                         setTimeout(function () {
 
                             server.publish('/', 'heya');
-                        }, 10);
+                        }, 20);
                     });
                 });
             });
@@ -877,7 +877,7 @@ describe('authentication', function () {
                         setTimeout(function () {
 
                             server.publish('/', 'heya');
-                        }, 10);
+                        }, 20);
                     });
                 });
             });
@@ -916,7 +916,7 @@ describe('authentication', function () {
                         setTimeout(function () {
 
                             server.publish('/', 'heya');
-                        }, 10);
+                        }, 20);
                     });
                 });
             });
@@ -955,7 +955,7 @@ describe('authentication', function () {
                         setTimeout(function () {
 
                             server.publish('/', 'heya');
-                        }, 10);
+                        }, 20);
                     });
                 });
             });
@@ -994,7 +994,7 @@ describe('authentication', function () {
                         setTimeout(function () {
 
                             server.publish('/', 'heya');
-                        }, 10);
+                        }, 20);
                     });
                 });
             });
@@ -1033,7 +1033,7 @@ describe('authentication', function () {
                         setTimeout(function () {
 
                             server.publish('/', 'heya');
-                        }, 10);
+                        }, 20);
                     });
                 });
             });
@@ -1072,7 +1072,7 @@ describe('authentication', function () {
                         setTimeout(function () {
 
                             server.publish('/', 'heya');
-                        }, 10);
+                        }, 20);
                     });
                 });
             });
@@ -1111,7 +1111,7 @@ describe('authentication', function () {
                         setTimeout(function () {
 
                             server.publish('/', 'heya');
-                        }, 10);
+                        }, 20);
                     });
                 });
             });
@@ -1150,7 +1150,7 @@ describe('authentication', function () {
                         setTimeout(function () {
 
                             server.publish('/', 'heya');
-                        }, 10);
+                        }, 20);
                     });
                 });
             });
@@ -1189,7 +1189,7 @@ describe('authentication', function () {
                         setTimeout(function () {
 
                             server.publish('/', 'heya');
-                        }, 10);
+                        }, 20);
                     });
                 });
             });
@@ -1228,7 +1228,7 @@ describe('authentication', function () {
                         setTimeout(function () {
 
                             server.publish('/', 'heya');
-                        }, 10);
+                        }, 20);
                     });
                 });
             });
@@ -1267,7 +1267,7 @@ describe('authentication', function () {
                         setTimeout(function () {
 
                             server.publish('/5', 'heya');
-                        }, 10);
+                        }, 20);
                     });
                 });
             });
@@ -1306,7 +1306,7 @@ describe('authentication', function () {
                         setTimeout(function () {
 
                             server.publish('/', 'heya');
-                        }, 10);
+                        }, 20);
                     });
                 });
             });
@@ -1345,7 +1345,7 @@ describe('authentication', function () {
                         setTimeout(function () {
 
                             server.publish('/', 'heya');
-                        }, 10);
+                        }, 20);
                     });
                 });
             });
@@ -1384,7 +1384,7 @@ describe('authentication', function () {
                         setTimeout(function () {
 
                             server.publish('/', 'heya');
-                        }, 10);
+                        }, 20);
                     });
                 });
             });

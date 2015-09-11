@@ -1,22 +1,27 @@
-# 0.3.x API Reference
+# 0.4.x API Reference
 
 - [Registration](#registration)
 - [Server](#server)
     - [`server.broadcast(message)`](#serverbroadcastmessage)
     - [`server.subscription(path, [options])`](#serversubscriptionpath-options)
     - [`server.publish(path, message)`](#serverpublishpath-message)
+- [Socket](#socket)
+    - [`socket.id`](#socketid)
+    - [`socket.auth`](#socketauth)
+    - [`socket.disconnect()`](#socketdisconnect)
 - [Client](#client)
     - [`new Client(url, [options])`](#new-clienturl-options)
-- [`client.onError`](#clientonerror)
-- [`client.onConnect`](#clientonconnect)
-- [`client.onBroadcast`](#clientonbroadcast)
-- [`client.connect([options], callback)`](#clientconnectoptions-callback)
-- [`client.disconnect()`](#clientdisconnect)
-- [`client.request(options, callback)`](#clientrequestoptions-callback)
-- [`client.message(message, callback)`](#clientmessagemessage-callback)
-- [`client.subscribe(path, handler)`](#clientsubscribepath-handler)
-- [`client.unsubscribe(path, [handler])`](#clientunsubscribepath-handler)
-- [`client.subscriptions()`](#clientsubscriptions)
+    - [`client.onError`](#clientonerror)
+    - [`client.onConnect`](#clientonconnect)
+    - [`client.onDisconnect`](#clientondisconnect)
+    - [`client.onBroadcast`](#clientonbroadcast)
+    - [`client.connect([options], callback)`](#clientconnectoptions-callback)
+    - [`client.disconnect()`](#clientdisconnect)
+    - [`client.request(options, callback)`](#clientrequestoptions-callback)
+    - [`client.message(message, callback)`](#clientmessagemessage-callback)
+    - [`client.subscribe(path, handler)`](#clientsubscribepath-handler)
+    - [`client.unsubscribe(path, [handler])`](#clientunsubscribepath-handler)
+    - [`client.subscriptions()`](#clientsubscriptions)
 
 ## Registration
 
@@ -25,8 +30,9 @@ method. The plugin accepts the following optional registration options:
 - `onConnect` - a function with the signature `function(ws)` invoked for each incoming client
   connection where:
     - `ws` - the WebSocket connection object.
-- `onMessage` - a function with the signature `function(message, next)` used to receive custom
+- `onMessage` - a function with the signature `function(socket message, next)` used to receive custom
   client messages (when the client calls [`client.message()`](#clientmessagedata-callback)) where:
+    - `socket` - the [`Socket`](#socket) object of the message source.
     - `message` - the message sent by the client.
     - `next` - the required callback function used to return a response to the client using
       signature `function(data)` where:
@@ -138,6 +144,25 @@ Sends a message to all the subscribed clients where:
 - `message` - the message sent to the clients. Can be any type which can be safely converted to
   string using `JSON.stringify()`.
 
+## Socket
+
+An object representing a client connection.
+
+### `socket.id`
+
+A unique socket identifier.
+
+### `socket.auth`
+
+The socket authentication state if any. Similar to the normal **hapi** `request.auth` object where:
+- `isAuthenticated` - a boolean set to `true` when authenticated.
+- `credentials` - the authentication credentials used.
+- `artifacts` - authentication artifacts specific to the authentication strategy used.
+
+### `socket.disconnect()`
+
+Closes a client connection.
+
 ## Client
 
 The client implements the **nes** protocol and provides methods for interacting with the server.
@@ -159,6 +184,12 @@ error happens that cannot be associated with a pending request with a callback.
 
 A property used to set a handler for connection events (initial connection and subsequent
 reconnections) with the signature `function()`.
+
+### `client.onDisconnect`
+
+A property used to set a handler for disconnection events with the signature `function(willReconnect)`
+where:
+- `willReconnect` - a boolean indicating if the client will automatically attempt to reconnect.
 
 ### `client.onBroadcast`
 

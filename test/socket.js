@@ -22,7 +22,40 @@ var expect = Code.expect;
 
 describe('Socket', function () {
 
-    describe('send()', function () {
+    describe('disconnect()', function () {
+
+        it('closes connection', function (done) {
+
+            var onMessage = function (socket, message, reply) {
+
+                socket.disconnect();
+            };
+
+            var server = new Hapi.Server();
+            server.connection();
+            server.register({ register: Nes, options: { onMessage: onMessage } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.start(function (err) {
+
+                    var client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.onDisconnect = function () {
+
+                        client.disconnect();
+                        server.stop(done);
+                    };
+
+                    client.connect(function () {
+
+                        client.message('winning', function (err, response) { });
+                    });
+                });
+            });
+        });
+    });
+
+    describe('_send()', function () {
 
         it('errors on invalid message', function (done) {
 
