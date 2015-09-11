@@ -59,7 +59,7 @@ describe('Socket', function () {
         });
     });
 
-    describe('onMessage()', function () {
+    describe('_onMessage()', function () {
 
         it('supports route id', function (done) {
 
@@ -501,6 +501,156 @@ describe('Socket', function () {
                                 expect(err).to.not.exist();
                             });
                         });
+                    });
+                });
+            });
+        });
+
+        it('unsubscribes to two paths on same subscription', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+
+            var onMessage = function (socket, message, next) {
+
+                return next('b');
+            };
+
+            server.register({ register: Nes, options: { auth: false, onMessage: onMessage } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.subscription('/{id}', {});
+
+                server.start(function (err) {
+
+                    var client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect(function () {
+
+                        var called = false;
+                        client.subscribe('/5', function (err, update) { });
+
+                        client.subscribe('/6', function (err, update) {
+
+                            expect(err).to.not.exist();
+
+                            client.unsubscribe('/5');
+                            client.unsubscribe('/6');
+
+                            client.message('a', function (err, message) {
+
+                                var listener = server.connections[0].plugins.nes._listener;
+                                var match = listener._router.route('sub', '/5');
+                                expect(match.route.subscribers._items).to.deep.equal({});
+
+                                client.disconnect();
+                                server.stop(done);
+                            });
+                        });
+
+                        setTimeout(function () {
+
+                            server.publish('/6', 'b');
+                        }, 10);
+                    });
+                });
+            });
+        });
+
+        it('ignores double unsubscribe to same subscription', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+
+            var onMessage = function (socket, message, next) {
+
+                return next('b');
+            };
+
+            server.register({ register: Nes, options: { auth: false, onMessage: onMessage } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.subscription('/{id}', {});
+
+                server.start(function (err) {
+
+                    var client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect(function () {
+
+                        client.subscribe('/6', function (err, update) {
+
+                            expect(err).to.not.exist();
+
+                            client.unsubscribe('/6');
+                            client._send({ type: 'unsub', path: '/6' });
+
+                            client.message('a', function (err, message) {
+
+                                var listener = server.connections[0].plugins.nes._listener;
+                                var match = listener._router.route('sub', '/6');
+                                expect(match.route.subscribers._items).to.deep.equal({});
+
+                                client.disconnect();
+                                server.stop(done);
+                            });
+                        });
+
+                        setTimeout(function () {
+
+                            server.publish('/6', 'b');
+                        }, 10);
+                    });
+                });
+            });
+        });
+
+        it('ignores double unsubscribe to same subscription with another path', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+
+            var onMessage = function (socket, message, next) {
+
+                return next('b');
+            };
+
+            server.register({ register: Nes, options: { auth: false, onMessage: onMessage } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.subscription('/{id}', {});
+
+                server.start(function (err) {
+
+                    var client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect(function () {
+
+                        client.subscribe('/5', function () { });
+
+                        client.subscribe('/6', function (err, update) {
+
+                            expect(err).to.not.exist();
+
+                            client.unsubscribe('/6');
+                            client._send({ type: 'unsub', path: '/6' });
+                            client.unsubscribe('/5');
+
+                            client.message('a', function (err, message) {
+
+                                var listener = server.connections[0].plugins.nes._listener;
+                                var match = listener._router.route('sub', '/6');
+                                expect(match.route.subscribers._items).to.deep.equal({});
+
+                                client.disconnect();
+                                server.stop(done);
+                            });
+                        });
+
+                        setTimeout(function () {
+
+                            server.publish('/6', 'b');
+                        }, 10);
                     });
                 });
             });
