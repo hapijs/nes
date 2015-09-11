@@ -1,150 +1,309 @@
-# Messages
+# Protocol v0.4.x
 
-## General
+## Message
 
-All messages on the channel have the `type` field which is used to identify the expected behavior. Valid values to the server include `hello`, ``sub`, `unsub`, `request`, `message`. Valid values to the client include `hello`, `broadcast`, `pub`, `sub`, `response`, and `message`. All other message types are considered a protocol error.
+The nes protocol consists of JSON messages sent between the client and server.
 
-Most client -> server messages support the `id` parameter, which can be used to identify the message's response from the server. This value may be any valid JSON value and the server will simply echo this back to the client with the associated response.
+Each incoming request from the client to the server contains:
+- `type` - the message type:
+    - `'hello'` - connection initialization and authentication.
+    - `'request'` - endpoint request.
+    - `'sub'` - subscribe to a path.
+    - `'unsub'` - unsubscribe from a path.
+    - `'message'` - send custom message.
+- `id` - a unique per-client request id (number or string).
+- additional type-specific fields.
 
-## Handshake
+Each outgoing request from the server to the client contains:
+- `type` - the message type:
+    - `'hello'` - connection initialization and authentication.
+    - `'request'` - endpoint request.
+    - `'sub'` - subscribe to a path.
+    - `'message'` - send custom message.
+    - `'broadcast'` - a broadcast message to all clients.
+    - `'pub'` - a subscription update.
+- additional type-specific fields.
 
-Client -> Server. Sent when the client first connects and wishes to perform authentication and setup initial subscriptions. This message may only be sent once for a given connection.
+## Errors
 
-```
+When a message indicates an error, the message will include in addition to the message-specific fields:
+- `statusCode` - an HTTP equivalent status code (4xx, 5xx).
+- `headers` - optional headers related to the request.
+- `payload` - the error details which include:
+    - `statusCode` - the same status code information.
+    - `error` - the HTTP equivalent error message.
+    - `message` - a description of the error.
+    - additional error-specific fields.
+
+For example:
+
+```js
 {
-  id: callbackId,
-  type: 'hello',
-  auth: Object,
-  subs: ['path', 'path']
-}
-```
-
-When the authentication mode is `direct`, the `auth` field is an object containing the headers that needs to be passed to the server's authentication tier, ex:
-
-```
-  auth: {
-    headers: {
-      Authorization: 'Bearer SuperSecret'
+    type: 'hello',
+    id: 1,
+    statusCode: 401,
+    payload: {
+        statusCode: 401,
+        error: 'Unauthorized',
+        message: 'Unknown username or incorrect password'
     }
-  }
-```
-
-Other authentication modes must pass the result from the nes authentication endpoint.
-
-The optional `subs` array provides a list of all subscription paths that have been registered prior to connection.
-
-Response:
-
-```
-{
-  id: callbackId
-  error: 'Optional Error message'
-  subs: 
-```
-
-
-## Broadcast
-
-Server -> Client. Sent when the server wishes to send a message to all clients.
-
-```
-{
-  type: 'broadcast',
-  message: JSONObject
 }
 ```
 
-The `message` field may be any arbitrary JSON object.
+
+## Hello
+
+Flow: `client` -> `server` -> `client`
+
+Every client connection must first be initialized with a `hello` message. The client sends a message to the server
+with the following:
+- `type` - set to `'hello'`.
+- `id` - unique request identifier.
+- `auth` - optional authentication credentials. Can be any value understood by the server.
+- `subs` - an optional array of strings indicating the path subscriptions the client is interested in.
+
+For example:
+
+```js
+{
+    type: 'hello',
+    id: 1,
+    auth: {
+        headers: {
+            authorization: 'Basic am9objpzZWNyZXQ='
+        }
+    },
+    subs: ['/a', '/b']
+}
+```
+
+The server respond by sending a message back with the following:
+- `type` - set to `'hello'`.
+- `id` - the same `id` received from the client.
+
+For example:
+
+```js
+{
+    type: 'hello',
+    id: 1
+}
+```
+
+If the request failed, the server includes the [standard error fields](#errors).
+
+For example:
+
+```js
+{
+    type: 'hello',
+    id: 1,
+    statusCode: 401,
+    payload: {
+        statusCode: 401,
+        error: 'Unauthorized',
+        message: 'Unknown username or incorrect password'
+    }
+}
+```
+
+If any of the subscription requests fail, the server will send separate messages before the `'hello'` response:
+- `type` - set to `'sub'`.
+- `path` - the requested path which failed to subscribe.
+- the [standard error fields](#errors)
+
+For example:
+
+```js
+{
+    type: 'sub',
+    path: '/a',
+    statusCode: 403,
+    payload: {
+        statusCode: 403,
+        error: 'Forbidden'
+    }
+}
+```
+
+## Request
+
+Flow: `client` -> `server` -> `client`
+
+Request a resource from the server where:
+- `type` - set to `'request'`.
+- `id` - unique request identifier.
+- `method` - the corresponding HTTP method (e.g. `'GET'`).
+- `path` - the requested resource (can be an HTTP path of resource name).
+- `headers` - an optional object with the request headers (each header name is a key with a corresponding value).
+- `payload` - an optional value to send with the request.
+
+For example:
+
+```js
+{
+    type: 'request',
+    id: 2,
+    method: 'POST',
+    path: '/item/5',
+    payload: {
+        id: 5,
+        status: 'done'
+    }
+}
+```
+
+The server response includes:
+- `type` - set to `'request'`.
+- `id` - the same `id` received from the client.
+- `statusCode` - an HTTP equivalent status code.
+- `payload` - the requested resource.
+- `headers` - optional headers related to the request (e.g. `{ 'content-type': 'text/html; charset=utf-8' }').
+
+For example:
+
+```js
+{
+    type: 'request',
+    id: 2,
+    statusCode: 200,
+    payload: {
+        status: 'ok'
+    }
+}
+```
+
+If the request fails, the `statusCode`, `headers`, and `payload` fields will comply with the
+[standard error values](#errors).
+
+## Message
+
+Flow: `client` -> `server` [-> `client`]
+
+Sends a custom message to the server where:
+- `type` - set to `'message'`.
+- `id` - unique request identifier.
+- `message` - any value (string, object, etc.).
+
+For example:
+
+```js
+{
+    type: 'message',
+    id: 3,
+    message: 'hi'
+}
+```
+
+The server may respond which includes:
+- `type` - set to `'message'`.
+- `id` - the same `id` received from the client.
+- `message` - any value (string, object, etc.).
+
+For example:
+
+```js
+{
+    type: 'message',
+    id: 3,
+    message: 'hello back'
+}
+```
+
+If the request fails, the response will include the [standard error fields](#errors).
 
 
 ## Subscribe
 
-Client -> Server. Registers a subscription for the client on the server. This should be done only once for a given route that the client is concerned about. Routing the message to multiple callbacks on the same client should be done within the client rather than through multiple requests from the server.
+Flow: `client` -> `server` [-> `client`]
 
-```
+Sends a subscription request to the server:
+- `type` - set to `'sub'`.
+- `id` - unique request identifier.
+- `path` - the requested subscription path.
+
+For example:
+
+```js
 {
-  type: 'sub',
-  path: '/example/value'
+    type: 'sub',
+    id: 4,
+    path: '/box/blue'
 }
 ```
 
-Response:
+The server responds only if an error occurred:
+- `type` - set to `'sub'`.
+- `path` - the requested path which failed to subscribe.
+- the [standard error fields](#errors)
 
-```
+For example:
+
+```js
 {
-  type: 'sub',
-  error: Optional Error message'
+    type: 'sub',
+    path: '/box/blue',
+    statusCode: 403,
+    payload: {
+        statusCode: 403,
+        error: 'Forbidden'
+    }
 }
 ```
 
 ## Unsubscribe
 
-Client -> Server. Unregisters a previously registered subscription. This message has not response from the server and is assumed to always be successful.
+Flow: `client` -> `server`
 
-```
+Unsubscribe from a server subscription:
+- `type` - set to `'unsub'`.
+- `id` - unique request identifier.
+- `path` - the subscription path.
+
+For example:
+
+```js
 {
-  type: 'sub',
-  path: '/example/value'
+    type: 'unsub',
+    id: 5,
+    path: '/box/blue'
 }
 ```
 
-Response: None
+There is no server response.
 
-## Request
+## Broadcast
 
-Client -> Server. Primary action sent from the client. This executes a given hapi route on the server.
+Flow: `server` -> `client`
 
-```
+A message sent from the server to all connected clients:
+- `type` - set to `'broadcast'`.
+- `message` - any value (string, object, etc.).
+
+```js
 {
-  type: 'request',
-  id: callbackId,
-  method: 'httpMethod',
-  path: '/route/path',
-  headers: httpHeadersObject,
-  payload: JSONObject
+    type: 'broadcast',
+    message: {
+        some: 'message'
+    }
 }
 ```
 
-Response:
-```
+## Publish
+
+Flow: `server` -> `client`
+
+A message sent from the server to all subscribed clients:
+- `type` - set to `'pub'`.
+- `path` - the subscription path.
+- `message` - any value (string, object, etc.).
+
+```js
 {
-  type: 'response',
-  id: callbackId,
-  statusCode: httpStatusCode,
-  payload: JSONObject
-  headers:  httpHeadersObject
+    type: 'pub',
+    path: '/box/blue',
+    message: {
+        status: 'closed'
+    }
 }
 ```
-
-The `headers` fields is a key value set defining the HTTP headers that would be sent if this were a HTTP request. Ex:
-```
-  headers: { 'content-type': 'text/html; charset=utf-8' }
-```
-
-The `payload` field maybe be a string or an arbitrary JSON object as returned by the server.
-
-
-## Custom Message
-
-Client -> Server. Sends an arbitrary custom message to the server. This will be handled by the `onMessage` callback supplied to the hes plugin options. If no option was provided, the server will send back an error to the client.
-
-```
-{
-  type: 'message',
-  id: callbackId,
-  message: JSONObject
-}
-```
-
-Response:
-
-```
-{
-  type: 'message',
-  id: callbackId,
-  error: 'Optional Error message',
-  message: JSONObject
-}
-```
-
-The `message` field may be any arbitrary JSON object.
