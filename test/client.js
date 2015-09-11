@@ -197,7 +197,7 @@ describe('Browser', function () {
                                 return;
                             }
 
-                            expect(Date.now() - now).to.be.below(95);
+                            expect(Date.now() - now).to.be.below(100);
 
                             client.disconnect();
                             server.stop(done);
