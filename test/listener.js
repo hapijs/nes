@@ -297,7 +297,14 @@ describe('Listener', function () {
 
                             expect(called).to.be.true();
                             client.disconnect();
-                            server.stop(done);
+                            server.stop(function () {
+
+                                var listener = server.connections[0].plugins.nes._listener;
+                                expect(listener._sockets._items).to.deep.equal({});
+                                var match = listener._router.route('sub', '/5');
+                                expect(match.route.subscribers._items).to.deep.equal({});
+                                done();
+                            });
                         });
 
                         setTimeout(function () {
