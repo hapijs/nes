@@ -478,7 +478,10 @@ describe('Browser', function () {
                         path: '/',
                         handler: function (request, reply) {
 
-                            request.connection.plugins.nes._listener._sockets[0]._ws.send('{');
+                            request.connection.plugins.nes._listener._sockets.forEach(function (socket) {
+
+                                socket._ws.send('{');
+                            });
 
                             setTimeout(function () {
 
@@ -525,7 +528,10 @@ describe('Browser', function () {
                         path: '/',
                         handler: function (request, reply) {
 
-                            request.connection.plugins.nes._listener._sockets[0]._ws.send('{"id":100,"type":"response","statusCode":200,"payload":"hello","headers":{}}');
+                            request.connection.plugins.nes._listener._sockets.forEach(function (socket) {
+
+                                socket._ws.send('{"id":100,"type":"response","statusCode":200,"payload":"hello","headers":{}}');
+                            });
 
                             setTimeout(function () {
 
@@ -572,7 +578,10 @@ describe('Browser', function () {
                         path: '/',
                         handler: function (request, reply) {
 
-                            request.connection.plugins.nes._listener._sockets[0]._ws.send('{"id":2,"type":"unknown","statusCode":200,"payload":"hello","headers":{}}');
+                            request.connection.plugins.nes._listener._sockets.forEach(function (socket) {
+
+                                socket._ws.send('{"id":2,"type":"unknown","statusCode":200,"payload":"hello","headers":{}}');
+                            });
 
                             setTimeout(function () {
 
