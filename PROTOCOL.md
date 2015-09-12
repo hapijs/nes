@@ -12,6 +12,7 @@ Each incoming request from the client to the server contains:
     - `'sub'` - subscribe to a path.
     - `'unsub'` - unsubscribe from a path.
     - `'message'` - send custom message.
+- `id` - a unique per-client request id (number or string).
 - additional type-specific fields.
 
 Each outgoing request from the server to the client contains:
@@ -123,7 +124,11 @@ For example:
 ```js
 {
     type: 'hello',
-    id: 1
+    id: 1,
+    heartbeat: {
+        interval: 15000,
+        timeout: 5000
+    }
 }
 ```
 
