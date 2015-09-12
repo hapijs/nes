@@ -236,7 +236,6 @@ describe('Socket', function () {
 
                         var message = JSON.parse(data);
                         expect(message.payload).to.deep.equal({
-                            statusCode: 400,
                             error: 'Bad Request',
                             message: 'Cannot parse message'
                         });
@@ -308,7 +307,6 @@ describe('Socket', function () {
 
                         var message = JSON.parse(data);
                         expect(message.payload).to.deep.equal({
-                            statusCode: 400,
                             error: 'Bad Request',
                             message: 'Message missing id'
                         });
@@ -401,7 +399,6 @@ describe('Socket', function () {
                         }
 
                         expect(message.payload).to.deep.equal({
-                            statusCode: 400,
                             error: 'Bad Request',
                             message: 'Message missing method'
                         });
@@ -457,7 +454,6 @@ describe('Socket', function () {
                         }
 
                         expect(message.payload).to.deep.equal({
-                            statusCode: 400,
                             error: 'Bad Request',
                             message: 'Message missing path'
                         });
@@ -513,7 +509,6 @@ describe('Socket', function () {
                         }
 
                         expect(message.payload).to.deep.equal({
-                            statusCode: 400,
                             error: 'Bad Request',
                             message: 'Unknown message type'
                         });

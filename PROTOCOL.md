@@ -30,7 +30,6 @@ When a message indicates an error, the message will include in addition to the m
 - `statusCode` - an HTTP equivalent status code (4xx, 5xx).
 - `headers` - optional headers related to the request.
 - `payload` - the error details which include:
-    - `statusCode` - the same status code information.
     - `error` - the HTTP equivalent error message.
     - `message` - a description of the error.
     - additional error-specific fields.
@@ -43,7 +42,6 @@ For example:
     id: 1,
     statusCode: 401,
     payload: {
-        statusCode: 401,
         error: 'Unauthorized',
         message: 'Unknown username or incorrect password'
     }
@@ -100,7 +98,6 @@ For example:
     id: 1,
     statusCode: 401,
     payload: {
-        statusCode: 401,
         error: 'Unauthorized',
         message: 'Unknown username or incorrect password'
     }
@@ -120,7 +117,6 @@ For example:
     path: '/a',
     statusCode: 403,
     payload: {
-        statusCode: 403,
         error: 'Forbidden'
     }
 }
@@ -245,7 +241,6 @@ For example:
     path: '/box/blue',
     statusCode: 403,
     payload: {
-        statusCode: 403,
         error: 'Forbidden'
     }
 }
