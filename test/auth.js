@@ -65,9 +65,6 @@ describe('authentication', function () {
                                 expect(err).to.not.exist();
                                 expect(payload).to.equal('hello');
                                 expect(statusCode).to.equal(200);
-                                expect(headers).to.contain({
-                                    'content-type': 'text/html; charset=utf-8'
-                                });
 
                                 client.disconnect();
                                 server.stop(done);
@@ -120,9 +117,6 @@ describe('authentication', function () {
                                 expect(err).to.not.exist();
                                 expect(payload).to.equal('hello');
                                 expect(statusCode).to.equal(200);
-                                expect(headers).to.contain({
-                                    'content-type': 'text/html; charset=utf-8'
-                                });
 
                                 client.disconnect();
                                 server.stop(done);
@@ -342,9 +336,6 @@ describe('authentication', function () {
                                 expect(err).to.not.exist();
                                 expect(payload).to.equal('hello');
                                 expect(statusCode).to.equal(200);
-                                expect(headers).to.contain({
-                                    'content-type': 'text/html; charset=utf-8'
-                                });
 
                                 client.disconnect();
                                 server.stop(done);
@@ -392,9 +383,6 @@ describe('authentication', function () {
                                 expect(err).to.not.exist();
                                 expect(payload).to.equal('hello');
                                 expect(statusCode).to.equal(200);
-                                expect(headers).to.contain({
-                                    'content-type': 'text/html; charset=utf-8'
-                                });
 
                                 client.disconnect();
                                 server.stop(done);
@@ -570,9 +558,6 @@ describe('authentication', function () {
                             expect(err).to.not.exist();
                             expect(payload).to.equal('hello');
                             expect(statusCode).to.equal(200);
-                            expect(headers).to.contain({
-                                'content-type': 'text/html; charset=utf-8'
-                            });
 
                             client.disconnect();
                             server.stop(done);

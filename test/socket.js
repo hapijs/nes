@@ -125,7 +125,6 @@ describe('Socket', function () {
                             expect(err).to.not.exist();
                             expect(payload).to.equal('hello');
                             expect(statusCode).to.equal(200);
-                            expect(headers).to.contain({ 'content-type': 'text/html; charset=utf-8' });
 
                             client.disconnect();
                             server.stop(done);
@@ -692,7 +691,7 @@ describe('Socket', function () {
 
             var server = new Hapi.Server();
             server.connection();
-            server.register({ register: Nes, options: { auth: false } }, function (err) {
+            server.register({ register: Nes, options: { auth: false, headers: '*' } }, function (err) {
 
                 expect(err).to.not.exist();
 
