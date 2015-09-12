@@ -192,18 +192,18 @@ describe('Browser', function () {
 
                             ++c;
 
-                            if (c < 5) {
+                            if (c < 6) {
                                 client._ws.close();
                                 return;
                             }
 
-                            expect(Date.now() - now).to.be.below(100);
+                            expect(Date.now() - now).to.be.below(150);
 
                             client.disconnect();
                             server.stop(done);
                         };
 
-                        client.connect({ delay: 10, maxDelay: 15 }, function () { });
+                        client.connect({ delay: 10, maxDelay: 11 }, function () { });
                     });
                 });
             });
@@ -1033,6 +1033,64 @@ describe('Browser', function () {
                     expect(err).to.exist();
                     expect(err.message).to.equal('Invalid path');
                     done();
+                });
+            });
+        });
+
+        describe('_beat()', function () {
+
+            it('disconnects when server fails to ping', function (done) {
+
+                var server = new Hapi.Server();
+                server.connection();
+                server.register({ register: Nes, options: { auth: false, heartbeat: { interval: 20, timeout: 10 } } }, function (err) {
+
+                    expect(err).to.not.exist();
+
+                    server.start(function (err) {
+
+                        var client = new Nes.Client('http://localhost:' + server.info.port);
+                        client.onDisconnect = function () {
+
+                            server.stop(done);
+                        };
+
+                        client.connect(function (err) {
+
+                            expect(err).to.not.exist();
+
+                            clearTimeout(server.connections[0].plugins.nes._listener._heartbeat);
+                        });
+                    });
+                });
+            });
+
+            it('disconnects when server fails to ping (after a few pings)', function (done) {
+
+                var server = new Hapi.Server();
+                server.connection();
+                server.register({ register: Nes, options: { auth: false, heartbeat: { interval: 20, timeout: 10 } } }, function (err) {
+
+                    expect(err).to.not.exist();
+
+                    server.start(function (err) {
+
+                        var client = new Nes.Client('http://localhost:' + server.info.port);
+                        client.onDisconnect = function () {
+
+                            server.stop(done);
+                        };
+
+                        client.connect(function (err) {
+
+                            expect(err).to.not.exist();
+
+                            setTimeout(function () {
+
+                                clearTimeout(server.connections[0].plugins.nes._listener._heartbeat);
+                            }, 50);
+                        });
+                    });
                 });
             });
         });

@@ -1,4 +1,4 @@
-# 0.4.x API Reference
+# 0.5.x API Reference
 
 - [Registration](#registration)
 - [Server](#server)
@@ -84,9 +84,17 @@ method. The plugin accepts the following optional registration options:
         - `isHttpOnly` - the cookie HTTP only flag when using type `'cookie'`. Defaults to `true`.
         - `path` - the cookie path when using type `'cookie'`. Defaults to `'/'`.
         - `domain` - the cookie domain when using type `'cookie'`. Defaults to no domain.
-        - `ttl` - the cookie expiration milliseconds when using type `'cookie'`. Defaults to current session only.
+        - `ttl` - the cookie expiration milliseconds when using type `'cookie'`. Defaults to current
+          session only.
 - `headers` - an optional array of header field names to include in server responses to the client.
   If set to `'*'` (without an array), allows all headers. Defaults to `null` (no headers).
+- `heartbeat` - configures connection keep-alive settings where value can be:
+    - `false` - no heartbeats.
+    - an object with:
+        - `interval` - time interval between heartbeat messages in milliseconds. Defaults to `15000`
+          (15 seconds).
+        - `timeout` - timeout in milliseconds after a heartbeat is sent to the client and before the
+          client is considered disconnected by the server. Defaults to `5000` (5 seconds).
 
 ## Server
 

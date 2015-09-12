@@ -22,6 +22,59 @@ var expect = Code.expect;
 
 describe('Listener', function () {
 
+    describe('_beat()', function () {
+
+        it('disconnects client after timeout', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+            server.register({ register: Nes, options: { auth: false, heartbeat: { interval: 20, timeout: 10 } } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.start(function (err) {
+
+                    var client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.onDisconnect = function () {
+
+                        server.stop(done);
+                    };
+
+                    client.connect(function (err) {
+
+                        expect(err).to.not.exist();
+                        expect(client._heartbeatTimeout).to.equal(30);
+
+                        client._onMessage = function () { };
+                    });
+                });
+            });
+        });
+
+        it('disables heartbeat', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+            server.register({ register: Nes, options: { auth: false, heartbeat: false } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.start(function (err) {
+
+                    var client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect(function (err) {
+
+                        expect(err).to.not.exist();
+                        expect(client._heartbeatTimeout).to.be.false();
+
+                        client.disconnect();
+                        server.stop(done);
+                    });
+                });
+            });
+        });
+    });
+
     describe('broadcast()', function () {
 
         it('sends message to all clients', function (done) {
