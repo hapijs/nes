@@ -1,7 +1,7 @@
 {
   "name": "nes",
   "description": "WebSocket adapter plugin for hapi routes",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "repository": "git://github.com/hapijs/nes",
   "main": "lib/index.js",
   "keywords": [
@@ -10,7 +10,7 @@
     "websocket"
   ],
   "engines": {
-    "node": ">=0.10.40"
+    "node": ">=4.0.0"
   },
   "dependencies": {
     "boom": "2.x.x",
@@ -23,11 +23,11 @@
     "ws": "0.8.x"
   },
   "peerDependencies": {
-    "hapi": ">=9.3.x"
+    "hapi": ">=10.0.0"
   },
   "devDependencies": {
     "code": "1.x.x",
-    "hapi": "9.x.x",
+    "hapi": "10.x.x",
     "lab": "5.x.x"
   },
   "scripts": {
