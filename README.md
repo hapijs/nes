@@ -10,6 +10,7 @@ flexible and organic extension.
 Lead Maintainer - [Eran Hammer](https://github.com/hueniverse)
 
 - [API](#api)
+- [Protocol](#protocol)
 - [Examples](#examples)
     - [Route invocation](#route-invocation)
     - [Subscriptions](#subscriptions)
@@ -20,6 +21,10 @@ Lead Maintainer - [Eran Hammer](https://github.com/hueniverse)
 ## API
 
 The full client and server API is available in the [API documentation](https://github.com/hapijs/nes/blob/master/API.md).
+
+## Protocol
+
+The **nes** protocol is described in the [Protocol documentation](https://github.com/hapijs/nes/blob/master/PROTOCOL.md).
 
 ## Examples
 
