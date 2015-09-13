@@ -463,6 +463,47 @@ describe('Browser', function () {
             });
         });
 
+        describe('message()', function () {
+
+            it('errors on timeout', function (done) {
+
+                var onMessage = function (socket, message, reply) {
+
+                    setTimeout(function () {
+
+                        return reply('hello');
+                    }, 20);
+                };
+
+                var server = new Hapi.Server();
+                server.connection();
+                server.register({ register: Nes, options: { onMessage: onMessage } }, function (err) {
+
+                    expect(err).to.not.exist();
+
+                    server.start(function (err) {
+
+                        var client = new Nes.Client('http://localhost:' + server.info.port, { timeout: 10 });
+                        client.connect(function () {
+
+                            client.message('winning', function (err, response) {
+
+                                expect(err).to.exist();
+                                expect(err.message).to.equal('Request timed out');
+                                expect(response).to.not.exist();
+
+                                setTimeout(function () {
+
+                                    client.disconnect();
+                                    server.stop(done);
+                                }, 20);
+                            });
+                        });
+                    });
+                });
+            });
+        });
+
         describe('_onMessage', function () {
 
             it('ignores invalid incoming message', function (done) {
@@ -555,7 +596,7 @@ describe('Browser', function () {
                             client.request('/', function (err, payload, statusCode, headers) {
 
                                 expect(err).to.not.exist();
-                                expect(logged).to.equal('Received response for missing request');
+                                expect(logged).to.equal('Received response for unknown request');
 
                                 client.disconnect();
                                 server.stop(done);
@@ -603,7 +644,7 @@ describe('Browser', function () {
                             }
 
                             expect(logged).to.equal('Received unknown response type: unknown');
-                            expect(err.message).to.equal('Received response for missing request');
+                            expect(err.message).to.equal('Received response for unknown request');
 
                             client.disconnect();
                             server.stop(done);

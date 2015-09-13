@@ -182,8 +182,10 @@ It supports auto-connect by default as well as authentication.
 
 Creates a new client object where:
 - `url` - the WebSocket address to connect to (e.g. `'wss://localhost:8000'`).
-- `option` - optional configuration object available only when the client is used in node.js
-  and passed as-is to the [**ws** module](https://www.npmjs.com/package/ws).
+- `option` - optional configuration object where:
+    - `ws` - available only when the client is used in node.js and passed as-is to the
+      [**ws** module](https://www.npmjs.com/package/ws).
+    - `timeout` - server response timeout in milliseconds. Defaults to `false` (no timeout).
 
 ### `client.onError`
 

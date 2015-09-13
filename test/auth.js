@@ -56,7 +56,7 @@ describe('authentication', function () {
                         var header = res.headers['set-cookie'][0];
                         var cookie = header.match(/(?:[^\x00-\x20\(\)<>@\,;\:\\"\/\[\]\?\=\{\}\x7F]+)\s*=\s*(?:([^\x00-\x20\"\,\;\\\x7F]*))/);
 
-                        var client = new Nes.Client('http://localhost:' + server.info.port, { headers: { cookie: 'nes=' + cookie[1] } });
+                        var client = new Nes.Client('http://localhost:' + server.info.port, { ws: { headers: { cookie: 'nes=' + cookie[1] } } });
                         client.connect(function (err) {
 
                             expect(err).to.not.exist();
@@ -108,7 +108,7 @@ describe('authentication', function () {
                         var header = res.headers['set-cookie'][0];
                         var cookie = header.match(/(?:[^\x00-\x20\(\)<>@\,;\:\\"\/\[\]\?\=\{\}\x7F]+)\s*=\s*(?:([^\x00-\x20\"\,\;\\\x7F]*))/);
 
-                        var client = new Nes.Client('http://localhost:' + server.info.port, { headers: { cookie: 'nes=' + cookie[1] } });
+                        var client = new Nes.Client('http://localhost:' + server.info.port, { ws: { headers: { cookie: 'nes=' + cookie[1] } } });
                         client.connect(function (err) {
 
                             expect(err).to.not.exist();
@@ -200,7 +200,7 @@ describe('authentication', function () {
 
                         expect(res.result.status).to.equal('unauthenticated');
 
-                        var client = new Nes.Client('http://localhost:' + server.info.port, { headers: { cookie: 'xnes=123' } });
+                        var client = new Nes.Client('http://localhost:' + server.info.port, { ws: { headers: { cookie: 'xnes=123' } } });
                         client.connect(function (err) {
 
                             expect(err).to.not.exist();
@@ -249,7 +249,7 @@ describe('authentication', function () {
                         var header = res.headers['set-cookie'][0];
                         var cookie = header.match(/(?:[^\x00-\x20\(\)<>@\,;\:\\"\/\[\]\?\=\{\}\x7F]+)\s*=\s*(?:([^\x00-\x20\"\,\;\\\x7F]*))/);
 
-                        var client = new Nes.Client('http://localhost:' + server.info.port, { headers: { cookie: 'nes=' + cookie[1] } });
+                        var client = new Nes.Client('http://localhost:' + server.info.port, { ws: { headers: { cookie: 'nes=' + cookie[1] } } });
                         client.connect({ auth: 'something' }, function (err) {
 
                             expect(err).to.exist();
