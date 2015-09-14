@@ -28,9 +28,9 @@
 
 The **nes** plugin uses the standard **hapi** registration process using the `server.register()`
 method. The plugin accepts the following optional registration options:
-- `onConnect` - a function with the signature `function(ws)` invoked for each incoming client
+- `onConnection` - a function with the signature `function(socket)` invoked for each incoming client
   connection where:
-    - `ws` - the WebSocket connection object.
+    - `socket` - the [`Socket`](#socket) object of the incoming connection.
 - `onMessage` - a function with the signature `function(socket, message, next)` used to receive custom
   client messages (when the client calls [`client.message()`](#clientmessagedata-callback)) where:
     - `socket` - the [`Socket`](#socket) object of the message source.
