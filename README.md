@@ -141,7 +141,7 @@ var Nes = require('nes');
 var client = new Nes.Client('ws://localhost');
 client.connect(function (err) {
 
-    client.onBroadcast = function (update) {
+    client.onUpdate = function (update) {
 
         // update -> 'welcome!'
     });
