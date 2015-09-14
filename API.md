@@ -223,6 +223,7 @@ Connects the client to the server where:
       be 1 seconds, then 2 seconds, 3 seconds, until the `maxDelay` value is reached and then
       `maxDelay` is used.
     - `maxDelay` - the maximum delay time in milliseconds between reconnections.
+    - `retries` - number of reconnection attempts. Defaults to `Infinity` (unlimited).
 - `callback` - the server response callback using the signature `function(err)` where:
     - `err` - an error response.
 

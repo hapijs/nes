@@ -297,6 +297,38 @@ describe('Browser', function () {
 
         describe('_reconnect()', function () {
 
+            it('limits retries', function (done) {
+
+                var server = new Hapi.Server();
+                server.connection();
+                server.register({ register: Nes, options: { auth: false } }, function (err) {
+
+                    expect(err).to.not.exist();
+
+                    server.start(function (err) {
+
+                        var client = new Nes.Client('http://localhost:' + server.info.port);
+
+                        var c = 0;
+                        var now = Date.now();
+                        client.onConnect = function () {
+
+                            ++c;
+                            client._ws.close();
+                        };
+
+                        client.connect({ delay: 5, maxDelay: 10, retries: 2 }, function () {
+
+                            setTimeout(function () {
+
+                                expect(c).to.equal(3);
+                                server.stop(done);
+                            }, 100);
+                        });
+                    });
+                });
+            });
+
             it('aborts reconnect if disconnect is called in between attempts', function (done) {
 
                 var server = new Hapi.Server();
