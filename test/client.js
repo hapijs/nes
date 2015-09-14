@@ -86,7 +86,7 @@ describe('Browser', function () {
             });
         });
 
-        describe('_onClose()', function () {
+        describe('_reconnect()', function () {
 
             it('reconnects automatically', function (done) {
 
@@ -293,9 +293,52 @@ describe('Browser', function () {
                     });
                 });
             });
-        });
 
-        describe('_reconnect()', function () {
+            it('times out', function (done) {
+
+                var server = new Hapi.Server();
+                server.connection();
+                server.register({ register: Nes, options: { auth: false } }, function (err) {
+
+                    expect(err).to.not.exist();
+
+                    server.start(function (err) {
+
+                        server.connections[0].plugins.nes._listener._wss.handleUpgrade = function () { };
+
+                        var client = new Nes.Client('http://localhost:' + server.info.port);
+
+                        var c = 0;
+                        var now = Date.now();
+                        client.onConnect = function () {
+
+                            ++c;
+                        };
+
+                        var e = 0;
+                        client.onError = function (err) {
+
+                            ++e;
+                            expect(err).to.exist();
+                            expect(err.message).to.equal('Connection timed out');
+
+                            if (e < 4) {
+                                return;
+                            }
+
+                            expect(c).to.equal(0);
+                            client.disconnect();
+                            server.stop({ timeout: 1 }, done);
+                        };
+
+                        client.connect({ delay: 10, maxDelay: 10, timeout: 10 }, function (err) {
+
+                            expect(err).to.exist();
+                            expect(err.message).to.equal('Connection timed out');
+                        });
+                    });
+                });
+            });
 
             it('limits retries', function (done) {
 

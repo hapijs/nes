@@ -1,4 +1,4 @@
-# 0.5.x API Reference
+# 1.0.x API Reference
 
 - [Registration](#registration)
 - [Server](#server)
@@ -224,6 +224,8 @@ Connects the client to the server where:
       `maxDelay` is used.
     - `maxDelay` - the maximum delay time in milliseconds between reconnections.
     - `retries` - number of reconnection attempts. Defaults to `Infinity` (unlimited).
+    - `timeout` - socket connection timeout in milliseconds. Defaults to the WebSocket
+      implementation timeout default.
 - `callback` - the server response callback using the signature `function(err)` where:
     - `err` - an error response.
 
