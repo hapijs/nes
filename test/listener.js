@@ -88,7 +88,7 @@ describe('Listener', function () {
                 server.start(function (err) {
 
                     var client = new Nes.Client('http://localhost:' + server.info.port);
-                    client.onBroadcast = function (message) {
+                    client.onUpdate = function (message) {
 
                         expect(message).to.equal('hello');
                         client.disconnect();
@@ -115,7 +115,7 @@ describe('Listener', function () {
                 server.start(function (err) {
 
                     var client = new Nes.Client('http://localhost:' + server.info.port);
-                    client.onBroadcast = function (message) {
+                    client.onUpdate = function (message) {
 
                         expect(message).to.equal('hello');
                         client.disconnect();
@@ -143,7 +143,7 @@ describe('Listener', function () {
 
                 server.on('log', function (event, tags) {
 
-                    expect(event.data).to.equal('broadcast');
+                    expect(event.data).to.equal('update');
                     client.disconnect();
                     server.stop(done);
                 });

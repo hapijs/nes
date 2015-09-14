@@ -22,7 +22,7 @@ Each outgoing request from the server to the client contains:
     - `'request'` - endpoint request.
     - `'sub'` - subscribe to a path.
     - `'message'` - send custom message.
-    - `'broadcast'` - a broadcast message to all clients.
+    - `'update'` - an custom message push from the server.
     - `'pub'` - a subscription update.
 - additional type-specific fields.
 
@@ -311,17 +311,17 @@ For example:
 
 There is no server response.
 
-## Broadcast
+## Update
 
 Flow: `server` -> `client`
 
-A message sent from the server to all connected clients:
-- `type` - set to `'broadcast'`.
+A custom message sent from the server to a specific client or to all connected clients:
+- `type` - set to `'update'`.
 - `message` - any value (string, object, etc.).
 
 ```js
 {
-    type: 'broadcast',
+    type: 'update',
     message: {
         some: 'message'
     }

@@ -9,12 +9,13 @@
     - [`socket.id`](#socketid)
     - [`socket.auth`](#socketauth)
     - [`socket.disconnect()`](#socketdisconnect)
+    - [`socket.send(message)`](#socketsendmessage)
 - [Client](#client)
     - [`new Client(url, [options])`](#new-clienturl-options)
     - [`client.onError`](#clientonerror)
     - [`client.onConnect`](#clientonconnect)
     - [`client.onDisconnect`](#clientondisconnect)
-    - [`client.onBroadcast`](#clientonbroadcast)
+    - [`client.onUpdate`](#clientonupdate)
     - [`client.connect([options], callback)`](#clientconnectoptions-callback)
     - [`client.disconnect()`](#clientdisconnect)
     - [`client.request(options, callback)`](#clientrequestoptions-callback)
@@ -173,6 +174,12 @@ The socket authentication state if any. Similar to the normal **hapi** `request.
 
 Closes a client connection.
 
+### `socket.send(message)`
+
+Sends a custom message to the client where:
+- `message` - the message sent to the client. Can be any type which can be safely converted to
+  string using `JSON.stringify()`.
+
 ## Client
 
 The client implements the **nes** protocol and provides methods for interacting with the server.
@@ -203,10 +210,10 @@ A property used to set a handler for disconnection events with the signature `fu
 where:
 - `willReconnect` - a boolean indicating if the client will automatically attempt to reconnect.
 
-### `client.onBroadcast`
+### `client.onUpdate`
 
-A property used to set a broadcast handler with the signature `function(message)`. Invoked whenever
-the server calls `server.broadcast()`.
+A property used to set a custom message handler with the signature `function(message)`. Invoked whenever
+the server calls `server.broadcast()` or `socket.send()`.
 
 ### `client.connect([options], callback)`
 

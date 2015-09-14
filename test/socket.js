@@ -56,6 +56,37 @@ describe('Socket', function () {
         });
     });
 
+    describe('send()', function () {
+
+        it('sends custom message', function (done) {
+
+            var onConnection = function (socket) {
+
+                socket.send('goodbye');
+            };
+
+            var server = new Hapi.Server();
+            server.connection();
+            server.register({ register: Nes, options: { onConnection: onConnection } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.start(function (err) {
+
+                    var client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.onUpdate = function (message) {
+
+                        expect(message).to.equal('goodbye');
+                        client.disconnect();
+                        server.stop(done);
+                    };
+
+                    client.connect(function () { });
+                });
+            });
+        });
+    });
+
     describe('_send()', function () {
 
         it('errors on invalid message', function (done) {
