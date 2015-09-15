@@ -278,8 +278,6 @@ server.register([Basic, Nes], function (err) {
         server.publish('/items', { id: 6, status: 'initial', updater: 'steve' });
     });
 });
-
-var removeUpdated = ;
 ```
 
 #### Client
