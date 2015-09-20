@@ -90,7 +90,7 @@ server.register(Nes, function (err) {
     server.subscription('/item/{id}');
 
     server.start(function (err) {
-    
+
         server.publish('/item/5', { id: 5, status: 'complete' });
         server.publish('/item/6', { id: 6, status: 'initial' });
     });
@@ -127,7 +127,7 @@ server.connection();
 server.register(Nes, function (err) {
 
     server.start(function (err) {
-    
+
         server.broadcast('welcome!');
     });
 });
@@ -144,7 +144,7 @@ client.connect(function (err) {
     client.onUpdate = function (update) {
 
         // update -> 'welcome!'
-    });
+    };
 });
 ```
 
@@ -186,11 +186,11 @@ server.register([Basic, Nes], function (err) {
             callback(err, isValid, { id: user.id, name: user.name });
         });
     };
-    
+
     server.auth.strategy('simple', 'basic', 'required', { validateFunc: validate });
-    
+
     // Configure route with authentication
-    
+
     server.route({
         method: 'GET',
         path: '/h',
@@ -260,7 +260,7 @@ server.register([Basic, Nes], function (err) {
             callback(err, isValid, { id: user.id, name: user.name, username: user.username });
         });
     };
-    
+
     server.auth.strategy('simple', 'basic', 'required', { validateFunc: validate });
 
     // Set up subscription
@@ -273,7 +273,7 @@ server.register([Basic, Nes], function (err) {
     });
 
     server.start(function (err) {
-    
+
         server.publish('/items', { id: 5, status: 'complete', updater: 'john' });
         server.publish('/items', { id: 6, status: 'initial', updater: 'steve' });
     });
