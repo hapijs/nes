@@ -213,7 +213,7 @@ server.register([Basic, Nes], function (err) {
 var Nes = require('nes');
 
 var client = new Nes.Client('ws://localhost');
-client.connect({ headers: { authorization: 'Basic am9objpzZWNyZXQ=' } }, function (err) {
+client.connect({ auth: { headers: { authorization: 'Basic am9objpzZWNyZXQ=' } } }, function (err) {
 
     client.request('hello', function (err, payload) {   // Can also request '/h'
 
@@ -289,7 +289,7 @@ var client = new Nes.Client('ws://localhost');
 
 // Authenticate as 'john'
 
-client.connect({ headers: { authorization: 'Basic am9objpzZWNyZXQ=' } }, function (err) {
+client.connect({ auth: { headers: { authorization: 'Basic am9objpzZWNyZXQ=' } } }, function (err) {
 
     client.subscribe('/items', function (err, update) {
 
