@@ -19,6 +19,7 @@ Lead Maintainer - [Eran Hammer](https://github.com/hueniverse)
     - [Broadcast](#broadcast)
     - [Route authentication](#route-authentication)
     - [Subscription filter](#subscription-filter)
+- [Browser Client](#browser-client)
 
 ## API
 
@@ -62,7 +63,7 @@ server.register(Nes, function (err) {
 #### Client
 
 ```js
-var Nes = require('nes/client');
+var Nes = require('nes');
 
 var client = new Nes.Client('ws://localhost');
 client.connect(function (err) {
@@ -100,7 +101,7 @@ server.register(Nes, function (err) {
 #### Client
 
 ```js
-var Nes = require('nes/client');
+var Nes = require('nes');
 
 var client = new Nes.Client('ws://localhost');
 client.connect(function (err) {
@@ -136,7 +137,7 @@ server.register(Nes, function (err) {
 #### Client
 
 ```js
-var Nes = require('nes/client');
+var Nes = require('nes');
 
 var client = new Nes.Client('ws://localhost');
 client.connect(function (err) {
@@ -210,7 +211,7 @@ server.register([Basic, Nes], function (err) {
 #### Client
 
 ```js
-var Nes = require('nes/client');
+var Nes = require('nes');
 
 var client = new Nes.Client('ws://localhost');
 client.connect({ auth: { headers: { authorization: 'Basic am9objpzZWNyZXQ=' } } }, function (err) {
@@ -283,7 +284,7 @@ server.register([Basic, Nes], function (err) {
 #### Client
 
 ```js
-var Nes = require('nes/client');
+var Nes = require('nes');
 
 var client = new Nes.Client('ws://localhost');
 
@@ -298,3 +299,7 @@ client.connect({ auth: { headers: { authorization: 'Basic am9objpzZWNyZXQ=' } } 
     });
 });
 ```
+
+### Browser Client
+
+When you `require('nes')` it loads the full module and adds a lot of extra code that is not needed for the browser. The browser will only need the **nes** client. If you are using CommonJS you can load the client with `require('nes/client')`.
