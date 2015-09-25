@@ -62,7 +62,7 @@ server.register(Nes, function (err) {
 #### Client
 
 ```js
-var Nes = require('nes');
+var Nes = require('nes/client');
 
 var client = new Nes.Client('ws://localhost');
 client.connect(function (err) {
@@ -100,7 +100,7 @@ server.register(Nes, function (err) {
 #### Client
 
 ```js
-var Nes = require('nes');
+var Nes = require('nes/client');
 
 var client = new Nes.Client('ws://localhost');
 client.connect(function (err) {
@@ -136,7 +136,7 @@ server.register(Nes, function (err) {
 #### Client
 
 ```js
-var Nes = require('nes');
+var Nes = require('nes/client');
 
 var client = new Nes.Client('ws://localhost');
 client.connect(function (err) {
@@ -210,7 +210,7 @@ server.register([Basic, Nes], function (err) {
 #### Client
 
 ```js
-var Nes = require('nes');
+var Nes = require('nes/client');
 
 var client = new Nes.Client('ws://localhost');
 client.connect({ auth: { headers: { authorization: 'Basic am9objpzZWNyZXQ=' } } }, function (err) {
@@ -283,7 +283,7 @@ server.register([Basic, Nes], function (err) {
 #### Client
 
 ```js
-var Nes = require('nes');
+var Nes = require('nes/client');
 
 var client = new Nes.Client('ws://localhost');
 
