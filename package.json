@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "repository": "git://github.com/hapijs/nes",
   "main": "lib/index.js",
+  "browser": "lib/client.js",
   "keywords": [
     "hapi",
     "plugin",
