@@ -179,7 +179,7 @@ describe('Listener', function () {
 
                 server.start(function (err) {
 
-                    var client = new Nes.Client('http://localhost:' + server.info.port);
+                    var client = new Nes.Client('http://localhost:' + server.connections[0].info.port);
                     client.connect(function () {
 
                         client.subscribe('/', function (err, update) {
@@ -350,14 +350,18 @@ describe('Listener', function () {
 
                             expect(called).to.be.true();
                             client.disconnect();
-                            server.stop(function () {
 
-                                var listener = server.connections[0].plugins.nes._listener;
-                                expect(listener._sockets._items).to.deep.equal({});
-                                var match = listener._router.route('sub', '/5');
-                                expect(match.route.subscribers._items).to.deep.equal({});
-                                done();
-                            });
+                            setTimeout(function () {
+
+                                server.stop(function () {
+
+                                    var listener = server.connections[0].plugins.nes._listener;
+                                    expect(listener._sockets._items).to.deep.equal({});
+                                    var match = listener._router.route('sub', '/5');
+                                    expect(match.route.subscribers._items).to.deep.equal({});
+                                    done();
+                                });
+                            }, 10);
                         });
 
                         setTimeout(function () {
