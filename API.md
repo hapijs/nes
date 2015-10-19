@@ -31,6 +31,9 @@ method. The plugin accepts the following optional registration options:
 - `onConnection` - a function with the signature `function(socket)` invoked for each incoming client
   connection where:
     - `socket` - the [`Socket`](#socket) object of the incoming connection.
+- `onDisconnection` - a function with the signature `function(socket)` invoked for each incoming client
+  connection on disconnect where:
+    - `socket` - the [`Socket`](#socket) object of the connection.
 - `onMessage` - a function with the signature `function(socket, message, next)` used to receive custom
   client messages (when the client calls [`client.message()`](#clientmessagedata-callback)) where:
     - `socket` - the [`Socket`](#socket) object of the message source.
