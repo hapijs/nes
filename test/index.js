@@ -91,4 +91,41 @@ describe('register()', function () {
             });
         });
     });
+
+    it('calls onDisconnection callback', function (done) {
+
+        var client;
+
+        var onDisconnection = function (ws) {
+
+            expect(ws).to.exist();
+            client.disconnect();
+            server.stop(done);
+        };
+
+        var server = new Hapi.Server();
+        server.connection();
+        server.register({ register: Nes, options: { onDisconnection: onDisconnection, auth: false } }, function (err) {
+
+            expect(err).to.not.exist();
+
+            server.route({
+                method: 'GET',
+                path: '/',
+                handler: function (request, reply) {
+
+                    return reply('hello');
+                }
+            });
+
+            server.start(function (err) {
+
+                client = new Nes.Client('http://localhost:' + server.info.port);
+                client.connect(function () {
+
+                    client.disconnect();
+                });
+            });
+        });
+    });
 });
