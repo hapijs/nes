@@ -448,6 +448,115 @@ describe('Listener', function () {
         });
     });
 
+
+    describe('eachSocket()', function () {
+
+        it('returns connected sockets', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+
+            server.register({ register: Nes, options: { auth: false } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.start(function (err) {
+
+                    var client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect(function (err) {
+
+                        expect(err).to.not.exist();
+                        expect(countSockets(server)).to.equal(1);
+
+                        server.stop(done);
+                    });
+                });
+            });
+        });
+
+        it('returns sockets on a subscription', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+
+            server.register({ register: Nes, options: { auth: false } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.subscription('/a/{id}');
+                server.subscription('/b');
+
+                server.start(function (err) {
+
+                    var client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect(function (err) {
+
+                        expect(err).to.not.exist();
+
+                        client.subscribe('/b', function () { });
+
+                        client = new Nes.Client('http://localhost:' + server.info.port);
+                        client.connect(function (err) {
+
+                            expect(err).to.not.exist();
+                            client.subscribe('/a/b', function () { });
+
+                            setTimeout(function () {
+
+                                expect(countSockets(server)).to.equal(2);
+                                expect(countSockets(server, { subscription: '/a/a' })).to.equal(0);
+                                expect(countSockets(server, { subscription: '/a/b' })).to.equal(1);
+
+                                expect(countSockets(server, { subscription: '/b' })).to.equal(1);
+
+                                expect(countSockets(server, { subscription: '/foo' })).to.equal(0);
+
+                                server.stop(done);
+                            }, 10);
+                        });
+                    });
+                });
+            });
+        });
+
+        it('ignores not participating connections', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+
+            server.register({ register: Nes, options: { auth: false } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.start(function (err) {
+
+                    var client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect(function (err) {
+
+                        expect(err).to.not.exist();
+
+                        server.connection();
+                        expect(countSockets(server)).to.equal(1);
+
+                        server.stop(done);
+                    });
+                });
+            });
+        });
+
+
+        var countSockets = function (server, options) {
+
+            var seen = 0;
+            server.eachSocket(function (socket) {
+
+                expect(socket).to.exist();
+                seen++;
+            }, options);
+            return seen;
+        };
+    });
+
     describe('_generateId()', function () {
 
         it('rolls over when reached max sockets per millisecond', function (done) {

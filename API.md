@@ -158,6 +158,16 @@ Sends a message to all the subscribed clients where:
 - `message` - the message sent to the clients. Can be any type which can be safely converted to
   string using `JSON.stringify()`.
 
+
+### `server.eachSocket(callback, options)`
+
+Iterates over all connected sockets, optionally filtering on those that have subscribed to
+a given subscription. This operation is synchronous.
+- `callback` - Iteration callback in the form `function(socket)`.
+- `options` - Optional options object
+  - `subscription` - When set to a string path, limits the results to sockets that are 
+    to that path.
+
 ## Socket
 
 An object representing a client connection.
