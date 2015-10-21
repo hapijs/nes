@@ -688,7 +688,7 @@ describe('authentication', function () {
                     client.connect({ auth: { headers: { authorization: 'Custom steve' } } }, function (err) {
 
                         expect(err).to.exist();
-                        expect(err.message).to.equal('Unauthorized');
+                        expect(err.message).to.equal('Unknown user');
                         client.disconnect();
                         server.stop(done);
                     });
