@@ -130,7 +130,7 @@ Declares a subscription path client can subscribe to where:
             - `credentials` - the client credentials if authenticated.
             - `params` - the parameters parsed from the publish message path is the subscription
               path contains parameters.
-            - `internal` - the internal options data passed to the publish call, if defined.
+            - `internal` - the `internal` options data passed to the publish call, if defined.
         - `next` - the continuation method using signature `function(isMatch)` where:
             - `isMatch` - a boolean to indicate if the published message should be sent to the
               current client where `true` means the message will be sent.
