@@ -1,4 +1,4 @@
-# 1.0.x API Reference
+# 1.1.x API Reference
 
 - [Registration](#registration)
 - [Server](#server)
@@ -51,7 +51,10 @@ method. The plugin accepts the following optional registration options:
               passing an `auth` option to [`client.connect()](#clientconnectoptions-callback)). The
               endpoint returns a copy of the credentials object (along with any artifacts) to the plugin
               which is then used for all subsequent client requests and subscriptions. This type requires
-              exposing the underlying credentials to the application. This is the default value.
+              exposing the underlying credentials to the application. Note that if the authentication scheme
+              uses the HTTP request method (e.g. [hawk](https://github.com/hueniverse/hawk) or
+              [oz](https://github.com/hueniverse/oz)) you need to use `'auth'` as the value (and
+              not `'GET'`). This is the default value.
             - `'cookie'` - the plugin configures a public authentication endpoint which must be called
               by the client application manually before it calls [`client.connect()](#clientconnectoptions-callback).
               When the endpoint is called with valid credentials, it sets a cookie with the provided
