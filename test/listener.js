@@ -198,6 +198,82 @@ describe('Listener', function () {
                 });
             });
         });
+
+        it('provides subscription notifications', function (done) {
+
+            var server = new Hapi.Server();
+            var client;
+
+            var onSubscribe = function (socket, path) {
+
+                expect(socket).to.exist();
+                expect(path).to.equal('/');
+                client.disconnect();
+            };
+
+            var onUnsubscribe = function (socket, path) {
+
+                expect(socket).to.exist();
+                expect(path).to.equal('/');
+                server.stop(done);
+            };
+
+            server.connection();
+            server.register({ register: Nes, options: { auth: false } }, function (err) {
+
+                expect(err).to.not.exist();
+                server.connection();
+
+                server.subscription('/', { onSubscribe: onSubscribe, onUnsubscribe: onUnsubscribe });
+
+                server.start(function (err) {
+
+                    client = new Nes.Client('http://localhost:' + server.connections[0].info.port);
+                    client.connect(function () {
+
+                        client.subscribe('/', function (err, update) { });
+                    });
+                });
+            });
+        });
+
+        it('removes subscription notification by path', function (done) {
+
+            var server = new Hapi.Server();
+            var client;
+
+            var onSubscribe = function (socket, path) {
+
+                expect(socket).to.exist();
+                expect(path).to.equal('/foo');
+                client.unsubscribe('/foo');
+            };
+
+            var onUnsubscribe = function (socket, path) {
+
+                expect(socket).to.exist();
+                expect(path).to.equal('/foo');
+                server.stop(done);
+            };
+
+            server.connection();
+            server.register({ register: Nes, options: { auth: false } }, function (err) {
+
+                expect(err).to.not.exist();
+                server.connection();
+
+                server.subscription('/{params*}', { onSubscribe: onSubscribe, onUnsubscribe: onUnsubscribe });
+
+                server.start(function (err) {
+
+                    client = new Nes.Client('http://localhost:' + server.connections[0].info.port);
+                    client.connect(function () {
+
+                        client.subscribe('/foo', function (err, update) { });
+                    });
+                });
+            });
+        });
     });
 
     describe('publish()', function () {

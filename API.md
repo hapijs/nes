@@ -146,6 +146,14 @@ Declares a subscription path client can subscribe to where:
                 - `'user'`
                 - `'app'`
                 - `'any'`
+    - `onSubscribe` - Callback called when a client subscribes to this subscription endpoint.
+      `function(socket, path)`
+        - `socket` - the [`Socket`](#socket) object of the incoming connection.
+        - `path` - the path the client subscribed to
+    - `onUnsubscribe` - Callback called when a client unsubscribes from this subscription endpoint.
+      `function(socket, path)`.
+        - `socket` - the [`Socket`](#socket) object of the incoming connection.
+        - `path` - Path of the unsubscribed route.
 
 ### `server.publish(path, message)`
 
