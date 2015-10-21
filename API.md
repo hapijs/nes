@@ -130,6 +130,7 @@ Declares a subscription path client can subscribe to where:
             - `credentials` - the client credentials if authenticated.
             - `params` - the parameters parsed from the publish message path is the subscription
               path contains parameters.
+            - `internal` - the internal options data passed to the publish call, if defined.
         - `next` - the continuation method using signature `function(isMatch)` where:
             - `isMatch` - a boolean to indicate if the published message should be sent to the
               current client where `true` means the message will be sent.
@@ -155,7 +156,7 @@ Declares a subscription path client can subscribe to where:
         - `socket` - the [`Socket`](#socket) object of the incoming connection.
         - `path` - Path of the unsubscribed route.
 
-### `server.publish(path, message)`
+### `server.publish(path, message, options)`
 
 Sends a message to all the subscribed clients where:
 - `path` - the subscription path. The path is matched first against the available subscriptions
@@ -165,6 +166,9 @@ Sends a message to all the subscribed clients where:
   which client should receive which update.
 - `message` - the message sent to the clients. Can be any type which can be safely converted to
   string using `JSON.stringify()`.
+- `options` - optional object that may include
+  - `internal` - Internal data that is passed to `filter` and may be used to filter messages
+    on data that is not sent to the client.
 
 
 ### `server.eachSocket(each, options)`

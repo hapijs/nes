@@ -353,6 +353,46 @@ describe('Listener', function () {
             });
         });
 
+        it('passes internal options to filter', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+
+            server.register({ register: Nes, options: { auth: false } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                var filter = function (path, update, options, next) {
+
+                    return next(options.internal.b === 1);
+                };
+
+                server.subscription('/updates', { filter: filter });
+
+                server.start(function (err) {
+
+                    var client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect(function (err) {
+
+                        expect(err).to.not.exist();
+                        client.subscribe('/updates', function (err, update) {
+
+                            expect(err).to.not.exist();
+                            expect(update).to.deep.equal({ a: 1 });
+                            client.disconnect();
+                            server.stop(done);
+                        });
+
+                        setTimeout(function () {
+
+                            server.publish('/updates', { a: 2 }, { internal: { b: 2 } });
+                            server.publish('/updates', { a: 1 }, { internal: { b: 1 } });
+                        }, 10);
+                    });
+                });
+            });
+        });
+
         it('ignores unknown path', function (done) {
 
             var server = new Hapi.Server();
