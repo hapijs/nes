@@ -309,7 +309,6 @@ describe('Browser', function () {
                         var client = new Nes.Client('http://localhost:' + server.info.port);
 
                         var c = 0;
-                        var now = Date.now();
                         client.onConnect = function () {
 
                             ++c;
@@ -353,7 +352,6 @@ describe('Browser', function () {
                         var client = new Nes.Client('http://localhost:' + server.info.port);
 
                         var c = 0;
-                        var now = Date.now();
                         client.onConnect = function () {
 
                             ++c;

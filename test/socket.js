@@ -586,7 +586,6 @@ describe('Socket', function () {
                     var client = new Nes.Client('http://localhost:' + server.info.port);
                     client.connect(function () {
 
-                        var called = false;
                         client.subscribe('/5', function (err, update) { });
 
                         client.subscribe('/6', function (err, update) {
