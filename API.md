@@ -159,11 +159,11 @@ Sends a message to all the subscribed clients where:
   string using `JSON.stringify()`.
 
 
-### `server.eachSocket(callback, options)`
+### `server.eachSocket(each, options)`
 
 Iterates over all connected sockets, optionally filtering on those that have subscribed to
 a given subscription. This operation is synchronous.
-- `callback` - Iteration callback in the form `function(socket)`.
+- `each` - Iteration callback in the form `function(socket)`.
 - `options` - Optional options object
   - `subscription` - When set to a string path, limits the results to sockets that are 
     to that path.
