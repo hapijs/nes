@@ -566,6 +566,47 @@ describe('authentication', function () {
             });
         });
 
+        it('protects an endpoint with prefix', function (done) {
+
+            var server = new Hapi.Server();
+            server.connection();
+
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom', true);
+
+            server.register(Nes, { routes: { prefix: '/foo' } }, function (err) {
+
+                expect(err).to.not.exist();
+
+                server.route({
+                    method: 'GET',
+                    path: '/',
+                    handler: function (request, reply) {
+
+                        return reply('hello');
+                    }
+                });
+
+                server.start(function (err) {
+
+                    var client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect({ auth: { headers: { authorization: 'Custom john' } } }, function (err) {
+
+                        expect(err).to.not.exist();
+                        client.request('/', function (err, payload, statusCode, headers) {
+
+                            expect(err).to.not.exist();
+                            expect(payload).to.equal('hello');
+                            expect(statusCode).to.equal(200);
+
+                            client.disconnect();
+                            server.stop(done);
+                        });
+                    });
+                });
+            });
+        });
+
         it('reconnects automatically', function (done) {
 
             var server = new Hapi.Server();
