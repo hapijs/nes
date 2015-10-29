@@ -27,7 +27,7 @@ describe('Browser', function () {
 
             it('fails to connect', function (done) {
 
-                var client = new Nes.Client('http://no.such.example.com');
+                var client = new Nes.Client('http://nosuchexamplecom');
 
                 client.connect(function (err) {
 
@@ -39,7 +39,7 @@ describe('Browser', function () {
 
             it('handles error before open events', function (done) {
 
-                var client = new Nes.Client('http://no.such.example.com');
+                var client = new Nes.Client('http://nosuchexamplecom');
                 client.onError = function (err) { };
 
                 client.connect(function (err) {
