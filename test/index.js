@@ -62,8 +62,10 @@ describe('register()', () => {
 
     it('calls onConnection callback', (done) => {
 
-        let client;
+        const server = new Hapi.Server();
+        server.connection();
 
+        let client;
         const onConnection = function (ws) {
 
             expect(ws).to.exist();
@@ -71,8 +73,6 @@ describe('register()', () => {
             server.stop(done);
         };
 
-        const server = new Hapi.Server();
-        server.connection();
         server.register({ register: Nes, options: { onConnection: onConnection, auth: false } }, (err) => {
 
             expect(err).to.not.exist();
@@ -96,8 +96,10 @@ describe('register()', () => {
 
     it('calls onDisconnection callback', (done) => {
 
-        let client;
+        const server = new Hapi.Server();
+        server.connection();
 
+        let client;
         const onDisconnection = function (ws) {
 
             expect(ws).to.exist();
@@ -105,8 +107,6 @@ describe('register()', () => {
             server.stop(done);
         };
 
-        const server = new Hapi.Server();
-        server.connection();
         server.register({ register: Nes, options: { onDisconnection: onDisconnection, auth: false } }, (err) => {
 
             expect(err).to.not.exist();

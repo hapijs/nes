@@ -565,8 +565,18 @@ describe('Listener', () => {
         });
     });
 
-
     describe('eachSocket()', () => {
+
+        const countSockets = function (server, options) {
+
+            let seen = 0;
+            server.eachSocket((socket) => {
+
+                expect(socket).to.exist();
+                seen++;
+            }, options);
+            return seen;
+        };
 
         it('returns connected sockets', (done) => {
 
@@ -660,17 +670,6 @@ describe('Listener', () => {
                 });
             });
         });
-
-        const countSockets = function (server, options) {
-
-            let seen = 0;
-            server.eachSocket((socket) => {
-
-                expect(socket).to.exist();
-                seen++;
-            }, options);
-            return seen;
-        };
     });
 
     describe('_generateId()', () => {
