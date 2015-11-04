@@ -1,35 +1,37 @@
+'use strict';
+
 // Load modules
 
-var Code = require('code');
-var Hapi = require('hapi');
-var Lab = require('lab');
-var Nes = require('../');
+const Code = require('code');
+const Hapi = require('hapi');
+const Lab = require('lab');
+const Nes = require('../');
 
 
 // Declare internals
 
-var internals = {};
+const internals = {};
 
 
 // Test shortcuts
 
-var lab = exports.lab = Lab.script();
-var describe = lab.describe;
-var it = lab.it;
-var expect = Code.expect;
+const lab = exports.lab = Lab.script();
+const describe = lab.describe;
+const it = lab.it;
+const expect = Code.expect;
 
 
-describe('Browser', function () {
+describe('Browser', () => {
 
-    describe('Client', function () {
+    describe('Client', () => {
 
-        describe('connect()', function () {
+        describe('connect()', () => {
 
-            it('fails to connect', function (done) {
+            it('fails to connect', (done) => {
 
-                var client = new Nes.Client('http://nosuchexamplecom');
+                const client = new Nes.Client('http://nosuchexamplecom');
 
-                client.connect(function (err) {
+                client.connect((err) => {
 
                     expect(err).to.exist();
                     expect(err.message).to.match(/getaddrinfo ENOTFOUND/);
@@ -37,12 +39,12 @@ describe('Browser', function () {
                 });
             });
 
-            it('handles error before open events', function (done) {
+            it('handles error before open events', (done) => {
 
-                var client = new Nes.Client('http://nosuchexamplecom');
+                const client = new Nes.Client('http://nosuchexamplecom');
                 client.onError = function (err) { };
 
-                client.connect(function (err) {
+                client.connect((err) => {
 
                     expect(err).to.exist();
                     expect(err.message).to.equal('test');
@@ -54,28 +56,28 @@ describe('Browser', function () {
             });
         });
 
-        describe('disconnect()', function () {
+        describe('disconnect()', () => {
 
-            it('ignores when client not connected', function (done) {
+            it('ignores when client not connected', (done) => {
 
-                var client = new Nes.Client();
+                const client = new Nes.Client();
 
                 client.disconnect();
                 done();
             });
 
-            it('ignores when client is disconnecting', function (done) {
+            it('ignores when client is disconnecting', (done) => {
 
-                var server = new Hapi.Server();
+                const server = new Hapi.Server();
                 server.connection();
-                server.register({ register: Nes, options: { auth: false } }, function (err) {
+                server.register({ register: Nes, options: { auth: false } }, (err) => {
 
                     expect(err).to.not.exist();
 
-                    server.start(function (err) {
+                    server.start((err) => {
 
-                        var client = new Nes.Client('http://localhost:' + server.info.port);
-                        client.connect(function () {
+                        const client = new Nes.Client('http://localhost:' + server.info.port);
+                        client.connect(() => {
 
                             client.disconnect();
                             client.disconnect();
@@ -86,27 +88,27 @@ describe('Browser', function () {
             });
         });
 
-        describe('_reconnect()', function () {
+        describe('_reconnect()', () => {
 
-            it('reconnects automatically', function (done) {
+            it('reconnects automatically', (done) => {
 
-                var server = new Hapi.Server();
+                const server = new Hapi.Server();
                 server.connection();
-                server.register({ register: Nes, options: { auth: false } }, function (err) {
+                server.register({ register: Nes, options: { auth: false } }, (err) => {
 
                     expect(err).to.not.exist();
 
-                    server.start(function (err) {
+                    server.start((err) => {
 
-                        var client = new Nes.Client('http://localhost:' + server.info.port);
+                        const client = new Nes.Client('http://localhost:' + server.info.port);
 
-                        var e = 0;
+                        let e = 0;
                         client.onError = function (err) {
 
                             ++e;
                         };
 
-                        var c = 0;
+                        let c = 0;
                         client.onConnect = function () {
 
                             ++c;
@@ -119,7 +121,7 @@ describe('Browser', function () {
 
                         expect(c).to.equal(0);
                         expect(e).to.equal(0);
-                        client.connect({ delay: 10 }, function (err) {
+                        client.connect({ delay: 10 }, (err) => {
 
                             expect(err).to.not.exist();
 
@@ -132,25 +134,25 @@ describe('Browser', function () {
                 });
             });
 
-            it('does not reconnect automatically', function (done) {
+            it('does not reconnect automatically', (done) => {
 
-                var server = new Hapi.Server();
+                const server = new Hapi.Server();
                 server.connection();
-                server.register({ register: Nes, options: { auth: false } }, function (err) {
+                server.register({ register: Nes, options: { auth: false } }, (err) => {
 
                     expect(err).to.not.exist();
 
-                    server.start(function (err) {
+                    server.start((err) => {
 
-                        var client = new Nes.Client('http://localhost:' + server.info.port);
+                        const client = new Nes.Client('http://localhost:' + server.info.port);
 
-                        var e = 0;
+                        let e = 0;
                         client.onError = function (err) {
 
                             ++e;
                         };
 
-                        var c = 0;
+                        let c = 0;
                         client.onConnect = function () {
 
                             ++c;
@@ -158,13 +160,13 @@ describe('Browser', function () {
 
                         expect(c).to.equal(0);
                         expect(e).to.equal(0);
-                        client.connect({ reconnect: false, delay: 10 }, function () {
+                        client.connect({ reconnect: false, delay: 10 }, () => {
 
                             expect(c).to.equal(1);
                             expect(e).to.equal(0);
 
                             client._ws.close();
-                            setTimeout(function () {
+                            setTimeout(() => {
 
                                 expect(c).to.equal(1);
                                 server.stop(done);
@@ -174,20 +176,20 @@ describe('Browser', function () {
                 });
             });
 
-            it('overrides max delay', function (done) {
+            it('overrides max delay', (done) => {
 
-                var server = new Hapi.Server();
+                const server = new Hapi.Server();
                 server.connection();
-                server.register({ register: Nes, options: { auth: false } }, function (err) {
+                server.register({ register: Nes, options: { auth: false } }, (err) => {
 
                     expect(err).to.not.exist();
 
-                    server.start(function (err) {
+                    server.start((err) => {
 
-                        var client = new Nes.Client('http://localhost:' + server.info.port);
+                        const client = new Nes.Client('http://localhost:' + server.info.port);
 
-                        var c = 0;
-                        var now = Date.now();
+                        let c = 0;
+                        const now = Date.now();
                         client.onConnect = function () {
 
                             ++c;
@@ -203,32 +205,32 @@ describe('Browser', function () {
                             server.stop(done);
                         };
 
-                        client.connect({ delay: 10, maxDelay: 11 }, function () { });
+                        client.connect({ delay: 10, maxDelay: 11 }, () => { });
                     });
                 });
             });
 
-            it('reconnects automatically (with errors)', function (done) {
+            it('reconnects automatically (with errors)', (done) => {
 
-                var server = new Hapi.Server();
+                const server = new Hapi.Server();
                 server.connection();
-                server.register({ register: Nes, options: { auth: false } }, function (err) {
+                server.register({ register: Nes, options: { auth: false } }, (err) => {
 
                     expect(err).to.not.exist();
 
-                    server.start(function (err) {
+                    server.start((err) => {
 
-                        var url = 'http://localhost:' + server.info.port;
-                        var client = new Nes.Client(url);
+                        const url = 'http://localhost:' + server.info.port;
+                        const client = new Nes.Client(url);
 
-                        var e = 0;
+                        let e = 0;
                         client.onError = function (err) {
 
                             ++e;
                             client._url = 'http://localhost:' + server.info.port;
                         };
 
-                        var c = 0;
+                        let c = 0;
                         client.onConnect = function () {
 
                             ++c;
@@ -250,16 +252,16 @@ describe('Browser', function () {
                         };
 
                         expect(e).to.equal(0);
-                        client.connect({ delay: 10, maxDelay: 15 }, function () { });
+                        client.connect({ delay: 10, maxDelay: 15 }, () => { });
                     });
                 });
             });
 
-            it('errors on pending request when closed', function (done) {
+            it('errors on pending request when closed', (done) => {
 
-                var server = new Hapi.Server();
+                const server = new Hapi.Server();
                 server.connection();
-                server.register({ register: Nes, options: { auth: false } }, function (err) {
+                server.register({ register: Nes, options: { auth: false } }, (err) => {
 
                     expect(err).to.not.exist();
 
@@ -268,19 +270,19 @@ describe('Browser', function () {
                         path: '/',
                         handler: function (request, reply) {
 
-                            setTimeout(function () {
+                            setTimeout(() => {
 
                                 return reply('hello');
                             }, 10);
                         }
                     });
 
-                    server.start(function (err) {
+                    server.start((err) => {
 
-                        var client = new Nes.Client('http://localhost:' + server.info.port);
-                        client.connect(function () {
+                        const client = new Nes.Client('http://localhost:' + server.info.port);
+                        client.connect(() => {
 
-                            client.request('/', function (err, payload, statusCode, headers) {
+                            client.request('/', (err, payload, statusCode, headers) => {
 
                                 expect(err).to.exist();
                                 expect(err.message).to.equal('Request failed - server disconnected');
@@ -294,27 +296,27 @@ describe('Browser', function () {
                 });
             });
 
-            it('times out', function (done) {
+            it('times out', (done) => {
 
-                var server = new Hapi.Server();
+                const server = new Hapi.Server();
                 server.connection();
-                server.register({ register: Nes, options: { auth: false } }, function (err) {
+                server.register({ register: Nes, options: { auth: false } }, (err) => {
 
                     expect(err).to.not.exist();
 
-                    server.start(function (err) {
+                    server.start((err) => {
 
                         server.connections[0].plugins.nes._listener._wss.handleUpgrade = function () { };
 
-                        var client = new Nes.Client('http://localhost:' + server.info.port);
+                        const client = new Nes.Client('http://localhost:' + server.info.port);
 
-                        var c = 0;
+                        let c = 0;
                         client.onConnect = function () {
 
                             ++c;
                         };
 
-                        var e = 0;
+                        let e = 0;
                         client.onError = function (err) {
 
                             ++e;
@@ -330,7 +332,7 @@ describe('Browser', function () {
                             server.stop({ timeout: 1 }, done);
                         };
 
-                        client.connect({ delay: 10, maxDelay: 10, timeout: 10 }, function (err) {
+                        client.connect({ delay: 10, maxDelay: 10, timeout: 10 }, (err) => {
 
                             expect(err).to.exist();
                             expect(err.message).to.equal('Connection timed out');
@@ -339,28 +341,28 @@ describe('Browser', function () {
                 });
             });
 
-            it('limits retries', function (done) {
+            it('limits retries', (done) => {
 
-                var server = new Hapi.Server();
+                const server = new Hapi.Server();
                 server.connection();
-                server.register({ register: Nes, options: { auth: false } }, function (err) {
+                server.register({ register: Nes, options: { auth: false } }, (err) => {
 
                     expect(err).to.not.exist();
 
-                    server.start(function (err) {
+                    server.start((err) => {
 
-                        var client = new Nes.Client('http://localhost:' + server.info.port);
+                        const client = new Nes.Client('http://localhost:' + server.info.port);
 
-                        var c = 0;
+                        let c = 0;
                         client.onConnect = function () {
 
                             ++c;
                             client._ws.close();
                         };
 
-                        client.connect({ delay: 5, maxDelay: 10, retries: 2 }, function () {
+                        client.connect({ delay: 5, maxDelay: 10, retries: 2 }, () => {
 
-                            setTimeout(function () {
+                            setTimeout(() => {
 
                                 expect(c).to.equal(3);
                                 server.stop(done);
@@ -370,31 +372,31 @@ describe('Browser', function () {
                 });
             });
 
-            it('aborts reconnect if disconnect is called in between attempts', function (done) {
+            it('aborts reconnect if disconnect is called in between attempts', (done) => {
 
-                var server = new Hapi.Server();
+                const server = new Hapi.Server();
                 server.connection();
-                server.register({ register: Nes, options: { auth: false } }, function (err) {
+                server.register({ register: Nes, options: { auth: false } }, (err) => {
 
                     expect(err).to.not.exist();
 
-                    server.start(function (err) {
+                    server.start((err) => {
 
-                        var client = new Nes.Client('http://localhost:' + server.info.port);
+                        const client = new Nes.Client('http://localhost:' + server.info.port);
 
-                        var c = 0;
+                        let c = 0;
                         client.onConnect = function () {
 
                             ++c;
                             client._ws.close();
 
                             if (c === 1) {
-                                setTimeout(function () {
+                                setTimeout(() => {
 
                                     client.disconnect();
                                 }, 5);
 
-                                setTimeout(function () {
+                                setTimeout(() => {
 
                                     expect(c).to.equal(1);
                                     server.stop(done);
@@ -402,19 +404,19 @@ describe('Browser', function () {
                             }
                         };
 
-                        client.connect({ delay: 10 }, function () { });
+                        client.connect({ delay: 10 }, () => { });
                     });
                 });
             });
         });
 
-        describe('request()', function () {
+        describe('request()', () => {
 
-            it('defaults to GET', function (done) {
+            it('defaults to GET', (done) => {
 
-                var server = new Hapi.Server();
+                const server = new Hapi.Server();
                 server.connection();
-                server.register({ register: Nes, options: { auth: false, headers: '*' } }, function (err) {
+                server.register({ register: Nes, options: { auth: false, headers: '*' } }, (err) => {
 
                     expect(err).to.not.exist();
 
@@ -427,12 +429,12 @@ describe('Browser', function () {
                         }
                     });
 
-                    server.start(function (err) {
+                    server.start((err) => {
 
-                        var client = new Nes.Client('http://localhost:' + server.info.port);
-                        client.connect(function () {
+                        const client = new Nes.Client('http://localhost:' + server.info.port);
+                        client.connect(() => {
 
-                            client.request({ path: '/' }, function (err, payload, statusCode, headers) {
+                            client.request({ path: '/' }, (err, payload, statusCode, headers) => {
 
                                 expect(err).to.not.exist();
                                 expect(payload).to.equal('hello');
@@ -447,11 +449,11 @@ describe('Browser', function () {
                 });
             });
 
-            it('errors when disconnected', function (done) {
+            it('errors when disconnected', (done) => {
 
-                var client = new Nes.Client();
+                const client = new Nes.Client();
 
-                client.request('/', function (err, payload, statusCode, headers) {
+                client.request('/', (err, payload, statusCode, headers) => {
 
                     expect(err).to.exist();
                     expect(err.message).to.equal('Failed to send message - server disconnected');
@@ -459,11 +461,11 @@ describe('Browser', function () {
                 });
             });
 
-            it('errors on invalid payload', function (done) {
+            it('errors on invalid payload', (done) => {
 
-                var server = new Hapi.Server();
+                const server = new Hapi.Server();
                 server.connection();
-                server.register({ register: Nes, options: { auth: false } }, function (err) {
+                server.register({ register: Nes, options: { auth: false } }, (err) => {
 
                     expect(err).to.not.exist();
 
@@ -476,15 +478,15 @@ describe('Browser', function () {
                         }
                     });
 
-                    server.start(function (err) {
+                    server.start((err) => {
 
-                        var client = new Nes.Client('http://localhost:' + server.info.port);
-                        client.connect(function () {
+                        const client = new Nes.Client('http://localhost:' + server.info.port);
+                        client.connect(() => {
 
-                            var a = { b: 1 };
+                            const a = { b: 1 };
                             a.a = a;
 
-                            client.request({ method: 'POST', path: '/', payload: a }, function (err, payload, statusCode, headers) {
+                            client.request({ method: 'POST', path: '/', payload: a }, (err, payload, statusCode, headers) => {
 
                                 expect(err).to.exist();
                                 expect(err.message).to.equal('Converting circular structure to JSON');
@@ -496,11 +498,11 @@ describe('Browser', function () {
                 });
             });
 
-            it('errors on invalid data', { parallel: false }, function (done) {
+            it('errors on invalid data', { parallel: false }, (done) => {
 
-                var server = new Hapi.Server();
+                const server = new Hapi.Server();
                 server.connection();
-                server.register({ register: Nes, options: { auth: false } }, function (err) {
+                server.register({ register: Nes, options: { auth: false } }, (err) => {
 
                     expect(err).to.not.exist();
 
@@ -513,17 +515,17 @@ describe('Browser', function () {
                         }
                     });
 
-                    server.start(function (err) {
+                    server.start((err) => {
 
-                        var client = new Nes.Client('http://localhost:' + server.info.port);
-                        client.connect(function () {
+                        const client = new Nes.Client('http://localhost:' + server.info.port);
+                        client.connect(() => {
 
                             client._ws.send = function () {
 
                                 throw new Error('boom');
                             };
 
-                            client.request({ method: 'POST', path: '/', payload: 'a' }, function (err, payload, statusCode, headers) {
+                            client.request({ method: 'POST', path: '/', payload: 'a' }, (err, payload, statusCode, headers) => {
 
                                 expect(err).to.exist();
                                 expect(err.message).to.equal('boom');
@@ -536,36 +538,36 @@ describe('Browser', function () {
             });
         });
 
-        describe('message()', function () {
+        describe('message()', () => {
 
-            it('errors on timeout', function (done) {
+            it('errors on timeout', (done) => {
 
-                var onMessage = function (socket, message, reply) {
+                const onMessage = function (socket, message, reply) {
 
-                    setTimeout(function () {
+                    setTimeout(() => {
 
                         return reply('hello');
                     }, 20);
                 };
 
-                var server = new Hapi.Server();
+                const server = new Hapi.Server();
                 server.connection();
-                server.register({ register: Nes, options: { onMessage: onMessage } }, function (err) {
+                server.register({ register: Nes, options: { onMessage: onMessage } }, (err) => {
 
                     expect(err).to.not.exist();
 
-                    server.start(function (err) {
+                    server.start((err) => {
 
-                        var client = new Nes.Client('http://localhost:' + server.info.port, { timeout: 10 });
-                        client.connect(function () {
+                        const client = new Nes.Client('http://localhost:' + server.info.port, { timeout: 10 });
+                        client.connect(() => {
 
-                            client.message('winning', function (err, response) {
+                            client.message('winning', (err, response) => {
 
                                 expect(err).to.exist();
                                 expect(err.message).to.equal('Request timed out');
                                 expect(response).to.not.exist();
 
-                                setTimeout(function () {
+                                setTimeout(() => {
 
                                     client.disconnect();
                                     server.stop(done);
@@ -577,13 +579,13 @@ describe('Browser', function () {
             });
         });
 
-        describe('_onMessage', function () {
+        describe('_onMessage', () => {
 
-            it('ignores invalid incoming message', function (done) {
+            it('ignores invalid incoming message', (done) => {
 
-                var server = new Hapi.Server();
+                const server = new Hapi.Server();
                 server.connection();
-                server.register({ register: Nes, options: { auth: false } }, function (err) {
+                server.register({ register: Nes, options: { auth: false } }, (err) => {
 
                     expect(err).to.not.exist();
 
@@ -592,31 +594,31 @@ describe('Browser', function () {
                         path: '/',
                         handler: function (request, reply) {
 
-                            request.connection.plugins.nes._listener._sockets.forEach(function (socket) {
+                            request.connection.plugins.nes._listener._sockets.forEach((socket) => {
 
                                 socket._ws.send('{');
                             });
 
-                            setTimeout(function () {
+                            setTimeout(() => {
 
                                 return reply('hello');
                             }, 10);
                         }
                     });
 
-                    server.start(function (err) {
+                    server.start((err) => {
 
-                        var client = new Nes.Client('http://localhost:' + server.info.port);
+                        const client = new Nes.Client('http://localhost:' + server.info.port);
 
-                        var logged;
+                        let logged;
                         client.onError = function (err) {
 
                             logged = err.message;
                         };
 
-                        client.connect(function () {
+                        client.connect(() => {
 
-                            client.request('/', function (err, payload, statusCode, headers) {
+                            client.request('/', (err, payload, statusCode, headers) => {
 
                                 expect(err).to.not.exist();
                                 expect(logged).to.equal('Unexpected end of input');
@@ -629,11 +631,11 @@ describe('Browser', function () {
                 });
             });
 
-            it('ignores incoming message with unknown id', function (done) {
+            it('ignores incoming message with unknown id', (done) => {
 
-                var server = new Hapi.Server();
+                const server = new Hapi.Server();
                 server.connection();
-                server.register({ register: Nes, options: { auth: false } }, function (err) {
+                server.register({ register: Nes, options: { auth: false } }, (err) => {
 
                     expect(err).to.not.exist();
 
@@ -642,31 +644,31 @@ describe('Browser', function () {
                         path: '/',
                         handler: function (request, reply) {
 
-                            request.connection.plugins.nes._listener._sockets.forEach(function (socket) {
+                            request.connection.plugins.nes._listener._sockets.forEach((socket) => {
 
                                 socket._ws.send('{"id":100,"type":"response","statusCode":200,"payload":"hello","headers":{}}');
                             });
 
-                            setTimeout(function () {
+                            setTimeout(() => {
 
                                 return reply('hello');
                             }, 10);
                         }
                     });
 
-                    server.start(function (err) {
+                    server.start((err) => {
 
-                        var client = new Nes.Client('http://localhost:' + server.info.port);
+                        const client = new Nes.Client('http://localhost:' + server.info.port);
 
-                        var logged;
+                        let logged;
                         client.onError = function (err) {
 
                             logged = err.message;
                         };
 
-                        client.connect(function () {
+                        client.connect(() => {
 
-                            client.request('/', function (err, payload, statusCode, headers) {
+                            client.request('/', (err, payload, statusCode, headers) => {
 
                                 expect(err).to.not.exist();
                                 expect(logged).to.equal('Received response for unknown request');
@@ -679,11 +681,11 @@ describe('Browser', function () {
                 });
             });
 
-            it('ignores incoming message with unknown type', function (done) {
+            it('ignores incoming message with unknown type', (done) => {
 
-                var server = new Hapi.Server();
+                const server = new Hapi.Server();
                 server.connection();
-                server.register({ register: Nes, options: { auth: false } }, function (err) {
+                server.register({ register: Nes, options: { auth: false } }, (err) => {
 
                     expect(err).to.not.exist();
 
@@ -692,23 +694,23 @@ describe('Browser', function () {
                         path: '/',
                         handler: function (request, reply) {
 
-                            request.connection.plugins.nes._listener._sockets.forEach(function (socket) {
+                            request.connection.plugins.nes._listener._sockets.forEach((socket) => {
 
                                 socket._ws.send('{"id":2,"type":"unknown","statusCode":200,"payload":"hello","headers":{}}');
                             });
 
-                            setTimeout(function () {
+                            setTimeout(() => {
 
                                 return reply('hello');
                             }, 10);
                         }
                     });
 
-                    server.start(function (err) {
+                    server.start((err) => {
 
-                        var client = new Nes.Client('http://localhost:' + server.info.port);
+                        const client = new Nes.Client('http://localhost:' + server.info.port);
 
-                        var logged;
+                        let logged;
                         client.onError = function (err) {
 
                             if (!logged) {
@@ -723,33 +725,33 @@ describe('Browser', function () {
                             server.stop(done);
                         };
 
-                        client.connect(function () {
+                        client.connect(() => {
 
-                            client.request('/', function (err, payload, statusCode, headers) { });
+                            client.request('/', (err, payload, statusCode, headers) => { });
                         });
                     });
                 });
             });
         });
 
-        describe('subscribe()', function () {
+        describe('subscribe()', () => {
 
-            it('subscribes to a path', function (done) {
+            it('subscribes to a path', (done) => {
 
-                var server = new Hapi.Server();
+                const server = new Hapi.Server();
                 server.connection();
-                server.register({ register: Nes, options: { auth: false } }, function (err) {
+                server.register({ register: Nes, options: { auth: false } }, (err) => {
 
                     expect(err).to.not.exist();
 
                     server.subscription('/', {});
 
-                    server.start(function (err) {
+                    server.start((err) => {
 
-                        var client = new Nes.Client('http://localhost:' + server.info.port);
-                        client.connect(function () {
+                        const client = new Nes.Client('http://localhost:' + server.info.port);
+                        client.connect(() => {
 
-                            client.subscribe('/', function (err, update) {
+                            client.subscribe('/', (err, update) => {
 
                                 expect(client.subscriptions()).to.deep.equal(['/']);
                                 expect(err).to.not.exist();
@@ -758,7 +760,7 @@ describe('Browser', function () {
                                 server.stop(done);
                             });
 
-                            setTimeout(function () {
+                            setTimeout(() => {
 
                                 server.publish('/', 'heya');
                             }, 10);
@@ -767,19 +769,19 @@ describe('Browser', function () {
                 });
             });
 
-            it('subscribes to a unknown path (pre connect)', function (done) {
+            it('subscribes to a unknown path (pre connect)', (done) => {
 
-                var server = new Hapi.Server();
+                const server = new Hapi.Server();
                 server.connection();
-                server.register({ register: Nes, options: { auth: false } }, function (err) {
+                server.register({ register: Nes, options: { auth: false } }, (err) => {
 
                     expect(err).to.not.exist();
 
-                    server.start(function (err) {
+                    server.start((err) => {
 
-                        var client = new Nes.Client('http://localhost:' + server.info.port);
+                        const client = new Nes.Client('http://localhost:' + server.info.port);
 
-                        client.subscribe('/b', function (err, update) {
+                        client.subscribe('/b', (err, update) => {
 
                             expect(err).to.exist();
                             expect(err.message).to.equal('Not Found');
@@ -790,26 +792,26 @@ describe('Browser', function () {
                             server.stop(done);
                         });
 
-                        client.connect(function (err) { });
+                        client.connect((err) => { });
                     });
                 });
             });
 
-            it('subscribes to a path (pre connect)', function (done) {
+            it('subscribes to a path (pre connect)', (done) => {
 
-                var server = new Hapi.Server();
+                const server = new Hapi.Server();
                 server.connection();
-                server.register({ register: Nes, options: { auth: false } }, function (err) {
+                server.register({ register: Nes, options: { auth: false } }, (err) => {
 
                     expect(err).to.not.exist();
 
                     server.subscription('/');
 
-                    server.start(function (err) {
+                    server.start((err) => {
 
-                        var client = new Nes.Client('http://localhost:' + server.info.port);
+                        const client = new Nes.Client('http://localhost:' + server.info.port);
 
-                        client.subscribe('/', function (err, update) {
+                        client.subscribe('/', (err, update) => {
 
                             expect(err).to.not.exist();
                             expect(update).to.equal('heya');
@@ -817,11 +819,11 @@ describe('Browser', function () {
                             server.stop(done);
                         });
 
-                        client.connect(function (err) {
+                        client.connect((err) => {
 
                             expect(err).to.not.exist();
 
-                            setTimeout(function () {
+                            setTimeout(() => {
 
                                 server.publish('/', 'heya');
                             }, 10);
@@ -830,29 +832,29 @@ describe('Browser', function () {
                 });
             });
 
-            it('manages multiple subscriptions', function (done) {
+            it('manages multiple subscriptions', (done) => {
 
-                var server = new Hapi.Server();
+                const server = new Hapi.Server();
                 server.connection();
-                server.register({ register: Nes, options: { auth: false } }, function (err) {
+                server.register({ register: Nes, options: { auth: false } }, (err) => {
 
                     expect(err).to.not.exist();
 
                     server.subscription('/');
 
-                    server.start(function (err) {
+                    server.start((err) => {
 
-                        var client1 = new Nes.Client('http://localhost:' + server.info.port);
-                        var client2 = new Nes.Client('http://localhost:' + server.info.port);
+                        const client1 = new Nes.Client('http://localhost:' + server.info.port);
+                        const client2 = new Nes.Client('http://localhost:' + server.info.port);
 
-                        client1.connect(function (err) {
+                        client1.connect((err) => {
 
                             expect(err).to.not.exist();
-                            client2.connect(function (err) {
+                            client2.connect((err) => {
 
                                 expect(err).to.not.exist();
 
-                                client1.subscribe('/', function (err, update) {
+                                client1.subscribe('/', (err, update) => {
 
                                     expect(err).to.not.exist();
                                     expect(update).to.equal('heya');
@@ -860,12 +862,12 @@ describe('Browser', function () {
                                     server.stop(done);
                                 });
 
-                                client2.subscribe('/', function () { });
+                                client2.subscribe('/', () => { });
 
-                                setTimeout(function () {
+                                setTimeout(() => {
 
                                     client2.disconnect();
-                                    setTimeout(function () {
+                                    setTimeout(() => {
 
                                         server.publish('/', 'heya');
                                     }, 10);
@@ -876,28 +878,28 @@ describe('Browser', function () {
                 });
             });
 
-            it('ignores publish to a unknown path', function (done) {
+            it('ignores publish to a unknown path', (done) => {
 
-                var server = new Hapi.Server();
+                const server = new Hapi.Server();
                 server.connection();
-                server.register({ register: Nes, options: { auth: false } }, function (err) {
+                server.register({ register: Nes, options: { auth: false } }, (err) => {
 
                     expect(err).to.not.exist();
 
                     server.subscription('/');
 
-                    server.start(function (err) {
+                    server.start((err) => {
 
-                        var client = new Nes.Client('http://localhost:' + server.info.port);
-                        client.connect(function () {
+                        const client = new Nes.Client('http://localhost:' + server.info.port);
+                        client.connect(() => {
 
-                            client.subscribe('/', function (err, update) { });
+                            client.subscribe('/', (err, update) => { });
                             delete client._subscriptions['/'];
 
-                            setTimeout(function () {
+                            setTimeout(() => {
 
                                 server.publish('/', 'heya');
-                                setTimeout(function () {
+                                setTimeout(() => {
 
                                     client.disconnect();
                                     server.stop(done);
@@ -908,20 +910,20 @@ describe('Browser', function () {
                 });
             });
 
-            it('errors on unknown path', function (done) {
+            it('errors on unknown path', (done) => {
 
-                var server = new Hapi.Server();
+                const server = new Hapi.Server();
                 server.connection();
-                server.register({ register: Nes, options: { auth: false } }, function (err) {
+                server.register({ register: Nes, options: { auth: false } }, (err) => {
 
                     expect(err).to.not.exist();
 
-                    server.start(function (err) {
+                    server.start((err) => {
 
-                        var client = new Nes.Client('http://localhost:' + server.info.port);
-                        client.connect(function () {
+                        const client = new Nes.Client('http://localhost:' + server.info.port);
+                        client.connect(() => {
 
-                            client.subscribe('/', function (err, update) {
+                            client.subscribe('/', (err, update) => {
 
                                 expect(err).to.exist();
                                 expect(err.message).to.equal('Not Found');
@@ -933,27 +935,27 @@ describe('Browser', function () {
                 });
             });
 
-            it('subscribes and immediately unsubscribe to a path (all handlers)', function (done) {
+            it('subscribes and immediately unsubscribe to a path (all handlers)', (done) => {
 
-                var server = new Hapi.Server();
+                const server = new Hapi.Server();
                 server.connection();
-                server.register({ register: Nes, options: { auth: false } }, function (err) {
+                server.register({ register: Nes, options: { auth: false } }, (err) => {
 
                     expect(err).to.not.exist();
 
-                    server.start(function (err) {
+                    server.start((err) => {
 
-                        var client = new Nes.Client('http://localhost:' + server.info.port);
-                        client.connect(function () {
+                        const client = new Nes.Client('http://localhost:' + server.info.port);
+                        client.connect(() => {
 
-                            client.subscribe('/', function (err, update) {
+                            client.subscribe('/', (err, update) => {
 
                                 throw new Error('Must not be called');
                             });
 
                             client.unsubscribe('/');
 
-                            setTimeout(function () {
+                            setTimeout(() => {
 
                                 client.disconnect();
                                 server.stop(done);
@@ -963,20 +965,20 @@ describe('Browser', function () {
                 });
             });
 
-            it('subscribes and immediately unsubscribe to a path (single handler)', function (done) {
+            it('subscribes and immediately unsubscribe to a path (single handler)', (done) => {
 
-                var server = new Hapi.Server();
+                const server = new Hapi.Server();
                 server.connection();
-                server.register({ register: Nes, options: { auth: false } }, function (err) {
+                server.register({ register: Nes, options: { auth: false } }, (err) => {
 
                     expect(err).to.not.exist();
 
-                    server.start(function (err) {
+                    server.start((err) => {
 
-                        var client = new Nes.Client('http://localhost:' + server.info.port);
-                        client.connect(function () {
+                        const client = new Nes.Client('http://localhost:' + server.info.port);
+                        client.connect(() => {
 
-                            var handler = function (err, update) {
+                            const handler = function (err, update) {
 
                                 throw new Error('Must not be called');
                             };
@@ -984,7 +986,7 @@ describe('Browser', function () {
                             client.subscribe('/', handler);
                             client.unsubscribe('/', handler);
 
-                            setTimeout(function () {
+                            setTimeout(() => {
 
                                 client.disconnect();
                                 server.stop(done);
@@ -994,14 +996,14 @@ describe('Browser', function () {
                 });
             });
 
-            it('subscribes and unsubscribes to a path before connecting', function (done) {
+            it('subscribes and unsubscribes to a path before connecting', (done) => {
 
-                var client = new Nes.Client('http://localhost');
+                const client = new Nes.Client('http://localhost');
 
-                var handler1 = function () { };
-                var handler2 = function () { };
-                var handler3 = function () { };
-                var handler4 = function () { };
+                const handler1 = function () { };
+                const handler2 = function () { };
+                const handler3 = function () { };
+                const handler4 = function () { };
 
                 // Initial subscription
 
@@ -1033,27 +1035,27 @@ describe('Browser', function () {
                 done();
             });
 
-            it('errors on subscribe fail', function (done) {
+            it('errors on subscribe fail', (done) => {
 
-                var server = new Hapi.Server();
+                const server = new Hapi.Server();
                 server.connection();
-                server.register({ register: Nes, options: { auth: false } }, function (err) {
+                server.register({ register: Nes, options: { auth: false } }, (err) => {
 
                     expect(err).to.not.exist();
 
                     server.subscription('/');
 
-                    server.start(function (err) {
+                    server.start((err) => {
 
-                        var client = new Nes.Client('http://localhost:' + server.info.port);
-                        client.connect(function () {
+                        const client = new Nes.Client('http://localhost:' + server.info.port);
+                        client.connect(() => {
 
                             client._ws.send = function () {
 
                                 throw new Error('failed');
                             };
 
-                            client.subscribe('/', function (err, update) {
+                            client.subscribe('/', (err, update) => {
 
                                 expect(err).to.exist();
                                 expect(err.message).to.equal('failed');
@@ -1066,11 +1068,11 @@ describe('Browser', function () {
                 });
             });
 
-            it('errors on missing path', function (done) {
+            it('errors on missing path', (done) => {
 
-                var client = new Nes.Client('http://localhost');
+                const client = new Nes.Client('http://localhost');
 
-                client.subscribe('', function (err, update) {
+                client.subscribe('', (err, update) => {
 
                     expect(err).to.exist();
                     expect(err.message).to.equal('Invalid path');
@@ -1078,11 +1080,11 @@ describe('Browser', function () {
                 });
             });
 
-            it('errors on invalid path', function (done) {
+            it('errors on invalid path', (done) => {
 
-                var client = new Nes.Client('http://localhost');
+                const client = new Nes.Client('http://localhost');
 
-                client.subscribe('asd', function (err, update) {
+                client.subscribe('asd', (err, update) => {
 
                     expect(err).to.exist();
                     expect(err.message).to.equal('Invalid path');
@@ -1091,14 +1093,14 @@ describe('Browser', function () {
             });
         });
 
-        describe('unsubscribe()', function () {
+        describe('unsubscribe()', () => {
 
-            it('drops all handlers', function (done) {
+            it('drops all handlers', (done) => {
 
-                var client = new Nes.Client('http://localhost');
+                const client = new Nes.Client('http://localhost');
 
-                var handler1 = function () { };
-                var handler2 = function () { };
+                const handler1 = function () { };
+                const handler2 = function () { };
 
                 client.subscribe('/a/b', handler1);
                 client.subscribe('/a/b', handler2);
@@ -1109,12 +1111,12 @@ describe('Browser', function () {
                 done();
             });
 
-            it('ignores unknown path', function (done) {
+            it('ignores unknown path', (done) => {
 
-                var client = new Nes.Client('http://localhost');
+                const client = new Nes.Client('http://localhost');
 
-                var handler1 = function () { };
-                var handler2 = function () { };
+                const handler1 = function () { };
+                const handler2 = function () { };
 
                 client.subscribe('/a/b', handler1);
                 client.subscribe('/b/c', handler2);
@@ -1126,11 +1128,11 @@ describe('Browser', function () {
                 done();
             });
 
-            it('errors on missing path', function (done) {
+            it('errors on missing path', (done) => {
 
-                var client = new Nes.Client('http://localhost');
+                const client = new Nes.Client('http://localhost');
 
-                client.unsubscribe('', function (err, update) {
+                client.unsubscribe('', (err, update) => {
 
                     expect(err).to.exist();
                     expect(err.message).to.equal('Invalid path');
@@ -1138,11 +1140,11 @@ describe('Browser', function () {
                 });
             });
 
-            it('errors on invalid path', function (done) {
+            it('errors on invalid path', (done) => {
 
-                var client = new Nes.Client('http://localhost');
+                const client = new Nes.Client('http://localhost');
 
-                client.unsubscribe('asd', function (err, update) {
+                client.unsubscribe('asd', (err, update) => {
 
                     expect(err).to.exist();
                     expect(err.message).to.equal('Invalid path');
@@ -1151,25 +1153,25 @@ describe('Browser', function () {
             });
         });
 
-        describe('_beat()', function () {
+        describe('_beat()', () => {
 
-            it('disconnects when server fails to ping', function (done) {
+            it('disconnects when server fails to ping', (done) => {
 
-                var server = new Hapi.Server();
+                const server = new Hapi.Server();
                 server.connection();
-                server.register({ register: Nes, options: { auth: false, heartbeat: { interval: 20, timeout: 10 } } }, function (err) {
+                server.register({ register: Nes, options: { auth: false, heartbeat: { interval: 20, timeout: 10 } } }, (err) => {
 
                     expect(err).to.not.exist();
 
-                    server.start(function (err) {
+                    server.start((err) => {
 
-                        var client = new Nes.Client('http://localhost:' + server.info.port);
+                        const client = new Nes.Client('http://localhost:' + server.info.port);
                         client.onDisconnect = function () {
 
                             server.stop(done);
                         };
 
-                        client.connect(function (err) {
+                        client.connect((err) => {
 
                             expect(err).to.not.exist();
 
@@ -1179,27 +1181,27 @@ describe('Browser', function () {
                 });
             });
 
-            it('disconnects when server fails to ping (after a few pings)', function (done) {
+            it('disconnects when server fails to ping (after a few pings)', (done) => {
 
-                var server = new Hapi.Server();
+                const server = new Hapi.Server();
                 server.connection();
-                server.register({ register: Nes, options: { auth: false, heartbeat: { interval: 20, timeout: 10 } } }, function (err) {
+                server.register({ register: Nes, options: { auth: false, heartbeat: { interval: 20, timeout: 10 } } }, (err) => {
 
                     expect(err).to.not.exist();
 
-                    server.start(function (err) {
+                    server.start((err) => {
 
-                        var client = new Nes.Client('http://localhost:' + server.info.port);
+                        const client = new Nes.Client('http://localhost:' + server.info.port);
                         client.onDisconnect = function () {
 
                             server.stop(done);
                         };
 
-                        client.connect(function (err) {
+                        client.connect((err) => {
 
                             expect(err).to.not.exist();
 
-                            setTimeout(function () {
+                            setTimeout(() => {
 
                                 clearTimeout(server.connections[0].plugins.nes._listener._heartbeat);
                             }, 50);

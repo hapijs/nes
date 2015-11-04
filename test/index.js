@@ -1,31 +1,33 @@
+'use strict';
+
 // Load modules
 
-var Code = require('code');
-var Hapi = require('hapi');
-var Lab = require('lab');
-var Nes = require('../');
+const Code = require('code');
+const Hapi = require('hapi');
+const Lab = require('lab');
+const Nes = require('../');
 
 
 // Declare internals
 
-var internals = {};
+const internals = {};
 
 
 // Test shortcuts
 
-var lab = exports.lab = Lab.script();
-var describe = lab.describe;
-var it = lab.it;
-var expect = Code.expect;
+const lab = exports.lab = Lab.script();
+const describe = lab.describe;
+const it = lab.it;
+const expect = Code.expect;
 
 
-describe('register()', function () {
+describe('register()', () => {
 
-    it('adds websocket support', function (done) {
+    it('adds websocket support', (done) => {
 
-        var server = new Hapi.Server();
+        const server = new Hapi.Server();
         server.connection();
-        server.register({ register: Nes, options: { auth: false, headers: ['Content-Type'] } }, function (err) {
+        server.register({ register: Nes, options: { auth: false, headers: ['Content-Type'] } }, (err) => {
 
             expect(err).to.not.exist();
 
@@ -38,12 +40,12 @@ describe('register()', function () {
                 }
             });
 
-            server.start(function (err) {
+            server.start((err) => {
 
-                var client = new Nes.Client('http://localhost:' + server.info.port);
-                client.connect(function () {
+                const client = new Nes.Client('http://localhost:' + server.info.port);
+                client.connect(() => {
 
-                    client.request('/', function (err, payload, statusCode, headers) {
+                    client.request('/', (err, payload, statusCode, headers) => {
 
                         expect(err).to.not.exist();
                         expect(payload).to.equal('hello');
@@ -58,20 +60,20 @@ describe('register()', function () {
         });
     });
 
-    it('calls onConnection callback', function (done) {
+    it('calls onConnection callback', (done) => {
 
-        var client;
+        let client;
 
-        var onConnection = function (ws) {
+        const onConnection = function (ws) {
 
             expect(ws).to.exist();
             client.disconnect();
             server.stop(done);
         };
 
-        var server = new Hapi.Server();
+        const server = new Hapi.Server();
         server.connection();
-        server.register({ register: Nes, options: { onConnection: onConnection, auth: false } }, function (err) {
+        server.register({ register: Nes, options: { onConnection: onConnection, auth: false } }, (err) => {
 
             expect(err).to.not.exist();
 
@@ -84,28 +86,28 @@ describe('register()', function () {
                 }
             });
 
-            server.start(function (err) {
+            server.start((err) => {
 
                 client = new Nes.Client('http://localhost:' + server.info.port);
-                client.connect(function () { });
+                client.connect(() => { });
             });
         });
     });
 
-    it('calls onDisconnection callback', function (done) {
+    it('calls onDisconnection callback', (done) => {
 
-        var client;
+        let client;
 
-        var onDisconnection = function (ws) {
+        const onDisconnection = function (ws) {
 
             expect(ws).to.exist();
             client.disconnect();
             server.stop(done);
         };
 
-        var server = new Hapi.Server();
+        const server = new Hapi.Server();
         server.connection();
-        server.register({ register: Nes, options: { onDisconnection: onDisconnection, auth: false } }, function (err) {
+        server.register({ register: Nes, options: { onDisconnection: onDisconnection, auth: false } }, (err) => {
 
             expect(err).to.not.exist();
 
@@ -118,10 +120,10 @@ describe('register()', function () {
                 }
             });
 
-            server.start(function (err) {
+            server.start((err) => {
 
                 client = new Nes.Client('http://localhost:' + server.info.port);
-                client.connect(function () {
+                client.connect(() => {
 
                     client.disconnect();
                 });
