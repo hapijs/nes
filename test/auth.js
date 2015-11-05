@@ -668,7 +668,7 @@ describe('authentication', () => {
                                 client.disconnect();
                                 server.stop(done);
                             });
-                        }, 30);
+                        }, 40);
                     });
                 });
             });
