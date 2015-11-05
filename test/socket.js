@@ -25,6 +25,49 @@ const expect = Code.expect;
 
 describe('Socket', () => {
 
+    it('exposes app namespace', (done) => {
+
+        const server = new Hapi.Server();
+        server.connection();
+
+        let client;
+        const onConnection = function (socket) {
+
+            socket.app.x = 'hello';
+        };
+
+        server.register({ register: Nes, options: { onConnection: onConnection, auth: false } }, (err) => {
+
+            expect(err).to.not.exist();
+
+            server.route({
+                method: 'GET',
+                path: '/',
+                handler: function (request, reply) {
+
+                    return reply(request.socket.app.x);
+                }
+            });
+
+            server.start((err) => {
+
+                client = new Nes.Client('http://localhost:' + server.info.port);
+                client.connect(() => {
+
+                    client.request('/', (err, payload, statusCode, headers) => {
+
+                        expect(err).to.not.exist();
+                        expect(payload).to.equal('hello');
+                        expect(statusCode).to.equal(200);
+
+                        client.disconnect();
+                        server.stop(done);
+                    });
+                });
+            });
+        });
+    });
+
     describe('disconnect()', () => {
 
         it('closes connection', (done) => {

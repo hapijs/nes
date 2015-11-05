@@ -7,6 +7,7 @@
     - [`server.publish(path, message)`](#serverpublishpath-message)
 - [Socket](#socket)
     - [`socket.id`](#socketid)
+    - [`socket.app`](#socketapp)
     - [`socket.auth`](#socketauth)
     - [`socket.disconnect()`](#socketdisconnect)
     - [`socket.send(message)`](#socketsendmessage)
@@ -193,6 +194,11 @@ An object representing a client connection.
 ### `socket.id`
 
 A unique socket identifier.
+
+### `socket.app`
+
+An object used to store application state per socket. Provides a safe namespace to avoid conflicts
+with the socket methods.
 
 ### `socket.auth`
 
