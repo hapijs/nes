@@ -1,3 +1,3 @@
 'use strict';
 
-module.exports = require('./lib/client');
+module.exports = require('./dist/client');
