@@ -719,6 +719,41 @@ describe('Socket', () => {
 
     describe('_processRequest()', () => {
 
+        it('exposes socket to request', (done) => {
+
+            const server = new Hapi.Server();
+            server.connection();
+            server.register({ register: Nes, options: { auth: false } }, (err) => {
+
+                expect(err).to.not.exist();
+
+                server.route({
+                    method: 'GET',
+                    path: '/',
+                    handler: function (request, reply) {
+
+                        return reply(request.socket.id);
+                    }
+                });
+
+                server.start((err) => {
+
+                    const client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect(() => {
+
+                        client.request('/', (err, payload, statusCode, headers) => {
+
+                            expect(err).to.not.exist();
+                            expect(payload).to.equal(client.id);
+
+                            client.disconnect();
+                            server.stop(done);
+                        });
+                    });
+                });
+            });
+        });
+
         it('passed headers', (done) => {
 
             const server = new Hapi.Server();

@@ -1,4 +1,4 @@
-# 1.1.x API Reference
+# 1.2.x API Reference
 
 - [Registration](#registration)
 - [Server](#server)
@@ -10,6 +10,8 @@
     - [`socket.auth`](#socketauth)
     - [`socket.disconnect()`](#socketdisconnect)
     - [`socket.send(message)`](#socketsendmessage)
+- [Request](#request)
+    - [`request.socket`](#requestsocket)
 - [Client](#client)
     - [`new Client(url, [options])`](#new-clienturl-options)
     - [`client.onError`](#clientonerror)
@@ -18,6 +20,7 @@
     - [`client.onUpdate`](#clientonupdate)
     - [`client.connect([options], callback)`](#clientconnectoptions-callback)
     - [`client.disconnect()`](#clientdisconnect)
+    - [`client.id`](#clientid)
     - [`client.request(options, callback)`](#clientrequestoptions-callback)
     - [`client.message(message, callback)`](#clientmessagemessage-callback)
     - [`client.subscribe(path, handler)`](#clientsubscribepath-handler)
@@ -208,6 +211,14 @@ Sends a custom message to the client where:
 - `message` - the message sent to the client. Can be any type which can be safely converted to
   string using `JSON.stringify()`.
 
+## Request
+
+The following decorations are available on each request received via the nes connection.
+
+### `request.socket`
+
+Provides access to the [`Socket`](#socket) object of the incoming connection.
+
 ## Client
 
 The client implements the **nes** protocol and provides methods for interacting with the server.
@@ -267,6 +278,11 @@ Connects the client to the server where:
 ### `client.disconnect()`
 
 Disconnects the client from the server and stops future reconnects.
+
+### `client.id`
+
+The unique socket identifier assigned by the server. The value is set after the connection is
+established.
 
 ### `client.request(options, callback)`
 

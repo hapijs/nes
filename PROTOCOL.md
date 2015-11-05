@@ -1,4 +1,4 @@
-# nes Protocol v1.0.x
+# nes Protocol v1.2.x
 
 ## Message
 
@@ -115,6 +115,7 @@ The server respond by sending a message back with the following:
         - `interval` - the heartbeat interval in milliseconds.
         - `timeout` - the time from sending a heartbeat to the client until a response is expected
           before a connection is considered closed by the server.
+- `socket` - the server generated socket identifier for the connection.
 
 Note: the client should assume the connection is closed if it has not heard from the server in
 heartbeat.interval + heartbeat.timeout.
@@ -128,7 +129,8 @@ For example:
     heartbeat: {
         interval: 15000,
         timeout: 5000
-    }
+    },
+    socket: 'abc-123'
 }
 ```
 
