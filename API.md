@@ -302,6 +302,13 @@ Sends an endpoint request to the server where:
         - `headers` - an object where each key is a request header and the value the header
           content. Cannot include an Authorization header. Defaults to no headers.
         - `payload` - the request payload sent to the server.
+- `callback` - the callback method using the signature `function(err, payload, statusCode, headers)`
+  where:
+    - `err` - the `Error` condition if the request failed.
+    - `payload` - the server response object.
+    - `statusCode` - the HTTP response status code.
+    - `headers` - an object containing the HTTP response headers returned by the server (based on
+      the server configuration).
 
 ### `client.message(message, callback)`
 
