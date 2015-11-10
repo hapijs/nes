@@ -7,7 +7,7 @@ flexible and organic extension.
 
 Protocol version: 1.2.x
 
-[![Build Status](https://secure.travis-ci.org/hapijs/nes.png)](http://travis-ci.org/hapijs/nes)
+[![Build Status](https://secure.travis-ci.org/hapijs/nes.svg)](http://travis-ci.org/hapijs/nes)
 
 Lead Maintainer - [Eran Hammer](https://github.com/hueniverse)
 
