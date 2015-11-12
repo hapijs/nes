@@ -86,6 +86,39 @@ describe('Browser', () => {
                     });
                 });
             });
+
+            it('allows closing from inside request callback', (done) => {
+
+                const server = new Hapi.Server();
+                server.connection();
+                server.register({ register: Nes, options: { auth: false } }, (err) => {
+
+                    expect(err).to.not.exist();
+
+                    server.route({
+                        method: 'GET',
+                        path: '/',
+                        handler: function (request, reply) {
+
+                            return reply('hello');
+                        }
+                    });
+
+                    server.start((err) => {
+
+                        const client = new Nes.Client('http://localhost:' + server.info.port);
+                        client.connect(() => {
+
+                            client.request('/', (err, payload, statusCode, headers) => {
+
+                                expect(err).to.not.exist();
+                                client.disconnect();
+                                setTimeout(() => server.stop(done), 100);
+                            });
+                        });
+                    });
+                });
+            });
         });
 
         describe('_reconnect()', () => {
