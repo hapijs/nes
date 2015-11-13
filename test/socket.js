@@ -707,57 +707,6 @@ describe('Socket', () => {
                 });
             });
         });
-
-        it('ignores double unsubscribe to same subscription with another path', (done) => {
-
-            const server = new Hapi.Server();
-            server.connection();
-
-            const onMessage = function (socket, message, next) {
-
-                return next('b');
-            };
-
-            server.register({ register: Nes, options: { auth: false, onMessage: onMessage } }, (err) => {
-
-                expect(err).to.not.exist();
-
-                server.subscription('/{id}', {});
-
-                server.start((err) => {
-
-                    const client = new Nes.Client('http://localhost:' + server.info.port);
-                    client.connect(() => {
-
-                        client.subscribe('/5', () => { });
-
-                        client.subscribe('/6', (err, update) => {
-
-                            expect(err).to.not.exist();
-
-                            client.unsubscribe('/6');
-                            client._send({ type: 'unsub', path: '/6' });
-                            client.unsubscribe('/5');
-
-                            client.message('a', (err, message) => {
-
-                                const listener = server.connections[0].plugins.nes._listener;
-                                const match = listener._router.route('sub', '/6');
-                                expect(match.route.subscribers._items).to.deep.equal({});
-
-                                client.disconnect();
-                                server.stop(done);
-                            });
-                        });
-
-                        setTimeout(() => {
-
-                            server.publish('/6', 'b');
-                        }, 10);
-                    });
-                });
-            });
-        });
     });
 
     describe('_processRequest()', () => {

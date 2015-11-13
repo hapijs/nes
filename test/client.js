@@ -1124,6 +1124,46 @@ describe('Browser', () => {
                     done();
                 });
             });
+
+            it('subscribes, unsubscribes, then subscribes again to a path', (done) => {
+
+                const server = new Hapi.Server();
+                server.connection();
+                server.register({ register: Nes, options: { auth: false } }, (err) => {
+
+                    expect(err).to.not.exist();
+
+                    server.subscription('/', {});
+
+                    server.start((err) => {
+
+                        const client = new Nes.Client('http://localhost:' + server.info.port);
+                        client.connect(() => {
+
+                            client.subscribe('/', (err, update1) => {
+
+                                expect(client.subscriptions()).to.deep.equal(['/']);
+                                expect(err).to.not.exist();
+                                expect(update1).to.equal('abc');
+
+                                client.unsubscribe('/');
+
+                                client.subscribe('/', (err, update2) => {
+
+                                    expect(client.subscriptions()).to.deep.equal(['/']);
+                                    expect(err).to.not.exist();
+                                    expect(update2).to.equal('def');
+                                    client.disconnect();
+                                    server.stop(done);
+                                });
+                            });
+
+                            setTimeout(() => server.publish('/', 'abc'), 10);
+                            setTimeout(() => server.publish('/', 'def'), 30);
+                        });
+                    });
+                });
+            });
         });
 
         describe('unsubscribe()', () => {
