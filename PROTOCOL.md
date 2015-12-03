@@ -88,6 +88,7 @@ Every client connection must first be initialized with a `hello` message. The cl
 with the following:
 - `type` - set to `'hello'`.
 - `id` - a unique per-client request id (number or string).
+- `version` - set to `'2'`.
 - `auth` - optional authentication credentials. Can be any value understood by the server.
 - `subs` - an optional array of strings indicating the path subscriptions the client is interested in.
 
@@ -97,6 +98,7 @@ For example:
 {
     type: 'hello',
     id: 1,
+    version: '2',
     auth: {
         headers: {
             authorization: 'Basic am9objpzZWNyZXQ='

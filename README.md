@@ -106,11 +106,13 @@ var Nes = require('nes');
 var client = new Nes.Client('ws://localhost');
 client.connect(function (err) {
 
-    client.subscribe('/item/5', function (err, update) {
+    var handler = function (update) {
 
         // update -> { id: 5, status: 'complete' }
         // Second publish is not received (doesn't match)
-    });
+    };
+
+    client.subscribe('/item/5', handler, function (err) { });
 });
 ```
 
@@ -292,11 +294,13 @@ var client = new Nes.Client('ws://localhost');
 
 client.connect({ auth: { headers: { authorization: 'Basic am9objpzZWNyZXQ=' } } }, function (err) {
 
-    client.subscribe('/items', function (err, update) {
+    var handler = function (err, update) {
 
         // First publish is not received (filtered due to updater key)
         // update -> { id: 6, status: 'initial', updater: 'steve' }
-    });
+    };
+
+    client.subscribe('/items', handler, function (err) { });
 });
 ```
 
