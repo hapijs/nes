@@ -488,7 +488,7 @@ describe('Socket', () => {
 
                     client.on('open', () => {
 
-                        client.send(JSON.stringify({ id: 1, type: 'hello' }), (err) => {
+                        client.send(JSON.stringify({ id: 1, type: 'hello', version: '2' }), (err) => {
 
                             expect(err).to.not.exist();
                             client.send(JSON.stringify({ id: 2, type: 'request', path: '/' }), (err) => {
@@ -543,7 +543,7 @@ describe('Socket', () => {
 
                     client.on('open', () => {
 
-                        client.send(JSON.stringify({ id: 1, type: 'hello' }), (err) => {
+                        client.send(JSON.stringify({ id: 1, type: 'hello', version: '2' }), (err) => {
 
                             expect(err).to.not.exist();
                             client.send(JSON.stringify({ id: 2, type: 'request', method: 'GET' }), (err) => {
@@ -598,13 +598,87 @@ describe('Socket', () => {
 
                     client.on('open', () => {
 
-                        client.send(JSON.stringify({ id: 1, type: 'hello' }), (err) => {
+                        client.send(JSON.stringify({ id: 1, type: 'hello', version: '2' }), (err) => {
 
                             expect(err).to.not.exist();
                             client.send(JSON.stringify({ id: 2, type: 'unknown' }), (err) => {
 
                                 expect(err).to.not.exist();
                             });
+                        });
+                    });
+                });
+            });
+        });
+
+        it('errors on incorrect version', (done) => {
+
+            const server = new Hapi.Server();
+            server.connection();
+            server.register({ register: Nes, options: { auth: false } }, (err) => {
+
+                expect(err).to.not.exist();
+
+                server.start((err) => {
+
+                    const client = new Ws('http://localhost:' + server.info.port);
+
+                    client.on('message', (data, flags) => {
+
+                        const message = JSON.parse(data);
+                        expect(message.payload).to.deep.equal({
+                            error: 'Bad Request',
+                            message: 'Incorrect protocol version (expected 2 but received 1)'
+                        });
+
+                        expect(message.statusCode).to.equal(400);
+
+                        client.close();
+                        server.stop(done);
+                    });
+
+                    client.on('open', () => {
+
+                        client.send(JSON.stringify({ id: 1, type: 'hello', version: '1' }), (err) => {
+
+                            expect(err).to.not.exist();
+                        });
+                    });
+                });
+            });
+        });
+
+        it('errors on missing version', (done) => {
+
+            const server = new Hapi.Server();
+            server.connection();
+            server.register({ register: Nes, options: { auth: false } }, (err) => {
+
+                expect(err).to.not.exist();
+
+                server.start((err) => {
+
+                    const client = new Ws('http://localhost:' + server.info.port);
+
+                    client.on('message', (data, flags) => {
+
+                        const message = JSON.parse(data);
+                        expect(message.payload).to.deep.equal({
+                            error: 'Bad Request',
+                            message: 'Incorrect protocol version (expected 2 but received none)'
+                        });
+
+                        expect(message.statusCode).to.equal(400);
+
+                        client.close();
+                        server.stop(done);
+                    });
+
+                    client.on('open', () => {
+
+                        client.send(JSON.stringify({ id: 1, type: 'hello' }), (err) => {
+
+                            expect(err).to.not.exist();
                         });
                     });
                 });
