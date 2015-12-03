@@ -5,6 +5,7 @@
 const Boom = require('boom');
 const Code = require('code');
 const Hapi = require('hapi');
+const Hoek = require('hoek');
 const Lab = require('lab');
 const Nes = require('../');
 const Ws = require('ws');
@@ -631,30 +632,30 @@ describe('Socket', () => {
                     const client = new Nes.Client('http://localhost:' + server.info.port);
                     client.connect(() => {
 
-                        client.subscribe('/5', (err, update) => { });
+                        client.subscribe('/5', Hoek.ignore, (err) => {
 
-                        client.subscribe('/6', (err, update) => {
+                            const handler = (update) => {
 
-                            expect(err).to.not.exist();
+                                client.unsubscribe('/5');
+                                client.unsubscribe('/6');
 
-                            client.unsubscribe('/5');
-                            client.unsubscribe('/6');
+                                client.message('a', (err, message) => {
 
-                            client.message('a', (err, message) => {
+                                    const listener = server.connections[0].plugins.nes._listener;
+                                    const match = listener._router.route('sub', '/5');
+                                    expect(match.route.subscribers._items).to.deep.equal({});
 
-                                const listener = server.connections[0].plugins.nes._listener;
-                                const match = listener._router.route('sub', '/5');
-                                expect(match.route.subscribers._items).to.deep.equal({});
+                                    client.disconnect();
+                                    server.stop(done);
+                                });
+                            };
 
-                                client.disconnect();
-                                server.stop(done);
+                            client.subscribe('/6', handler, (err) => {
+
+                                expect(err).to.not.exist();
+                                server.publish('/6', 'b');
                             });
                         });
-
-                        setTimeout(() => {
-
-                            server.publish('/6', 'b');
-                        }, 10);
                     });
                 });
             });
@@ -681,9 +682,7 @@ describe('Socket', () => {
                     const client = new Nes.Client('http://localhost:' + server.info.port);
                     client.connect(() => {
 
-                        client.subscribe('/6', (err, update) => {
-
-                            expect(err).to.not.exist();
+                        const handler = (update) => {
 
                             client.unsubscribe('/6');
                             client._send({ type: 'unsub', path: '/6' });
@@ -697,12 +696,13 @@ describe('Socket', () => {
                                 client.disconnect();
                                 server.stop(done);
                             });
-                        });
+                        };
 
-                        setTimeout(() => {
+                        client.subscribe('/6', handler, (err) => {
 
+                            expect(err).to.not.exist();
                             server.publish('/6', 'b');
-                        }, 10);
+                        });
                     });
                 });
             });

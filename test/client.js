@@ -4,6 +4,7 @@
 
 const Code = require('code');
 const Hapi = require('hapi');
+const Hoek = require('hoek');
 const Lab = require('lab');
 const Nes = require('../');
 
@@ -612,6 +613,40 @@ describe('Browser', () => {
             });
         });
 
+        describe('_send()', () => {
+
+            it('catches send error without tracking', (done) => {
+
+                const server = new Hapi.Server();
+                server.connection();
+                server.register({ register: Nes, options: { auth: false } }, (err) => {
+
+                    expect(err).to.not.exist();
+
+                    server.start((err) => {
+
+                        const client = new Nes.Client('http://localhost:' + server.info.port);
+                        client.connect(() => {
+
+                            client._ws.send = function () {
+
+                                throw new Error('failed');
+                            };
+
+                            client._send({}, false, (err) => {
+
+                                expect(err).to.exist();
+                                expect(err.message).to.equal('failed');
+
+                                client.disconnect();
+                                server.stop(done);
+                            });
+                        });
+                    });
+                });
+            });
+        });
+
         describe('_onMessage', () => {
 
             it('ignores invalid incoming message', (done) => {
@@ -784,19 +819,19 @@ describe('Browser', () => {
                         const client = new Nes.Client('http://localhost:' + server.info.port);
                         client.connect(() => {
 
-                            client.subscribe('/', (err, update) => {
+                            const handler = (update) => {
 
                                 expect(client.subscriptions()).to.deep.equal(['/']);
-                                expect(err).to.not.exist();
                                 expect(update).to.equal('heya');
                                 client.disconnect();
                                 server.stop(done);
-                            });
+                            };
 
-                            setTimeout(() => {
+                            client.subscribe('/', handler, (err) => {
 
+                                expect(err).to.not.exist();
                                 server.publish('/', 'heya');
-                            }, 10);
+                            });
                         });
                     });
                 });
@@ -814,18 +849,21 @@ describe('Browser', () => {
 
                         const client = new Nes.Client('http://localhost:' + server.info.port);
 
-                        client.subscribe('/b', (err, update) => {
+                        client.subscribe('/b', Hoek.ignore, (err) => {
 
-                            expect(err).to.exist();
-                            expect(err.message).to.equal('Not Found');
-                            expect(err.statusCode).to.equal(404);
-                            expect(client.subscriptions()).to.be.empty();
+                            expect(err).to.not.exist();
 
-                            client.disconnect();
-                            server.stop(done);
+                            client.connect((err) => {
+
+                                expect(err).to.exist();
+                                expect(err.message).to.equal('Subscription not found');
+                                expect(err.statusCode).to.equal(404);
+                                expect(client.subscriptions()).to.be.empty();
+
+                                client.disconnect();
+                                server.stop(done);
+                            });
                         });
-
-                        client.connect((err) => { });
                     });
                 });
             });
@@ -844,22 +882,22 @@ describe('Browser', () => {
 
                         const client = new Nes.Client('http://localhost:' + server.info.port);
 
-                        client.subscribe('/', (err, update) => {
+                        const handler = (update) => {
 
-                            expect(err).to.not.exist();
                             expect(update).to.equal('heya');
                             client.disconnect();
                             server.stop(done);
-                        });
+                        };
 
-                        client.connect((err) => {
+                        client.subscribe('/', handler, (err) => {
 
                             expect(err).to.not.exist();
 
-                            setTimeout(() => {
+                            client.connect((err) => {
 
+                                expect(err).to.not.exist();
                                 server.publish('/', 'heya');
-                            }, 10);
+                            });
                         });
                     });
                 });
@@ -886,25 +924,28 @@ describe('Browser', () => {
                             client2.connect((err) => {
 
                                 expect(err).to.not.exist();
+                                const handler = (update) => {
 
-                                client1.subscribe('/', (err, update) => {
-
-                                    expect(err).to.not.exist();
                                     expect(update).to.equal('heya');
                                     client1.disconnect();
                                     server.stop(done);
+                                };
+
+                                client1.subscribe('/', handler, (err) => {
+
+                                    expect(err).to.not.exist();
+
+                                    client2.subscribe('/', Hoek.ignore, (err) => {
+
+                                        expect(err).to.not.exist();
+
+                                        client2.disconnect();
+                                        setTimeout(() => {
+
+                                            server.publish('/', 'heya');
+                                        }, 10);
+                                    });
                                 });
-
-                                client2.subscribe('/', () => { });
-
-                                setTimeout(() => {
-
-                                    client2.disconnect();
-                                    setTimeout(() => {
-
-                                        server.publish('/', 'heya');
-                                    }, 10);
-                                }, 10);
                             });
                         });
                     });
@@ -926,10 +967,9 @@ describe('Browser', () => {
                         const client = new Nes.Client('http://localhost:' + server.info.port);
                         client.connect(() => {
 
-                            client.subscribe('/', (err, update) => { });
-                            delete client._subscriptions['/'];
+                            client.subscribe('/', Hoek.ignore, (err) => {
 
-                            setTimeout(() => {
+                                delete client._subscriptions['/'];
 
                                 server.publish('/', 'heya');
                                 setTimeout(() => {
@@ -937,7 +977,7 @@ describe('Browser', () => {
                                     client.disconnect();
                                     server.stop(done);
                                 }, 10);
-                            }, 10);
+                            });
                         });
                     });
                 });
@@ -956,10 +996,10 @@ describe('Browser', () => {
                         const client = new Nes.Client('http://localhost:' + server.info.port);
                         client.connect(() => {
 
-                            client.subscribe('/', (err, update) => {
+                            client.subscribe('/', Hoek.ignore, (err) => {
 
                                 expect(err).to.exist();
-                                expect(err.message).to.equal('Not Found');
+                                expect(err.message).to.equal('Subscription not found');
                                 client.disconnect();
                                 server.stop(done);
                             });
@@ -981,18 +1021,21 @@ describe('Browser', () => {
                         const client = new Nes.Client('http://localhost:' + server.info.port);
                         client.connect(() => {
 
-                            client.subscribe('/', (err, update) => {
+                            const handler = (update) => {
 
                                 throw new Error('Must not be called');
+                            };
+
+                            client.subscribe('/', handler, (err) => {
+
+                                client.unsubscribe('/');
+
+                                setTimeout(() => {
+
+                                    client.disconnect();
+                                    server.stop(done);
+                                }, 20);
                             });
-
-                            client.unsubscribe('/');
-
-                            setTimeout(() => {
-
-                                client.disconnect();
-                                server.stop(done);
-                            }, 20);
                         });
                     });
                 });
@@ -1011,19 +1054,21 @@ describe('Browser', () => {
                         const client = new Nes.Client('http://localhost:' + server.info.port);
                         client.connect(() => {
 
-                            const handler = function (err, update) {
+                            const handler = function (update) {
 
                                 throw new Error('Must not be called');
                             };
 
-                            client.subscribe('/', handler);
-                            client.unsubscribe('/', handler);
+                            client.subscribe('/', handler, (err) => {
 
-                            setTimeout(() => {
+                                client.unsubscribe('/', handler);
 
-                                client.disconnect();
-                                server.stop(done);
-                            }, 20);
+                                setTimeout(() => {
+
+                                    client.disconnect();
+                                    server.stop(done);
+                                }, 20);
+                            });
                         });
                     });
                 });
@@ -1033,29 +1078,29 @@ describe('Browser', () => {
 
                 const client = new Nes.Client('http://localhost');
 
-                const handler1 = function () { };
-                const handler2 = function () { };
-                const handler3 = function () { };
-                const handler4 = function () { };
+                const handler1 = (update) => { };
+                const handler2 = (update) => { };
+                const handler3 = (update) => { };
+                const handler4 = (update) => { };
 
                 // Initial subscription
 
-                client.subscribe('/', handler1);
-                client.subscribe('/a', handler2);
-                client.subscribe('/a/b', handler3);
-                client.subscribe('/b/c', handler4);
+                client.subscribe('/', handler1, Hoek.ignore);
+                client.subscribe('/a', handler2, Hoek.ignore);
+                client.subscribe('/a/b', handler3, Hoek.ignore);
+                client.subscribe('/b/c', handler4, Hoek.ignore);
 
                 // Ignore duplicates
 
-                client.subscribe('/', handler1);
-                client.subscribe('/a', handler2);
-                client.subscribe('/a/b', handler3);
-                client.subscribe('/b/c', handler4);
+                client.subscribe('/', handler1, Hoek.ignore);
+                client.subscribe('/a', handler2, Hoek.ignore);
+                client.subscribe('/a/b', handler3, Hoek.ignore);
+                client.subscribe('/b/c', handler4, Hoek.ignore);
 
                 // Subscribe to some with additional handlers
 
-                client.subscribe('/a', handler1);
-                client.subscribe('/b/c', handler2);
+                client.subscribe('/a', handler1, Hoek.ignore);
+                client.subscribe('/b/c', handler2, Hoek.ignore);
 
                 // Unsubscribe initial set
 
@@ -1088,7 +1133,7 @@ describe('Browser', () => {
                                 throw new Error('failed');
                             };
 
-                            client.subscribe('/', (err, update) => {
+                            client.subscribe('/', Hoek.ignore, (err) => {
 
                                 expect(err).to.exist();
                                 expect(err.message).to.equal('failed');
@@ -1105,7 +1150,7 @@ describe('Browser', () => {
 
                 const client = new Nes.Client('http://localhost');
 
-                client.subscribe('', (err, update) => {
+                client.subscribe('', Hoek.ignore, (err) => {
 
                     expect(err).to.exist();
                     expect(err.message).to.equal('Invalid path');
@@ -1117,7 +1162,7 @@ describe('Browser', () => {
 
                 const client = new Nes.Client('http://localhost');
 
-                client.subscribe('asd', (err, update) => {
+                client.subscribe('asd', Hoek.ignore, (err) => {
 
                     expect(err).to.exist();
                     expect(err.message).to.equal('Invalid path');
@@ -1140,26 +1185,34 @@ describe('Browser', () => {
                         const client = new Nes.Client('http://localhost:' + server.info.port);
                         client.connect(() => {
 
-                            client.subscribe('/', (err, update1) => {
+                            const handler1 = (update1) => {
 
                                 expect(client.subscriptions()).to.deep.equal(['/']);
-                                expect(err).to.not.exist();
                                 expect(update1).to.equal('abc');
 
                                 client.unsubscribe('/');
 
-                                client.subscribe('/', (err, update2) => {
+                                const handler2 = (update2) => {
 
                                     expect(client.subscriptions()).to.deep.equal(['/']);
-                                    expect(err).to.not.exist();
                                     expect(update2).to.equal('def');
                                     client.disconnect();
                                     server.stop(done);
-                                });
-                            });
+                                };
 
-                            setTimeout(() => server.publish('/', 'abc'), 10);
-                            setTimeout(() => server.publish('/', 'def'), 30);
+                                client.subscribe('/', handler2, (err) => {
+
+                                    expect(err).to.not.exist();
+                                    server.publish('/', 'def');
+                                });
+                            };
+
+                            client.subscribe('/', handler1, (err) => {
+
+                                expect(err).to.not.exist();
+
+                                server.publish('/', 'abc');
+                            });
                         });
                     });
                 });
@@ -1172,11 +1225,8 @@ describe('Browser', () => {
 
                 const client = new Nes.Client('http://localhost');
 
-                const handler1 = function () { };
-                const handler2 = function () { };
-
-                client.subscribe('/a/b', handler1);
-                client.subscribe('/a/b', handler2);
+                client.subscribe('/a/b', Hoek.ignore, Hoek.ignore);
+                client.subscribe('/a/b', Hoek.ignore, Hoek.ignore);
 
                 client.unsubscribe('/a/b');
 
@@ -1188,11 +1238,10 @@ describe('Browser', () => {
 
                 const client = new Nes.Client('http://localhost');
 
-                const handler1 = function () { };
-                const handler2 = function () { };
+                const handler1 = (update) => { };
 
-                client.subscribe('/a/b', handler1);
-                client.subscribe('/b/c', handler2);
+                client.subscribe('/a/b', handler1, Hoek.ignore);
+                client.subscribe('/b/c', Hoek.ignore, Hoek.ignore);
 
                 client.unsubscribe('/a/b/c', handler1);
                 client.unsubscribe('/b/c', handler1);

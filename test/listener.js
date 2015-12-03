@@ -4,6 +4,7 @@
 
 const Code = require('code');
 const Hapi = require('hapi');
+const Hoek = require('hoek');
 const Lab = require('lab');
 const Nes = require('../');
 
@@ -183,18 +184,18 @@ describe('Listener', () => {
                     const client = new Nes.Client('http://localhost:' + server.connections[0].info.port);
                     client.connect(() => {
 
-                        client.subscribe('/', (err, update) => {
+                        const handler = (update) => {
 
-                            expect(err).to.not.exist();
                             expect(update).to.equal('heya');
                             client.disconnect();
                             server.stop(done);
-                        });
+                        };
 
-                        setTimeout(() => {
+                        client.subscribe('/', handler, (err) => {
 
+                            expect(err).to.not.exist();
                             server.publish('/', 'heya');
-                        }, 10);
+                        });
                     });
                 });
             });
@@ -232,7 +233,7 @@ describe('Listener', () => {
                     client = new Nes.Client('http://localhost:' + server.connections[0].info.port);
                     client.connect(() => {
 
-                        client.subscribe('/', (err, update) => { });
+                        client.subscribe('/', Hoek.ignore, Hoek.ignore);
                     });
                 });
             });
@@ -270,7 +271,7 @@ describe('Listener', () => {
                     client = new Nes.Client('http://localhost:' + server.connections[0].info.port);
                     client.connect(() => {
 
-                        client.subscribe('/foo', (err, update) => { });
+                        client.subscribe('/foo', Hoek.ignore, Hoek.ignore);
                     });
                 });
             });
@@ -296,19 +297,20 @@ describe('Listener', () => {
                     client.connect((err) => {
 
                         expect(err).to.not.exist();
-                        client.subscribe('/a/b', (err, update) => {
 
-                            expect(err).to.not.exist();
+                        const handler = (update) => {
+
                             expect(update).to.equal('2');
                             client.disconnect();
                             server.stop(done);
-                        });
+                        };
 
-                        setTimeout(() => {
+                        client.subscribe('/a/b', handler, (err) => {
 
+                            expect(err).to.not.exist();
                             server.publish('/a/a', '1');
                             server.publish('/a/b', '2');
-                        }, 10);
+                        });
                     });
                 });
             });
@@ -336,19 +338,20 @@ describe('Listener', () => {
                     client.connect((err) => {
 
                         expect(err).to.not.exist();
-                        client.subscribe('/updates', (err, update) => {
 
-                            expect(err).to.not.exist();
+                        const handler = (update) => {
+
                             expect(update).to.deep.equal({ a: 1 });
                             client.disconnect();
                             server.stop(done);
-                        });
+                        };
 
-                        setTimeout(() => {
+                        client.subscribe('/updates', handler, (err) => {
 
+                            expect(err).to.not.exist();
                             server.publish('/updates', { a: 2 });
                             server.publish('/updates', { a: 1 });
-                        }, 10);
+                        });
                     });
                 });
             });
@@ -376,19 +379,20 @@ describe('Listener', () => {
                     client.connect((err) => {
 
                         expect(err).to.not.exist();
-                        client.subscribe('/updates', (err, update) => {
 
-                            expect(err).to.not.exist();
+                        const handler = (update) => {
+
                             expect(update).to.deep.equal({ a: 1 });
                             client.disconnect();
                             server.stop(done);
-                        });
+                        };
 
-                        setTimeout(() => {
+                        client.subscribe('/updates', handler, (err) => {
 
+                            expect(err).to.not.exist();
                             server.publish('/updates', { a: 2 }, { internal: { b: 2 } });
                             server.publish('/updates', { a: 1 }, { internal: { b: 1 } });
-                        }, 10);
+                        });
                     });
                 });
             });
@@ -455,37 +459,40 @@ describe('Listener', () => {
                     client.connect(() => {
 
                         let called = false;
-                        client.subscribe('/5', (err, update) => {
+                        const handler1 = (update1) => {
 
-                            expect(err).to.not.exist();
                             called = true;
-                        });
+                        };
 
-                        client.subscribe('/6', (err, update) => {
+                        client.subscribe('/5', handler1, (err) => {
 
                             expect(err).to.not.exist();
 
-                            expect(called).to.be.true();
-                            client.disconnect();
+                            const handler2 = (update2) => {
 
-                            setTimeout(() => {
+                                expect(called).to.be.true();
+                                client.disconnect();
 
-                                server.stop(() => {
+                                setTimeout(() => {
 
-                                    const listener = server.connections[0].plugins.nes._listener;
-                                    expect(listener._sockets._items).to.deep.equal({});
-                                    const match = listener._router.route('sub', '/5');
-                                    expect(match.route.subscribers._items).to.deep.equal({});
-                                    done();
-                                });
-                            }, 10);
+                                    server.stop(() => {
+
+                                        const listener = server.connections[0].plugins.nes._listener;
+                                        expect(listener._sockets._items).to.deep.equal({});
+                                        const match = listener._router.route('sub', '/5');
+                                        expect(match.route.subscribers._items).to.deep.equal({});
+                                        done();
+                                    });
+                                }, 10);
+                            };
+
+                            client.subscribe('/6', handler2, (err) => {
+
+                                expect(err).to.not.exist();
+                                server.publish('/5', 'a');
+                                server.publish('/6', 'b');
+                            });
                         });
-
-                        setTimeout(() => {
-
-                            server.publish('/5', 'a');
-                            server.publish('/6', 'b');
-                        }, 10);
                     });
                 });
             });
@@ -506,30 +513,19 @@ describe('Listener', () => {
                     const client = new Nes.Client('http://localhost:' + server.info.port);
                     client.connect(() => {
 
-                        let called = false;
-                        client.subscribe('/5', (err, update) => {
+                        client.subscribe('/5', Hoek.ignore, (err) => {
 
-                            if (!called) {
-                                called = true;
+                            const request = {
+                                type: 'sub',
+                                path: '/5'
+                            };
 
-                                const request = {
-                                    type: 'sub',
-                                    path: '/5'
-                                };
+                            client._send(request, true, (err) => {
 
-                                return client._send(request);
-                            }
-
-                            expect(err).to.exist();
-                            expect(err.message).to.equal('Client already subscribed');
-                            client.disconnect();
-                            server.stop(done);
+                                client.disconnect();
+                                server.stop(done);
+                            });
                         });
-
-                        setTimeout(() => {
-
-                            server.publish('/5', 'a');
-                        }, 10);
                     });
                 });
             });
@@ -551,7 +547,7 @@ describe('Listener', () => {
                     client.connect((err) => {
 
                         expect(err).to.not.exist();
-                        client.subscribe('/?5', (err, update) => {
+                        client.subscribe('/?5', Hoek.ignore, (err) => {
 
                             expect(err).to.exist();
                             expect(err.message).to.equal('Subscription path cannot contain query');
@@ -620,15 +616,13 @@ describe('Listener', () => {
 
                         expect(err).to.not.exist();
 
-                        client.subscribe('/b', () => { });
+                        client.subscribe('/b', Hoek.ignore, Hoek.ignore);
 
                         client = new Nes.Client('http://localhost:' + server.info.port);
                         client.connect((err) => {
 
                             expect(err).to.not.exist();
-                            client.subscribe('/a/b', () => { });
-
-                            setTimeout(() => {
+                            client.subscribe('/a/b', Hoek.ignore, (err) => {
 
                                 expect(countSockets(server)).to.equal(2);
                                 expect(countSockets(server, { subscription: '/a/a' })).to.equal(0);
@@ -639,7 +633,7 @@ describe('Listener', () => {
                                 expect(countSockets(server, { subscription: '/foo' })).to.equal(0);
 
                                 server.stop(done);
-                            }, 10);
+                            });
                         });
                     });
                 });

@@ -1,4 +1,4 @@
-# 1.2.x API Reference
+# 2.0.x API Reference
 
 - [Registration](#registration)
 - [Server](#server)
@@ -24,7 +24,7 @@
     - [`client.id`](#clientid)
     - [`client.request(options, callback)`](#clientrequestoptions-callback)
     - [`client.message(message, callback)`](#clientmessagemessage-callback)
-    - [`client.subscribe(path, handler)`](#clientsubscribepath-handler)
+    - [`client.subscribe(path, handler, callback)`](#clientsubscribepath-handler-callback)
     - [`client.unsubscribe(path, [handler])`](#clientunsubscribepath-handler)
     - [`client.subscriptions()`](#clientsubscriptions)
 
@@ -319,16 +319,20 @@ Sends a custom message to the server which is received by the server `onMessage`
     - `err` - an error response.
     - `message` - the server response if no error occurred.
 
-### `client.subscribe(path, handler)`
+### `client.subscribe(path, handler, callback)`
 
 Subscribes to a server subscription where:
 - `path` - the requested subscription path. Paths are just like HTTP request paths (e.g.
   `'/item/5'` or `'/updates'` based on the paths supported by the server).
-- `handler` - the function used to receive subscription updates and errors using the
-  signature `function(err, message)` where:
-    - `err` - if present, indicates the subscription request has failed and the handler
-      will not be called again.
+- `handler` - the function used to receive subscription updates using the
+  signature `function(message)` where:
     - `message` - the subscription update sent by the server.
+- `callback` - the callback function called when the subscription request was received by the server
+  or failed to transmit using the signature `function(err)` where:
+    - `err` - if present, indicates the subscription request has failed.
+
+Note that when `subscribe()` is called before the client connects, any server errors will be
+received via the `connect()` callback.
 
 ### `client.unsubscribe(path, [handler])`
 

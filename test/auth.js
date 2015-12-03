@@ -5,6 +5,7 @@
 const Boom = require('boom');
 const Code = require('code');
 const Hapi = require('hapi');
+const Hoek = require('hoek');
 const Iron = require('iron');
 const Lab = require('lab');
 const Nes = require('../');
@@ -785,19 +786,19 @@ describe('authentication', () => {
                     client.connect({ auth: { headers: { authorization: 'Custom john' } } }, (err) => {
 
                         expect(err).to.not.exist();
-                        client.subscribe('/', (err, update) => {
+                        const handler = (update) => {
 
-                            expect(err).to.not.exist();
                             expect(client.subscriptions()).to.deep.equal(['/']);
                             expect(update).to.equal('heya');
                             client.disconnect();
                             server.stop(done);
-                        });
+                        };
 
-                        setTimeout(() => {
+                        client.subscribe('/', handler, (err) => {
 
+                            expect(err).to.not.exist();
                             server.publish('/', 'heya');
-                        }, 20);
+                        });
                     });
                 });
             });
@@ -828,19 +829,20 @@ describe('authentication', () => {
                     client.connect({ auth: { headers: { authorization: 'Custom john' } } }, (err) => {
 
                         expect(err).to.not.exist();
-                        client.subscribe('/', (err, update) => {
+                        const handler = (update) => {
 
-                            expect(err).to.not.exist();
                             expect(update).to.equal('john');
                             client.disconnect();
                             server.stop(done);
-                        });
+                        };
 
-                        setTimeout(() => {
+                        client.subscribe('/', handler, (err) => {
+
+                            expect(err).to.not.exist();
 
                             server.publish('/', 'steve');
                             server.publish('/', 'john');
-                        }, 20);
+                        });
                     });
                 });
             });
@@ -866,20 +868,16 @@ describe('authentication', () => {
                     client.connect((err) => {
 
                         expect(err).to.not.exist();
-                        client.subscribe('/', (err, update) => {
+
+                        client.subscribe('/', Hoek.ignore, (err) => {
 
                             expect(err).to.exist();
-                            expect(err.message).to.equal('Unauthorized');
+                            expect(err.message).to.equal('Authentication required to subscribe');
                             expect(client.subscriptions()).to.deep.equal([]);
 
                             client.disconnect();
                             server.stop(done);
                         });
-
-                        setTimeout(() => {
-
-                            server.publish('/', 'heya');
-                        }, 20);
                     });
                 });
             });
@@ -905,20 +903,20 @@ describe('authentication', () => {
                     client.connect((err) => {
 
                         expect(err).to.not.exist();
-                        client.subscribe('/', (err, update) => {
+                        const handler = (update) => {
 
-                            expect(err).to.not.exist();
                             expect(update).to.equal('heya');
                             expect(client.subscriptions()).to.deep.equal(['/']);
 
                             client.disconnect();
                             server.stop(done);
-                        });
+                        };
 
-                        setTimeout(() => {
+                        client.subscribe('/', handler, (err) => {
 
+                            expect(err).to.not.exist();
                             server.publish('/', 'heya');
-                        }, 20);
+                        });
                     });
                 });
             });
@@ -944,20 +942,20 @@ describe('authentication', () => {
                     client.connect((err) => {
 
                         expect(err).to.not.exist();
-                        client.subscribe('/', (err, update) => {
+                        const handler = (update) => {
 
-                            expect(err).to.not.exist();
                             expect(update).to.equal('heya');
                             expect(client.subscriptions()).to.deep.equal(['/']);
 
                             client.disconnect();
                             server.stop(done);
-                        });
+                        };
 
-                        setTimeout(() => {
+                        client.subscribe('/', handler, (err) => {
 
+                            expect(err).to.not.exist();
                             server.publish('/', 'heya');
-                        }, 20);
+                        });
                     });
                 });
             });
@@ -983,20 +981,20 @@ describe('authentication', () => {
                     client.connect({ auth: { headers: { authorization: 'Custom john' } } }, (err) => {
 
                         expect(err).to.not.exist();
-                        client.subscribe('/', (err, update) => {
+                        const handler = (update) => {
 
-                            expect(err).to.not.exist();
                             expect(update).to.equal('heya');
                             expect(client.subscriptions()).to.deep.equal(['/']);
 
                             client.disconnect();
                             server.stop(done);
-                        });
+                        };
 
-                        setTimeout(() => {
+                        client.subscribe('/', handler, (err) => {
 
+                            expect(err).to.not.exist();
                             server.publish('/', 'heya');
-                        }, 20);
+                        });
                     });
                 });
             });
@@ -1022,20 +1020,20 @@ describe('authentication', () => {
                     client.connect({ auth: { headers: { authorization: 'Custom app' } } }, (err) => {
 
                         expect(err).to.not.exist();
-                        client.subscribe('/', (err, update) => {
+                        const handler = (update) => {
 
-                            expect(err).to.not.exist();
                             expect(update).to.equal('heya');
                             expect(client.subscriptions()).to.deep.equal(['/']);
 
                             client.disconnect();
                             server.stop(done);
-                        });
+                        };
 
-                        setTimeout(() => {
+                        client.subscribe('/', handler, (err) => {
 
+                            expect(err).to.not.exist();
                             server.publish('/', 'heya');
-                        }, 20);
+                        });
                     });
                 });
             });
@@ -1061,7 +1059,8 @@ describe('authentication', () => {
                     client.connect({ auth: { headers: { authorization: 'Custom john' } } }, (err) => {
 
                         expect(err).to.not.exist();
-                        client.subscribe('/', (err, update) => {
+
+                        client.subscribe('/', Hoek.ignore, (err) => {
 
                             expect(err).to.exist();
                             expect(err.message).to.equal('User credentials cannot be used on an application subscription');
@@ -1070,11 +1069,6 @@ describe('authentication', () => {
                             client.disconnect();
                             server.stop(done);
                         });
-
-                        setTimeout(() => {
-
-                            server.publish('/', 'heya');
-                        }, 20);
                     });
                 });
             });
@@ -1100,7 +1094,8 @@ describe('authentication', () => {
                     client.connect({ auth: { headers: { authorization: 'Custom app' } } }, (err) => {
 
                         expect(err).to.not.exist();
-                        client.subscribe('/', (err, update) => {
+
+                        client.subscribe('/', Hoek.ignore, (err) => {
 
                             expect(err).to.exist();
                             expect(err.message).to.equal('Application credentials cannot be used on a user subscription');
@@ -1109,11 +1104,6 @@ describe('authentication', () => {
                             client.disconnect();
                             server.stop(done);
                         });
-
-                        setTimeout(() => {
-
-                            server.publish('/', 'heya');
-                        }, 20);
                     });
                 });
             });
@@ -1139,20 +1129,20 @@ describe('authentication', () => {
                     client.connect({ auth: { headers: { authorization: 'Custom john' } } }, (err) => {
 
                         expect(err).to.not.exist();
-                        client.subscribe('/', (err, update) => {
+                        const handler = (update) => {
 
-                            expect(err).to.not.exist();
                             expect(update).to.equal('heya');
                             expect(client.subscriptions()).to.deep.equal(['/']);
 
                             client.disconnect();
                             server.stop(done);
-                        });
+                        };
 
-                        setTimeout(() => {
+                        client.subscribe('/', handler, (err) => {
 
+                            expect(err).to.not.exist();
                             server.publish('/', 'heya');
-                        }, 20);
+                        });
                     });
                 });
             });
@@ -1178,20 +1168,20 @@ describe('authentication', () => {
                     client.connect({ auth: { headers: { authorization: 'Custom john' } } }, (err) => {
 
                         expect(err).to.not.exist();
-                        client.subscribe('/', (err, update) => {
+                        const handler = (update) => {
 
-                            expect(err).to.not.exist();
                             expect(update).to.equal('heya');
                             expect(client.subscriptions()).to.deep.equal(['/']);
 
                             client.disconnect();
                             server.stop(done);
-                        });
+                        };
 
-                        setTimeout(() => {
+                        client.subscribe('/', handler, (err) => {
 
+                            expect(err).to.not.exist();
                             server.publish('/', 'heya');
-                        }, 20);
+                        });
                     });
                 });
             });
@@ -1217,20 +1207,20 @@ describe('authentication', () => {
                     client.connect({ auth: { headers: { authorization: 'Custom ed' } } }, (err) => {
 
                         expect(err).to.not.exist();
-                        client.subscribe('/', (err, update) => {
+                        const handler = (update) => {
 
-                            expect(err).to.not.exist();
                             expect(update).to.equal('heya');
                             expect(client.subscriptions()).to.deep.equal(['/']);
 
                             client.disconnect();
                             server.stop(done);
-                        });
+                        };
 
-                        setTimeout(() => {
+                        client.subscribe('/', handler, (err) => {
 
+                            expect(err).to.not.exist();
                             server.publish('/', 'heya');
-                        }, 20);
+                        });
                     });
                 });
             });
@@ -1256,20 +1246,20 @@ describe('authentication', () => {
                     client.connect({ auth: { headers: { authorization: 'Custom ed' } } }, (err) => {
 
                         expect(err).to.not.exist();
-                        client.subscribe('/', (err, update) => {
+                        const handler = (update) => {
 
-                            expect(err).to.not.exist();
                             expect(update).to.equal('heya');
                             expect(client.subscriptions()).to.deep.equal(['/']);
 
                             client.disconnect();
                             server.stop(done);
-                        });
+                        };
 
-                        setTimeout(() => {
+                        client.subscribe('/', handler, (err) => {
 
+                            expect(err).to.not.exist();
                             server.publish('/', 'heya');
-                        }, 20);
+                        });
                     });
                 });
             });
@@ -1295,20 +1285,20 @@ describe('authentication', () => {
                     client.connect({ auth: { headers: { authorization: 'Custom ed' } } }, (err) => {
 
                         expect(err).to.not.exist();
-                        client.subscribe('/5', (err, update) => {
+                        const handler = (update) => {
 
-                            expect(err).to.not.exist();
                             expect(update).to.equal('heya');
                             expect(client.subscriptions()).to.deep.equal(['/5']);
 
                             client.disconnect();
                             server.stop(done);
-                        });
+                        };
 
-                        setTimeout(() => {
+                        client.subscribe('/5', handler, (err) => {
 
+                            expect(err).to.not.exist();
                             server.publish('/5', 'heya');
-                        }, 20);
+                        });
                     });
                 });
             });
@@ -1334,20 +1324,15 @@ describe('authentication', () => {
                     client.connect({ auth: { headers: { authorization: 'Custom john' } } }, (err) => {
 
                         expect(err).to.not.exist();
-                        client.subscribe('/', (err, update) => {
+                        client.subscribe('/', Hoek.ignore, (err) => {
 
                             expect(err).to.exist();
-                            expect(err.message).to.equal('Insufficient scope, expected any of: b');
+                            expect(err.message).to.equal('Insufficient scope to subscribe, expected any of: b');
                             expect(client.subscriptions()).to.deep.equal([]);
 
                             client.disconnect();
                             server.stop(done);
                         });
-
-                        setTimeout(() => {
-
-                            server.publish('/', 'heya');
-                        }, 20);
                     });
                 });
             });
@@ -1373,20 +1358,15 @@ describe('authentication', () => {
                     client.connect({ auth: { headers: { authorization: 'Custom ed' } } }, (err) => {
 
                         expect(err).to.not.exist();
-                        client.subscribe('/', (err, update) => {
+                        client.subscribe('/', Hoek.ignore, (err) => {
 
                             expect(err).to.exist();
-                            expect(err.message).to.equal('Insufficient scope, expected any of: x');
+                            expect(err.message).to.equal('Insufficient scope to subscribe, expected any of: x');
                             expect(client.subscriptions()).to.deep.equal([]);
 
                             client.disconnect();
                             server.stop(done);
                         });
-
-                        setTimeout(() => {
-
-                            server.publish('/', 'heya');
-                        }, 20);
                     });
                 });
             });
@@ -1412,20 +1392,15 @@ describe('authentication', () => {
                     client.connect({ auth: { headers: { authorization: 'Custom app' } } }, (err) => {
 
                         expect(err).to.not.exist();
-                        client.subscribe('/', (err, update) => {
+                        client.subscribe('/', Hoek.ignore, (err) => {
 
                             expect(err).to.exist();
-                            expect(err.message).to.equal('Insufficient scope, expected any of: x');
+                            expect(err.message).to.equal('Insufficient scope to subscribe, expected any of: x');
                             expect(client.subscriptions()).to.deep.equal([]);
 
                             client.disconnect();
                             server.stop(done);
                         });
-
-                        setTimeout(() => {
-
-                            server.publish('/', 'heya');
-                        }, 20);
                     });
                 });
             });

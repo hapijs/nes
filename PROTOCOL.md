@@ -1,4 +1,4 @@
-# nes Protocol v1.2.x
+# nes Protocol v2.0.x
 
 ## Message
 
@@ -134,7 +134,7 @@ For example:
 }
 ```
 
-If the request failed, the server includes the [standard error fields](#errors).
+If the request failed (including subscription errors), the server includes the [standard error fields](#errors).
 
 For example:
 
@@ -150,20 +150,19 @@ For example:
 }
 ```
 
-If any of the subscription requests fail, the server will send separate messages before the `'hello'` response:
-- `type` - set to `'sub'`.
+If the request fails due to a subscription error, the server will include the failed subscription path in the response:
 - `path` - the requested path which failed to subscribe.
-- the [standard error fields](#errors)
 
 For example:
 
 ```js
 {
-    type: 'sub',
+    type: 'hello',
+    id: 1,
     path: '/a',
     statusCode: 403,
     payload: {
-        error: 'Forbidden'
+        error: 'Subscription not found'
     }
 }
 ```
@@ -237,7 +236,7 @@ For example:
 }
 ```
 
-The server may respond which includes:
+The server response includes:
 - `type` - set to `'message'`.
 - `id` - the same `id` received from the client.
 - `message` - any value (string, object, etc.).
@@ -274,16 +273,18 @@ For example:
 }
 ```
 
-The server responds only if an error occurred:
+The server response includes:
 - `type` - set to `'sub'`.
+- `id` - the same `id` received from the client.
 - `path` - the requested path which failed to subscribe.
-- the [standard error fields](#errors)
+- the [standard error fields](#errors) if failed.
 
 For example:
 
 ```js
 {
     type: 'sub',
+    id: 4,
     path: '/box/blue',
     statusCode: 403,
     payload: {
