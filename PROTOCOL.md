@@ -22,7 +22,7 @@ Each outgoing request from the server to the client contains:
     - `'request'` - endpoint request.
     - `'sub'` - subscribe to a path.
     - `'message'` - send custom message.
-    - `'update'` - an custom message push from the server.
+    - `'update'` - a custom message push from the server.
     - `'pub'` - a subscription update.
 - additional type-specific fields.
 
