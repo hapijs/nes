@@ -177,7 +177,7 @@ Request a resource from the server where:
 - `type` - set to `'request'`.
 - `id` - a unique per-client request id (number or string).
 - `method` - the corresponding HTTP method (e.g. `'GET'`).
-- `path` - the requested resource (can be an HTTP path of resource name).
+- `path` - the requested resource (can be an HTTP path or resource name).
 - `headers` - an optional object with the request headers (each header name is a key with a corresponding value).
 - `payload` - an optional value to send with the request.
 
