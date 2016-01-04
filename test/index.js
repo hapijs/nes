@@ -42,6 +42,7 @@ describe('register()', () => {
 
             server.start((err) => {
 
+                expect(err).to.not.exist();
                 const client = new Nes.Client('http://localhost:' + server.info.port);
                 client.connect(() => {
 
@@ -88,6 +89,7 @@ describe('register()', () => {
 
             server.start((err) => {
 
+                expect(err).to.not.exist();
                 client = new Nes.Client('http://localhost:' + server.info.port);
                 client.connect(() => { });
             });
@@ -122,6 +124,7 @@ describe('register()', () => {
 
             server.start((err) => {
 
+                expect(err).to.not.exist();
                 client = new Nes.Client('http://localhost:' + server.info.port);
                 client.connect(() => {
 

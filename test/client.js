@@ -43,7 +43,10 @@ describe('Browser', () => {
             it('handles error before open events', (done) => {
 
                 const client = new Nes.Client('http://nosuchexamplecom');
-                client.onError = function (err) { };
+                client.onError = function (err) {
+
+                    expect(err).to.exist();
+                };
 
                 client.connect((err) => {
 
@@ -77,6 +80,7 @@ describe('Browser', () => {
 
                     server.start((err) => {
 
+                        expect(err).to.not.exist();
                         const client = new Nes.Client('http://localhost:' + server.info.port);
                         client.connect(() => {
 
@@ -107,6 +111,7 @@ describe('Browser', () => {
 
                     server.start((err) => {
 
+                        expect(err).to.not.exist();
                         const client = new Nes.Client('http://localhost:' + server.info.port);
                         client.connect(() => {
 
@@ -134,11 +139,13 @@ describe('Browser', () => {
 
                     server.start((err) => {
 
+                        expect(err).to.not.exist();
                         const client = new Nes.Client('http://localhost:' + server.info.port);
 
                         let e = 0;
                         client.onError = function (err) {
 
+                            expect(err).to.exist();
                             ++e;
                         };
 
@@ -178,11 +185,13 @@ describe('Browser', () => {
 
                     server.start((err) => {
 
+                        expect(err).to.not.exist();
                         const client = new Nes.Client('http://localhost:' + server.info.port);
 
                         let e = 0;
                         client.onError = function (err) {
 
+                            expect(err).to.exist();
                             ++e;
                         };
 
@@ -220,6 +229,7 @@ describe('Browser', () => {
 
                     server.start((err) => {
 
+                        expect(err).to.not.exist();
                         const client = new Nes.Client('http://localhost:' + server.info.port);
 
                         let c = 0;
@@ -254,12 +264,14 @@ describe('Browser', () => {
 
                     server.start((err) => {
 
+                        expect(err).to.not.exist();
                         const url = 'http://localhost:' + server.info.port;
                         const client = new Nes.Client(url);
 
                         let e = 0;
                         client.onError = function (err) {
 
+                            expect(err).to.exist();
                             ++e;
                             client._url = 'http://localhost:' + server.info.port;
                         };
@@ -313,6 +325,7 @@ describe('Browser', () => {
 
                     server.start((err) => {
 
+                        expect(err).to.not.exist();
                         const client = new Nes.Client('http://localhost:' + server.info.port);
                         client.connect(() => {
 
@@ -340,6 +353,7 @@ describe('Browser', () => {
 
                     server.start((err) => {
 
+                        expect(err).to.not.exist();
                         server.connections[0].plugins.nes._listener._wss.handleUpgrade = function () { };
 
                         const client = new Nes.Client('http://localhost:' + server.info.port);
@@ -385,6 +399,7 @@ describe('Browser', () => {
 
                     server.start((err) => {
 
+                        expect(err).to.not.exist();
                         const client = new Nes.Client('http://localhost:' + server.info.port);
 
                         let c = 0;
@@ -416,6 +431,7 @@ describe('Browser', () => {
 
                     server.start((err) => {
 
+                        expect(err).to.not.exist();
                         const client = new Nes.Client('http://localhost:' + server.info.port);
 
                         let c = 0;
@@ -465,6 +481,7 @@ describe('Browser', () => {
 
                     server.start((err) => {
 
+                        expect(err).to.not.exist();
                         const client = new Nes.Client('http://localhost:' + server.info.port);
                         client.connect(() => {
 
@@ -514,6 +531,7 @@ describe('Browser', () => {
 
                     server.start((err) => {
 
+                        expect(err).to.not.exist();
                         const client = new Nes.Client('http://localhost:' + server.info.port);
                         client.connect(() => {
 
@@ -551,6 +569,7 @@ describe('Browser', () => {
 
                     server.start((err) => {
 
+                        expect(err).to.not.exist();
                         const client = new Nes.Client('http://localhost:' + server.info.port);
                         client.connect(() => {
 
@@ -592,6 +611,7 @@ describe('Browser', () => {
 
                     server.start((err) => {
 
+                        expect(err).to.not.exist();
                         const client = new Nes.Client('http://localhost:' + server.info.port, { timeout: 10 });
                         client.connect(() => {
 
@@ -625,6 +645,7 @@ describe('Browser', () => {
 
                     server.start((err) => {
 
+                        expect(err).to.not.exist();
                         const client = new Nes.Client('http://localhost:' + server.info.port);
                         client.connect(() => {
 
@@ -676,6 +697,7 @@ describe('Browser', () => {
 
                     server.start((err) => {
 
+                        expect(err).to.not.exist();
                         const client = new Nes.Client('http://localhost:' + server.info.port);
 
                         let logged;
@@ -726,6 +748,7 @@ describe('Browser', () => {
 
                     server.start((err) => {
 
+                        expect(err).to.not.exist();
                         const client = new Nes.Client('http://localhost:' + server.info.port);
 
                         let logged;
@@ -776,6 +799,7 @@ describe('Browser', () => {
 
                     server.start((err) => {
 
+                        expect(err).to.not.exist();
                         const client = new Nes.Client('http://localhost:' + server.info.port);
 
                         let logged;
@@ -795,7 +819,10 @@ describe('Browser', () => {
 
                         client.connect(() => {
 
-                            client.request('/', (err, payload, statusCode, headers) => { });
+                            client.request('/', (err, payload, statusCode, headers) => {
+
+                                expect(err).to.not.exist();
+                            });
                         });
                     });
                 });
@@ -816,6 +843,7 @@ describe('Browser', () => {
 
                     server.start((err) => {
 
+                        expect(err).to.not.exist();
                         const client = new Nes.Client('http://localhost:' + server.info.port);
                         client.connect(() => {
 
@@ -847,6 +875,7 @@ describe('Browser', () => {
 
                     server.start((err) => {
 
+                        expect(err).to.not.exist();
                         const client = new Nes.Client('http://localhost:' + server.info.port);
 
                         client.subscribe('/b', Hoek.ignore, (err) => {
@@ -880,6 +909,7 @@ describe('Browser', () => {
 
                     server.start((err) => {
 
+                        expect(err).to.not.exist();
                         const client = new Nes.Client('http://localhost:' + server.info.port);
 
                         const handler = (update) => {
@@ -915,6 +945,7 @@ describe('Browser', () => {
 
                     server.start((err) => {
 
+                        expect(err).to.not.exist();
                         const client1 = new Nes.Client('http://localhost:' + server.info.port);
                         const client2 = new Nes.Client('http://localhost:' + server.info.port);
 
@@ -964,11 +995,13 @@ describe('Browser', () => {
 
                     server.start((err) => {
 
+                        expect(err).to.not.exist();
                         const client = new Nes.Client('http://localhost:' + server.info.port);
                         client.connect(() => {
 
                             client.subscribe('/', Hoek.ignore, (err) => {
 
+                                expect(err).to.not.exist();
                                 delete client._subscriptions['/'];
 
                                 server.publish('/', 'heya');
@@ -993,6 +1026,7 @@ describe('Browser', () => {
 
                     server.start((err) => {
 
+                        expect(err).to.not.exist();
                         const client = new Nes.Client('http://localhost:' + server.info.port);
                         client.connect(() => {
 
@@ -1018,6 +1052,7 @@ describe('Browser', () => {
 
                     server.start((err) => {
 
+                        expect(err).to.not.exist();
                         const client = new Nes.Client('http://localhost:' + server.info.port);
                         client.connect(() => {
 
@@ -1028,6 +1063,7 @@ describe('Browser', () => {
 
                             client.subscribe('/', handler, (err) => {
 
+                                expect(err).to.exist();
                                 client.unsubscribe('/');
 
                                 setTimeout(() => {
@@ -1051,6 +1087,7 @@ describe('Browser', () => {
 
                     server.start((err) => {
 
+                        expect(err).to.not.exist();
                         const client = new Nes.Client('http://localhost:' + server.info.port);
                         client.connect(() => {
 
@@ -1061,6 +1098,7 @@ describe('Browser', () => {
 
                             client.subscribe('/', handler, (err) => {
 
+                                expect(err).to.exist();
                                 client.unsubscribe('/', handler);
 
                                 setTimeout(() => {
@@ -1125,6 +1163,7 @@ describe('Browser', () => {
 
                     server.start((err) => {
 
+                        expect(err).to.not.exist();
                         const client = new Nes.Client('http://localhost:' + server.info.port);
                         client.connect(() => {
 
@@ -1182,6 +1221,7 @@ describe('Browser', () => {
 
                     server.start((err) => {
 
+                        expect(err).to.not.exist();
                         const client = new Nes.Client('http://localhost:' + server.info.port);
                         client.connect(() => {
 
@@ -1287,6 +1327,7 @@ describe('Browser', () => {
 
                     server.start((err) => {
 
+                        expect(err).to.not.exist();
                         const client = new Nes.Client('http://localhost:' + server.info.port);
                         client.onDisconnect = function () {
 
@@ -1313,6 +1354,7 @@ describe('Browser', () => {
 
                     server.start((err) => {
 
+                        expect(err).to.not.exist();
                         const client = new Nes.Client('http://localhost:' + server.info.port);
                         client.onDisconnect = function () {
 

@@ -35,10 +35,10 @@ describe('authentication', () => {
 
             server.register({ register: Nes, options: { auth: { type: 'cookie' } } }, (err) => {
 
+                expect(err).to.not.exist();
+
                 server.auth.scheme('custom', internals.implementation);
                 server.auth.strategy('default', 'custom', true);
-
-                expect(err).to.not.exist();
 
                 server.route({
                     method: 'GET',
@@ -51,6 +51,7 @@ describe('authentication', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     server.inject({ url: '/nes/auth', headers: { authorization: 'Custom john' } }, (res) => {
 
                         expect(res.result.status).to.equal('authenticated');
@@ -103,6 +104,7 @@ describe('authentication', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     server.inject({ url: '/nes/auth', headers: { authorization: 'Custom john' } }, (res) => {
 
                         expect(res.result.status).to.equal('authenticated');
@@ -152,6 +154,7 @@ describe('authentication', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     server.inject('/nes/auth', (res) => {
 
                         expect(res.result.status).to.equal('unauthenticated');
@@ -198,6 +201,7 @@ describe('authentication', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     server.inject('/nes/auth', (res) => {
 
                         expect(res.result.status).to.equal('unauthenticated');
@@ -228,10 +232,9 @@ describe('authentication', () => {
 
             server.register({ register: Nes, options: { auth: { type: 'cookie' } } }, (err) => {
 
+                expect(err).to.not.exist();
                 server.auth.scheme('custom', internals.implementation);
                 server.auth.strategy('default', 'custom', true);
-
-                expect(err).to.not.exist();
 
                 server.route({
                     method: 'GET',
@@ -244,6 +247,7 @@ describe('authentication', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     server.inject({ url: '/nes/auth', headers: { authorization: 'Custom john' } }, (res) => {
 
                         expect(res.result.status).to.equal('authenticated');
@@ -324,6 +328,7 @@ describe('authentication', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     server.inject({ url: '/nes/auth', headers: { authorization: 'Custom john' } }, (res) => {
 
                         expect(res.result.status).to.equal('authenticated');
@@ -371,6 +376,7 @@ describe('authentication', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     server.inject({ url: '/nes/auth', headers: { authorization: 'Custom john' } }, (res) => {
 
                         expect(res.result.status).to.equal('authenticated');
@@ -418,6 +424,7 @@ describe('authentication', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     const client = new Nes.Client('http://localhost:' + server.info.port);
                     client.connect({ auth: 'abc' }, (err) => {
 
@@ -455,6 +462,7 @@ describe('authentication', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     const client = new Nes.Client('http://localhost:' + server.info.port);
                     client.connect({ auth: '' }, (err) => {
 
@@ -501,6 +509,7 @@ describe('authentication', () => {
                 expect(err).to.not.exist();
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     server.inject({ url: '/nes/auth', headers: { authorization: 'Custom john' } }, (res) => {
 
                         expect(res.result.status).to.equal('authenticated');
@@ -551,6 +560,7 @@ describe('authentication', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     const client = new Nes.Client('http://localhost:' + server.info.port);
                     client.connect({ auth: { headers: { authorization: 'Custom john' } } }, (err) => {
 
@@ -592,6 +602,7 @@ describe('authentication', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     const client = new Nes.Client('http://localhost:' + server.info.port);
                     client.connect({ auth: { headers: { authorization: 'Custom john' } } }, (err) => {
 
@@ -633,11 +644,13 @@ describe('authentication', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     const client = new Nes.Client('http://localhost:' + server.info.port);
 
                     let e = 0;
                     client.onError = function (err) {
 
+                        expect(err).to.exist();
                         ++e;
                     };
 
@@ -688,6 +701,7 @@ describe('authentication', () => {
                 expect(err).to.not.exist();
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     const client = new Nes.Client('http://localhost:' + server.info.port);
 
                     let c = 0;
@@ -699,6 +713,7 @@ describe('authentication', () => {
                     expect(c).to.equal(0);
                     client.connect({ delay: 10, auth: { headers: { authorization: 'Custom steve' } } }, (err) => {
 
+                        expect(err).to.exist();
                         expect(c).to.equal(0);
 
                         client._ws.close();
@@ -728,6 +743,7 @@ describe('authentication', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     const client = new Nes.Client('http://localhost:' + server.info.port);
                     client.connect({ auth: { headers: { authorization: 'Custom steve' } } }, (err) => {
 
@@ -754,6 +770,7 @@ describe('authentication', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     const client = new Nes.Client('http://localhost:' + server.info.port);
                     client.connect({ auth: '' }, (err) => {
 
@@ -782,6 +799,7 @@ describe('authentication', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     const client = new Nes.Client('http://localhost:' + server.info.port);
                     client.connect({ auth: { headers: { authorization: 'Custom john' } } }, (err) => {
 
@@ -825,6 +843,7 @@ describe('authentication', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     const client = new Nes.Client('http://localhost:' + server.info.port);
                     client.connect({ auth: { headers: { authorization: 'Custom john' } } }, (err) => {
 
@@ -864,6 +883,7 @@ describe('authentication', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     const client = new Nes.Client('http://localhost:' + server.info.port);
                     client.connect((err) => {
 
@@ -899,6 +919,7 @@ describe('authentication', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     const client = new Nes.Client('http://localhost:' + server.info.port);
                     client.connect((err) => {
 
@@ -938,6 +959,7 @@ describe('authentication', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     const client = new Nes.Client('http://localhost:' + server.info.port);
                     client.connect((err) => {
 
@@ -977,6 +999,7 @@ describe('authentication', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     const client = new Nes.Client('http://localhost:' + server.info.port);
                     client.connect({ auth: { headers: { authorization: 'Custom john' } } }, (err) => {
 
@@ -1016,6 +1039,7 @@ describe('authentication', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     const client = new Nes.Client('http://localhost:' + server.info.port);
                     client.connect({ auth: { headers: { authorization: 'Custom app' } } }, (err) => {
 
@@ -1055,6 +1079,7 @@ describe('authentication', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     const client = new Nes.Client('http://localhost:' + server.info.port);
                     client.connect({ auth: { headers: { authorization: 'Custom john' } } }, (err) => {
 
@@ -1090,6 +1115,7 @@ describe('authentication', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     const client = new Nes.Client('http://localhost:' + server.info.port);
                     client.connect({ auth: { headers: { authorization: 'Custom app' } } }, (err) => {
 
@@ -1125,6 +1151,7 @@ describe('authentication', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     const client = new Nes.Client('http://localhost:' + server.info.port);
                     client.connect({ auth: { headers: { authorization: 'Custom john' } } }, (err) => {
 
@@ -1164,6 +1191,7 @@ describe('authentication', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     const client = new Nes.Client('http://localhost:' + server.info.port);
                     client.connect({ auth: { headers: { authorization: 'Custom john' } } }, (err) => {
 
@@ -1203,6 +1231,7 @@ describe('authentication', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     const client = new Nes.Client('http://localhost:' + server.info.port);
                     client.connect({ auth: { headers: { authorization: 'Custom ed' } } }, (err) => {
 
@@ -1242,6 +1271,7 @@ describe('authentication', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     const client = new Nes.Client('http://localhost:' + server.info.port);
                     client.connect({ auth: { headers: { authorization: 'Custom ed' } } }, (err) => {
 
@@ -1281,6 +1311,7 @@ describe('authentication', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     const client = new Nes.Client('http://localhost:' + server.info.port);
                     client.connect({ auth: { headers: { authorization: 'Custom ed' } } }, (err) => {
 
@@ -1320,6 +1351,7 @@ describe('authentication', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     const client = new Nes.Client('http://localhost:' + server.info.port);
                     client.connect({ auth: { headers: { authorization: 'Custom john' } } }, (err) => {
 
@@ -1354,6 +1386,7 @@ describe('authentication', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     const client = new Nes.Client('http://localhost:' + server.info.port);
                     client.connect({ auth: { headers: { authorization: 'Custom ed' } } }, (err) => {
 
@@ -1388,6 +1421,7 @@ describe('authentication', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     const client = new Nes.Client('http://localhost:' + server.info.port);
                     client.connect({ auth: { headers: { authorization: 'Custom app' } } }, (err) => {
 

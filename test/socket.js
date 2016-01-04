@@ -52,6 +52,7 @@ describe('Socket', () => {
 
             server.start((err) => {
 
+                expect(err).to.not.exist();
                 client = new Nes.Client('http://localhost:' + server.info.port);
                 client.connect(() => {
 
@@ -86,6 +87,7 @@ describe('Socket', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     const client = new Nes.Client('http://localhost:' + server.info.port);
                     client.onDisconnect = function () {
 
@@ -95,7 +97,7 @@ describe('Socket', () => {
 
                     client.connect(() => {
 
-                        client.message('winning', (err, response) => { });
+                        client.message('winning', (errIgnore, response) => { });
                     });
                 });
             });
@@ -119,6 +121,7 @@ describe('Socket', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     const client = new Nes.Client('http://localhost:' + server.info.port);
                     client.onUpdate = function (message) {
 
@@ -153,6 +156,7 @@ describe('Socket', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     client = new Nes.Client('http://localhost:' + server.info.port);
                     client.connect((err) => {
 
@@ -194,6 +198,7 @@ describe('Socket', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     const client = new Nes.Client('http://localhost:' + server.info.port);
                     client.connect(() => {
 
@@ -233,6 +238,7 @@ describe('Socket', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     const client = new Nes.Client('http://localhost:' + server.info.port);
                     client.connect(() => {
 
@@ -271,6 +277,7 @@ describe('Socket', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     const client = new Nes.Client('http://localhost:' + server.info.port);
                     client.connect(() => {
 
@@ -306,6 +313,7 @@ describe('Socket', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     const client = new Ws('http://localhost:' + server.info.port);
 
                     client.on('message', (data, flags) => {
@@ -343,12 +351,14 @@ describe('Socket', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     const client = new Nes.Client('http://localhost:' + server.info.port);
                     client.connect((err) => {
 
                         expect(err).to.not.exist();
                         client.request('/nes/auth', (err, payload, statusCode, headers) => {
 
+                            expect(err).to.exist();
                             expect(statusCode).to.equal(404);
                             client.disconnect();
                             server.stop(done);
@@ -377,6 +387,7 @@ describe('Socket', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     const client = new Ws('http://localhost:' + server.info.port);
 
                     client.on('message', (data, flags) => {
@@ -424,6 +435,7 @@ describe('Socket', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     const client = new Ws('http://localhost:' + server.info.port);
 
                     client.on('message', (data, flags) => {
@@ -465,6 +477,7 @@ describe('Socket', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     const client = new Ws('http://localhost:' + server.info.port);
 
                     client.on('message', (data, flags) => {
@@ -520,6 +533,7 @@ describe('Socket', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     const client = new Ws('http://localhost:' + server.info.port);
 
                     client.on('message', (data, flags) => {
@@ -575,6 +589,7 @@ describe('Socket', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     const client = new Ws('http://localhost:' + server.info.port);
 
                     client.on('message', (data, flags) => {
@@ -621,6 +636,7 @@ describe('Socket', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     const client = new Ws('http://localhost:' + server.info.port);
 
                     client.on('message', (data, flags) => {
@@ -658,6 +674,7 @@ describe('Socket', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     const client = new Ws('http://localhost:' + server.info.port);
 
                     client.on('message', (data, flags) => {
@@ -703,11 +720,13 @@ describe('Socket', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     const client = new Nes.Client('http://localhost:' + server.info.port);
                     client.connect(() => {
 
                         client.subscribe('/5', Hoek.ignore, (err) => {
 
+                            expect(err).to.not.exist();
                             const handler = (update) => {
 
                                 client.unsubscribe('/5');
@@ -715,6 +734,7 @@ describe('Socket', () => {
 
                                 client.message('a', (err, message) => {
 
+                                    expect(err).to.not.exist();
                                     const listener = server.connections[0].plugins.nes._listener;
                                     const match = listener._router.route('sub', '/5');
                                     expect(match.route.subscribers._items).to.deep.equal({});
@@ -753,6 +773,7 @@ describe('Socket', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     const client = new Nes.Client('http://localhost:' + server.info.port);
                     client.connect(() => {
 
@@ -763,6 +784,7 @@ describe('Socket', () => {
 
                             client.message('a', (err, message) => {
 
+                                expect(err).to.not.exist();
                                 const listener = server.connections[0].plugins.nes._listener;
                                 const match = listener._router.route('sub', '/6');
                                 expect(match.route.subscribers._items).to.deep.equal({});
@@ -804,6 +826,7 @@ describe('Socket', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     const client = new Nes.Client('http://localhost:' + server.info.port);
                     client.connect(() => {
 
@@ -839,6 +862,7 @@ describe('Socket', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     const client = new Nes.Client('http://localhost:' + server.info.port);
                     client.connect(() => {
 
@@ -876,6 +900,7 @@ describe('Socket', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     const client = new Nes.Client('http://localhost:' + server.info.port);
                     client.connect(() => {
 
@@ -911,6 +936,7 @@ describe('Socket', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     const client = new Nes.Client('http://localhost:' + server.info.port);
                     client.connect(() => {
 
@@ -944,6 +970,7 @@ describe('Socket', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     client = new Nes.Client('http://localhost:' + server.info.port);
                     client.connect(() => {
 
@@ -979,6 +1006,7 @@ describe('Socket', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     client = new Nes.Client('http://localhost:' + server.info.port);
                     client.connect(() => {
 
@@ -1006,6 +1034,7 @@ describe('Socket', () => {
 
                 server.start((err) => {
 
+                    expect(err).to.not.exist();
                     const client = new Nes.Client('http://localhost:' + server.info.port);
                     client.connect(() => {
 
