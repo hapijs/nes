@@ -21,7 +21,7 @@
     "iron": "3.x.x",
     "items": "2.x.x",
     "joi": "7.x.x",
-    "ws": "0.8.x"
+    "ws": "1.0.x"
   },
   "peerDependencies": {
     "hapi": ">=11.1.0"
