@@ -36,6 +36,7 @@ describe('Browser', () => {
 
                     expect(err).to.exist();
                     expect(err.message).to.match(/getaddrinfo ENOTFOUND/);
+                    expect(err.type).to.equal('ws');
                     done();
                 });
             });
@@ -43,15 +44,14 @@ describe('Browser', () => {
             it('handles error before open events', (done) => {
 
                 const client = new Nes.Client('http://nosuchexamplecom');
-                client.onError = function (err) {
-
-                    expect(err).to.exist();
-                };
+                client.onError = Hoek.ignore;
 
                 client.connect((err) => {
 
                     expect(err).to.exist();
                     expect(err.message).to.equal('test');
+                    expect(err.type).to.equal('ws');
+
                     done();
                 });
 
@@ -279,6 +279,9 @@ describe('Browser', () => {
                         client.onError = function (err) {
 
                             expect(err).to.exist();
+                            expect(err.message).to.equal('getaddrinfo ENOTFOUND invalid invalid:80');
+                            expect(err.type).to.equal('ws');
+
                             ++e;
                             client._url = 'http://localhost:' + server.info.port;
                         };
@@ -347,6 +350,7 @@ describe('Browser', () => {
 
                                 expect(err).to.exist();
                                 expect(err.message).to.equal('Request failed - server disconnected');
+                                expect(err.type).to.equal('disconnect');
 
                                 server.stop(done);
                             });
@@ -384,6 +388,7 @@ describe('Browser', () => {
                             ++e;
                             expect(err).to.exist();
                             expect(err.message).to.equal('Connection timed out');
+                            expect(err.type).to.equal('timeout');
 
                             if (e < 4) {
                                 return;
@@ -398,6 +403,7 @@ describe('Browser', () => {
 
                             expect(err).to.exist();
                             expect(err.message).to.equal('Connection timed out');
+                            expect(err.type).to.equal('timeout');
                         });
                     });
                 });
@@ -529,6 +535,7 @@ describe('Browser', () => {
 
                     expect(err).to.exist();
                     expect(err.message).to.equal('Failed to send message - server disconnected');
+                    expect(err.type).to.equal('disconnect');
                     done();
                 });
             });
@@ -563,6 +570,7 @@ describe('Browser', () => {
 
                                 expect(err).to.exist();
                                 expect(err.message).to.equal('Converting circular structure to JSON');
+                                expect(err.type).to.equal('user');
                                 client.disconnect();
                                 server.stop(done);
                             });
@@ -603,6 +611,7 @@ describe('Browser', () => {
 
                                 expect(err).to.exist();
                                 expect(err.message).to.equal('boom');
+                                expect(err.type).to.equal('ws');
                                 client.disconnect();
                                 server.stop(done);
                             });
@@ -640,6 +649,7 @@ describe('Browser', () => {
 
                                 expect(err).to.exist();
                                 expect(err.message).to.equal('Request timed out');
+                                expect(err.type).to.equal('timeout');
                                 expect(response).to.not.exist();
 
                                 setTimeout(() => {
@@ -679,6 +689,7 @@ describe('Browser', () => {
 
                                 expect(err).to.exist();
                                 expect(err.message).to.equal('failed');
+                                expect(err.type).to.equal('ws');
 
                                 client.disconnect();
                                 server.stop(done);
@@ -724,7 +735,7 @@ describe('Browser', () => {
                         let logged;
                         client.onError = function (err) {
 
-                            logged = err.message;
+                            logged = err;
                         };
 
                         client.connect(() => {
@@ -732,7 +743,8 @@ describe('Browser', () => {
                             client.request('/', (err, payload, statusCode, headers) => {
 
                                 expect(err).to.not.exist();
-                                expect(logged).to.equal('Unexpected end of input');
+                                expect(logged.message).to.equal('Unexpected end of input');
+                                expect(logged.type).to.equal('protocol');
 
                                 client.disconnect();
                                 server.stop(done);
@@ -775,7 +787,7 @@ describe('Browser', () => {
                         let logged;
                         client.onError = function (err) {
 
-                            logged = err.message;
+                            logged = err;
                         };
 
                         client.connect(() => {
@@ -783,7 +795,8 @@ describe('Browser', () => {
                             client.request('/', (err, payload, statusCode, headers) => {
 
                                 expect(err).to.not.exist();
-                                expect(logged).to.equal('Received response for unknown request');
+                                expect(logged.message).to.equal('Received response for unknown request');
+                                expect(logged.type).to.equal('protocol');
 
                                 client.disconnect();
                                 server.stop(done);
@@ -827,12 +840,15 @@ describe('Browser', () => {
                         client.onError = function (err) {
 
                             if (!logged) {
-                                logged = err.message;
+                                logged = err;
                                 return;
                             }
 
-                            expect(logged).to.equal('Received unknown response type: unknown');
+                            expect(logged.message).to.equal('Received unknown response type: unknown');
+                            expect(logged.type).to.equal('protocol');
+
                             expect(err.message).to.equal('Received response for unknown request');
+                            expect(err.type).to.equal('protocol');
 
                             client.disconnect();
                             server.stop(done);
@@ -907,6 +923,7 @@ describe('Browser', () => {
 
                                 expect(err).to.exist();
                                 expect(err.message).to.equal('Subscription not found');
+                                expect(err.type).to.equal('server');
                                 expect(err.statusCode).to.equal(404);
                                 expect(client.subscriptions()).to.be.empty();
 
@@ -1055,6 +1072,7 @@ describe('Browser', () => {
 
                                 expect(err).to.exist();
                                 expect(err.message).to.equal('Subscription not found');
+                                expect(err.type).to.equal('server');
                                 client.disconnect();
                                 server.stop(done);
                             });
@@ -1085,6 +1103,9 @@ describe('Browser', () => {
                             client.subscribe('/', handler, (err) => {
 
                                 expect(err).to.exist();
+                                expect(err.message).to.equal('Subscription not found');
+                                expect(err.type).to.equal('server');
+
                                 client.unsubscribe('/');
 
                                 setTimeout(() => {
@@ -1120,6 +1141,9 @@ describe('Browser', () => {
                             client.subscribe('/', handler, (err) => {
 
                                 expect(err).to.exist();
+                                expect(err.message).to.equal('Subscription not found');
+                                expect(err.type).to.equal('server');
+
                                 client.unsubscribe('/', handler);
 
                                 setTimeout(() => {
@@ -1197,6 +1221,7 @@ describe('Browser', () => {
 
                                 expect(err).to.exist();
                                 expect(err.message).to.equal('failed');
+                                expect(err.type).to.equal('ws');
 
                                 client.disconnect();
                                 server.stop(done);
@@ -1214,6 +1239,7 @@ describe('Browser', () => {
 
                     expect(err).to.exist();
                     expect(err.message).to.equal('Invalid path');
+                    expect(err.type).to.equal('user');
                     done();
                 });
             });
@@ -1226,6 +1252,7 @@ describe('Browser', () => {
 
                     expect(err).to.exist();
                     expect(err.message).to.equal('Invalid path');
+                    expect(err.type).to.equal('user');
                     done();
                 });
             });
@@ -1319,6 +1346,7 @@ describe('Browser', () => {
 
                     expect(err).to.exist();
                     expect(err.message).to.equal('Invalid path');
+                    expect(err.type).to.equal('user');
                     done();
                 });
             });
@@ -1331,6 +1359,7 @@ describe('Browser', () => {
 
                     expect(err).to.exist();
                     expect(err.message).to.equal('Invalid path');
+                    expect(err.type).to.equal('user');
                     done();
                 });
             });

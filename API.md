@@ -1,4 +1,4 @@
-# 2.0.x API Reference
+# 2.1.x API Reference
 
 - [Registration](#registration)
 - [Server](#server)
@@ -27,6 +27,7 @@
     - [`client.subscribe(path, handler, callback)`](#clientsubscribepath-handler-callback)
     - [`client.unsubscribe(path, [handler])`](#clientunsubscribepath-handler)
     - [`client.subscriptions()`](#clientsubscriptions)
+    - [Errors](#errors)
 
 ## Registration
 
@@ -344,3 +345,14 @@ Cancels a subscription where:
 ### `client.subscriptions()`
 
 Returns an array of the current subscription paths.
+
+### Errors
+
+When a client callback or handler returns an error, the error is decorated with:
+- `type` - a string indicating the source of the error where:
+    - `'disconnect'` - the socket disconnected before the request completed.
+    - `'protocol'` - the client received an invalid message from the server violating the protocol.
+    - `'server'` - an error response sent from the server.
+    - `'timeout'` - a timeout event.
+    - `'user'` - user error (e.g. incorrect use of the API).
+    - `'ws'` - a socket error.
