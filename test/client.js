@@ -201,6 +201,12 @@ describe('Browser', () => {
                             ++c;
                         };
 
+                        let r = '';
+                        client.onDisconnect = function (willReconnect) {
+
+                            r += willReconnect ? 't' : 'f';
+                        };
+
                         expect(c).to.equal(0);
                         expect(e).to.equal(0);
                         client.connect({ reconnect: false, delay: 10 }, () => {
@@ -212,6 +218,7 @@ describe('Browser', () => {
                             setTimeout(() => {
 
                                 expect(c).to.equal(1);
+                                expect(r).to.equal('f');
                                 server.stop(done);
                             }, 15);
                         });
@@ -276,6 +283,12 @@ describe('Browser', () => {
                             client._url = 'http://localhost:' + server.info.port;
                         };
 
+                        let r = '';
+                        client.onDisconnect = function (willReconnect) {
+
+                            r += willReconnect ? 't' : 'f';
+                        };
+
                         let c = 0;
                         client.onConnect = function () {
 
@@ -292,6 +305,7 @@ describe('Browser', () => {
                             }
 
                             expect(e).to.equal(1);
+                            expect(r).to.equal('tttt');
 
                             client.disconnect();
                             server.stop(done);
@@ -409,11 +423,18 @@ describe('Browser', () => {
                             client._ws.close();
                         };
 
+                        let r = '';
+                        client.onDisconnect = function (willReconnect) {
+
+                            r += willReconnect ? 't' : 'f';
+                        };
+
                         client.connect({ delay: 5, maxDelay: 10, retries: 2 }, () => {
 
                             setTimeout(() => {
 
                                 expect(c).to.equal(3);
+                                expect(r).to.equal('ttf');
                                 server.stop(done);
                             }, 100);
                         });
