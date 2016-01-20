@@ -1,4 +1,4 @@
-# 2.1.x API Reference
+# 2.2.x API Reference
 
 - [Registration](#registration)
 - [Server](#server)
@@ -252,9 +252,15 @@ reconnections) with the signature `function()`.
 
 ### `client.onDisconnect`
 
-A property used to set a handler for disconnection events with the signature `function(willReconnect)`
+A property used to set a handler for disconnection events with the signature `function(willReconnect, log)`
 where:
 - `willReconnect` - a boolean indicating if the client will automatically attempt to reconnect.
+- `log` - an object with the following optional keys:
+    - `code` - the [RFC6455](https://tools.ietf.org/html/rfc6455#section-7.4.1) status code.
+    - `explanation` - the [RFC6455](https://tools.ietf.org/html/rfc6455#section-7.4.1) explanation for the
+      `code`.
+    - `reason` - a human-readable text explaining the reason for closing.
+    - `wasClean` - if `false`, the socket was closed abnormally.
 
 ### `client.onUpdate`
 

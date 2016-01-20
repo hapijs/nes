@@ -35,7 +35,7 @@ describe('Browser', () => {
                 client.connect((err) => {
 
                     expect(err).to.exist();
-                    expect(err.message).to.match(/getaddrinfo ENOTFOUND/);
+                    expect(err.message).to.equal('Socket error');
                     expect(err.type).to.equal('ws');
                     done();
                 });
@@ -49,7 +49,7 @@ describe('Browser', () => {
                 client.connect((err) => {
 
                     expect(err).to.exist();
-                    expect(err.message).to.equal('test');
+                    expect(err.message).to.equal('Socket error');
                     expect(err.type).to.equal('ws');
 
                     done();
@@ -57,6 +57,35 @@ describe('Browser', () => {
 
                 client._ws.emit('error', new Error('test'));
                 client._ws.emit('open');
+            });
+        });
+
+        describe('_connect()', () => {
+
+            it('handles unknown error code', (done) => {
+
+                const server = new Hapi.Server();
+                server.connection();
+                server.register({ register: Nes, options: { auth: false } }, (err) => {
+
+                    expect(err).to.not.exist();
+                    server.start((err) => {
+
+                        expect(err).to.not.exist();
+                        const client = new Nes.Client('http://localhost:' + server.info.port);
+                        client.connect(() => {
+
+                            client.onError = Hoek.ignore;
+                            client.onDisconnect = (willReconnect, log) => {
+
+                                expect(log.explanation).to.equal('Unknown');
+                                server.stop(done);
+                            };
+
+                            client._ws.onclose({ code: 9999, reason: 'bug', wasClean: false });
+                        });
+                    });
+                });
             });
         });
 
@@ -279,7 +308,7 @@ describe('Browser', () => {
                         client.onError = function (err) {
 
                             expect(err).to.exist();
-                            expect(err.message).to.equal('getaddrinfo ENOTFOUND invalid invalid:80');
+                            expect(err.message).to.equal('Socket error');
                             expect(err.type).to.equal('ws');
 
                             ++e;
