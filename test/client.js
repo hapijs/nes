@@ -1408,6 +1408,7 @@ describe('Browser', () => {
 
                         expect(err).to.not.exist();
                         const client = new Nes.Client('http://localhost:' + server.info.port);
+                        client.onError = Hoek.ignore;
                         client.onDisconnect = function () {
 
                             server.stop(done);
@@ -1435,6 +1436,7 @@ describe('Browser', () => {
 
                         expect(err).to.not.exist();
                         const client = new Nes.Client('http://localhost:' + server.info.port);
+                        client.onError = Hoek.ignore;
                         client.onDisconnect = function () {
 
                             server.stop(done);

@@ -134,6 +134,41 @@ describe('Socket', () => {
                 });
             });
         });
+
+        it('sends custom message (callback)', (done) => {
+
+            let sent = false;
+            const onConnection = function (socket) {
+
+                socket.send('goodbye', (err) => {
+
+                    expect(err).to.not.exist();
+                    sent = true;
+                });
+            };
+
+            const server = new Hapi.Server();
+            server.connection();
+            server.register({ register: Nes, options: { onConnection: onConnection } }, (err) => {
+
+                expect(err).to.not.exist();
+
+                server.start((err) => {
+
+                    expect(err).to.not.exist();
+                    const client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.onUpdate = function (message) {
+
+                        expect(message).to.equal('goodbye');
+                        expect(sent).to.be.true();
+                        client.disconnect();
+                        server.stop(done);
+                    };
+
+                    client.connect(() => { });
+                });
+            });
+        });
     });
 
     describe('_send()', () => {
@@ -166,7 +201,7 @@ describe('Socket', () => {
 
                         server.connections[0].plugins.nes._listener._sockets.forEach((socket) => {
 
-                            socket._send(a);
+                            socket._send(a, Hoek.ignore);
                         });
                     });
                 });

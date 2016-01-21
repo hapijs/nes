@@ -1,4 +1,4 @@
-# 2.2.x API Reference
+# 2.3.x API Reference
 
 - [Registration](#registration)
 - [Server](#server)
@@ -10,7 +10,7 @@
     - [`socket.app`](#socketapp)
     - [`socket.auth`](#socketauth)
     - [`socket.disconnect()`](#socketdisconnect)
-    - [`socket.send(message)`](#socketsendmessage)
+    - [`socket.send(message, [callback])`](#socketsendmessage-callback)
 - [Request](#request)
     - [`request.socket`](#requestsocket)
 - [Client](#client)
@@ -175,8 +175,8 @@ Sends a message to all the subscribed clients where:
 - `message` - the message sent to the clients. Can be any type which can be safely converted to
   string using `JSON.stringify()`.
 - `options` - optional object that may include
-  - `internal` - Internal data that is passed to `filter` and may be used to filter messages
-    on data that is not sent to the client.
+    - `internal` - Internal data that is passed to `filter` and may be used to filter messages
+      on data that is not sent to the client.
 
 
 ### `server.eachSocket(each, options)`
@@ -185,8 +185,8 @@ Iterates over all connected sockets, optionally filtering on those that have sub
 a given subscription. This operation is synchronous.
 - `each` - Iteration callback in the form `function(socket)`.
 - `options` - Optional options object
-  - `subscription` - When set to a string path, limits the results to sockets that are 
-    to that path.
+    - `subscription` - When set to a string path, limits the results to sockets that are 
+      to that path.
 
 ## Socket
 
@@ -212,11 +212,13 @@ The socket authentication state if any. Similar to the normal **hapi** `request.
 
 Closes a client connection.
 
-### `socket.send(message)`
+### `socket.send(message, [callback])`
 
 Sends a custom message to the client where:
 - `message` - the message sent to the client. Can be any type which can be safely converted to
   string using `JSON.stringify()`.
+- `callback` - optional callback method using signature `function(err)` where:
+    - `err` - an error condition.
 
 ## Request
 

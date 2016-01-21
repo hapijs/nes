@@ -38,6 +38,7 @@ describe('Listener', () => {
 
                     expect(err).to.not.exist();
                     const client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.onError = Hoek.ignore;
                     client.onDisconnect = function () {
 
                         server.stop(done);
@@ -48,7 +49,7 @@ describe('Listener', () => {
                         expect(err).to.not.exist();
                         expect(client._heartbeatTimeout).to.equal(30);
 
-                        client._onMessage = function () { };
+                        client._onMessage = function () { };                    // Stop processing messages
                     });
                 });
             });
@@ -73,6 +74,59 @@ describe('Listener', () => {
 
                         client.disconnect();
                         server.stop(done);
+                    });
+                });
+            });
+        });
+
+        it('pauses heartbeat timeout while replying to client', (done) => {
+
+            const server = new Hapi.Server();
+            server.connection();
+            server.register({ register: Nes, options: { auth: false, heartbeat: { interval: 50, timeout: 45 } } }, (err) => {
+
+                expect(err).to.not.exist();
+
+                server.route({
+                    method: 'GET',
+                    path: '/',
+                    handler: function (request, reply) {
+
+                        setTimeout(() => reply('hello'), 100);
+                    }
+                });
+
+                server.start((err) => {
+
+                    expect(err).to.not.exist();
+                    const client = new Nes.Client('http://localhost:' + server.info.port);
+
+                    let d = 0;
+                    client.onDisconnect = function (willReconnect, log) {
+
+                        ++d;
+                    };
+
+                    client.connect((err) => {
+
+                        expect(err).to.not.exist();
+                        expect(client._heartbeatTimeout).to.equal(95);
+
+                        client.request('/', (err, payload, statusCode, headers) => {
+
+                            expect(err).to.not.exist();
+                            setTimeout(() => {
+
+                                expect(d).to.equal(0);
+
+                                client._onMessage = function () { };                        // Stop processing messages
+                                setTimeout(() => {
+
+                                    expect(d).to.equal(1);
+                                    setTimeout(() => server.stop(done), 100);
+                                }, 100);
+                            }, 120);                                                        // Two interval cycles
+                        });
                     });
                 });
             });
