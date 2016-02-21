@@ -1,4 +1,4 @@
-# 2.3.x API Reference
+# 3.1.x API Reference
 
 - [Registration](#registration)
 - [Server](#server)
@@ -100,6 +100,12 @@ method. The plugin accepts the following optional registration options:
           session only.
 - `headers` - an optional array of header field names to include in server responses to the client.
   If set to `'*'` (without an array), allows all headers. Defaults to `null` (no headers).
+- `payload` - optional message payload settings where:
+    - `maxChunkChars` - the maximum number of characters (after the full protocol object is converted
+      to a string using `JSON.stringify()`) allowed in a single WebSocket message. This is important
+      when using the protocol over a slow network (e.g. mobile) with large updates as the transmission
+      time can exceed the timeout or heartbeat limits which will cause the client to disconnect.
+      Defaults to `false` (no limit).
 - `heartbeat` - configures connection keep-alive settings where value can be:
     - `false` - no heartbeats.
     - an object with:

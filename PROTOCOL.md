@@ -1,4 +1,4 @@
-# nes Protocol v2.0.x
+# nes Protocol v2.1.x
 
 ## Message
 
@@ -25,6 +25,10 @@ Each outgoing request from the server to the client contains:
     - `'update'` - a custom message push from the server.
     - `'pub'` - a subscription update.
 - additional type-specific fields.
+
+If a message is too large to send as a single WebSocket update, it can be chunked into multiple
+messages. After constructing the JSON message string, the string is sliced into chunked and each is
+sent with the `'+'` prefix except for the last chunk sent with the `'!'` prefix.
 
 ## Errors
 

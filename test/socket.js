@@ -31,7 +31,6 @@ describe('Socket', () => {
         const server = new Hapi.Server();
         server.connection();
 
-        let client;
         const onConnection = function (socket) {
 
             socket.app.x = 'hello';
@@ -53,7 +52,7 @@ describe('Socket', () => {
             server.start((err) => {
 
                 expect(err).to.not.exist();
-                client = new Nes.Client('http://localhost:' + server.info.port);
+                const client = new Nes.Client('http://localhost:' + server.info.port);
                 client.connect(() => {
 
                     client.request('/', (err, payload, statusCode, headers) => {
@@ -203,6 +202,39 @@ describe('Socket', () => {
 
                             socket._send(a, Hoek.ignore);
                         });
+                    });
+                });
+            });
+        });
+    });
+
+    describe('_flush()', () => {
+
+        it('breaks large message into smaller packets', (done) => {
+
+            const server = new Hapi.Server();
+            server.connection();
+            server.register({ register: Nes, options: { auth: false, payload: { maxChunkChars: 5 } } }, (err) => {
+
+                expect(err).to.not.exist();
+
+                server.start((err) => {
+
+                    expect(err).to.not.exist();
+                    const client = new Nes.Client('http://localhost:' + server.info.port);
+                    const text = 'this is a message longer than 5 bytes';
+
+                    client.onUpdate = function (message) {
+
+                        expect(message).to.equal(text);
+                        client.disconnect();
+                        server.stop(done);
+                    };
+
+                    client.connect((err) => {
+
+                        expect(err).to.not.exist();
+                        server.broadcast(text);
                     });
                 });
             });
@@ -989,8 +1021,6 @@ describe('Socket', () => {
 
         it('sends errors from callback (raw)', (done) => {
 
-            let client;
-
             const onMessage = function (socket, message, reply) {
 
                 expect(message).to.equal('winning');
@@ -1006,7 +1036,7 @@ describe('Socket', () => {
                 server.start((err) => {
 
                     expect(err).to.not.exist();
-                    client = new Nes.Client('http://localhost:' + server.info.port);
+                    const client = new Nes.Client('http://localhost:' + server.info.port);
                     client.connect(() => {
 
                         client.message('winning', (err, response) => {
@@ -1025,8 +1055,6 @@ describe('Socket', () => {
 
         it('sends errors from callback (boom)', (done) => {
 
-            let client;
-
             const onMessage = function (socket, message, reply) {
 
                 expect(message).to.equal('winning');
@@ -1042,7 +1070,7 @@ describe('Socket', () => {
                 server.start((err) => {
 
                     expect(err).to.not.exist();
-                    client = new Nes.Client('http://localhost:' + server.info.port);
+                    const client = new Nes.Client('http://localhost:' + server.info.port);
                     client.connect(() => {
 
                         client.message('winning', (err, response) => {

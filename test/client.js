@@ -26,6 +26,31 @@ describe('Browser', () => {
 
     describe('Client', () => {
 
+        describe('onError', () => {
+
+            it('logs error to console by default', { parallel: false }, (done) => {
+
+                const orig = console.error;
+                console.error = (err) => {
+
+                    expect(err).to.exist();
+                    console.error = orig;
+                    done();
+                };
+
+                const client = new Nes.Client('http://nosuchexamplecom');
+                client.connect((err) => {
+
+                    expect(err).to.exist();
+                    expect(err.message).to.equal('Socket error');
+                    expect(err.type).to.equal('ws');
+                });
+
+                client._ws.emit('error', new Error('test'));
+                client._ws.emit('open');
+            });
+        });
+
         describe('connect()', () => {
 
             it('fails to connect', (done) => {
@@ -659,7 +684,7 @@ describe('Browser', () => {
                     setTimeout(() => {
 
                         return reply('hello');
-                    }, 20);
+                    }, 50);
                 };
 
                 const server = new Hapi.Server();
@@ -671,7 +696,7 @@ describe('Browser', () => {
                     server.start((err) => {
 
                         expect(err).to.not.exist();
-                        const client = new Nes.Client('http://localhost:' + server.info.port, { timeout: 10 });
+                        const client = new Nes.Client('http://localhost:' + server.info.port, { timeout: 20 });
                         client.connect(() => {
 
                             client.message('winning', (err, response) => {
@@ -685,7 +710,7 @@ describe('Browser', () => {
 
                                     client.disconnect();
                                     server.stop(done);
-                                }, 20);
+                                }, 50);
                             });
                         });
                     });
@@ -773,6 +798,58 @@ describe('Browser', () => {
 
                                 expect(err).to.not.exist();
                                 expect(logged.message).to.equal('Unexpected end of input');
+                                expect(logged.type).to.equal('protocol');
+
+                                client.disconnect();
+                                server.stop(done);
+                            });
+                        });
+                    });
+                });
+            });
+
+            it('reports incomplete message', (done) => {
+
+                const server = new Hapi.Server();
+                server.connection();
+                server.register({ register: Nes, options: { auth: false } }, (err) => {
+
+                    expect(err).to.not.exist();
+
+                    server.route({
+                        method: 'GET',
+                        path: '/',
+                        handler: function (request, reply) {
+
+                            request.connection.plugins.nes._listener._sockets.forEach((socket) => {
+
+                                socket._ws.send('+abc');
+                            });
+
+                            setTimeout(() => {
+
+                                return reply('hello');
+                            }, 10);
+                        }
+                    });
+
+                    server.start((err) => {
+
+                        expect(err).to.not.exist();
+                        const client = new Nes.Client('http://localhost:' + server.info.port);
+
+                        let logged;
+                        client.onError = function (err) {
+
+                            logged = err;
+                        };
+
+                        client.connect(() => {
+
+                            client.request('/', (err, payload, statusCode, headers) => {
+
+                                expect(err).to.not.exist();
+                                expect(logged.message).to.equal('Received an incomplete message');
                                 expect(logged.type).to.equal('protocol');
 
                                 client.disconnect();
