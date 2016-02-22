@@ -170,6 +170,100 @@ describe('Socket', () => {
         });
     });
 
+    describe('publish()', () => {
+
+        it('updates a single socket subscription on subscribe', (done) => {
+
+            const server = new Hapi.Server();
+
+            const onSubscribe = function (socket, path, params) {
+
+                expect(socket).to.exist();
+                expect(path).to.equal('/1');
+                expect(params.id).to.equal('1');
+
+                socket.publish(path, 'Initial state');
+            };
+
+            server.connection();
+            server.register({ register: Nes, options: { auth: false } }, (err) => {
+
+                expect(err).to.not.exist();
+                server.connection();
+
+                server.subscription('/{id}', { onSubscribe: onSubscribe });
+
+                server.start((err) => {
+
+                    expect(err).to.not.exist();
+                    const client = new Nes.Client('http://localhost:' + server.connections[0].info.port);
+                    client.connect(() => {
+
+                        const each = (update) => {
+
+                            expect(update).to.equal('Initial state');
+                            client.disconnect();
+                            server.stop(done);
+                        };
+
+                        client.subscribe('/1', each, Hoek.ignore);
+                    });
+                });
+            });
+        });
+
+        it('passes a callback', (done) => {
+
+            const server = new Hapi.Server();
+
+            const onSubscribe = function (socket, path, params) {
+
+                expect(socket).to.exist();
+                expect(path).to.equal('/1');
+                expect(params.id).to.equal('1');
+
+                socket.publish(path, 'Initial state', (err) => {
+
+                    expect(err).to.not.exist();
+                    socket.publish(path, 'Updated state');
+                });
+            };
+
+            server.connection();
+            server.register({ register: Nes, options: { auth: false } }, (err) => {
+
+                expect(err).to.not.exist();
+                server.connection();
+
+                server.subscription('/{id}', { onSubscribe: onSubscribe });
+
+                server.start((err) => {
+
+                    expect(err).to.not.exist();
+                    const client = new Nes.Client('http://localhost:' + server.connections[0].info.port);
+                    client.connect(() => {
+
+                        let count = 0;
+                        const each = (update) => {
+
+                            ++count;
+                            if (count === 1) {
+                                expect(update).to.equal('Initial state');
+                            }
+                            else {
+                                expect(update).to.equal('Updated state');
+                                client.disconnect();
+                                server.stop(done);
+                            }
+                        };
+
+                        client.subscribe('/1', each, Hoek.ignore);
+                    });
+                });
+            });
+        });
+    });
+
     describe('_send()', () => {
 
         it('errors on invalid message', (done) => {

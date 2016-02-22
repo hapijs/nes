@@ -309,7 +309,7 @@ describe('Listener', () => {
             const server = new Hapi.Server();
             let client;
 
-            const onSubscribe = function (socket, path) {
+            const onSubscribe = function (socket, path, params) {
 
                 expect(socket).to.exist();
                 expect(path).to.equal('/foo');

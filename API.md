@@ -11,6 +11,7 @@
     - [`socket.auth`](#socketauth)
     - [`socket.disconnect()`](#socketdisconnect)
     - [`socket.send(message, [callback])`](#socketsendmessage-callback)
+    - [`socket.publish(path, message, [callback])`](#socketpublishpath-message-callback)
 - [Request](#request)
     - [`request.socket`](#requestsocket)
 - [Client](#client)
@@ -142,7 +143,7 @@ Declares a subscription path client can subscribe to where:
         - `message` - the message being published.
         - `options` - additional information about the subscription and client:
             - `credentials` - the client credentials if authenticated.
-            - `params` - the parameters parsed from the publish message path is the subscription
+            - `params` - the parameters parsed from the publish message path if the subscription
               path contains parameters.
             - `internal` - the `internal` options data passed to the publish call, if defined.
         - `next` - the continuation method using signature `function(isMatch)` where:
@@ -161,12 +162,14 @@ Declares a subscription path client can subscribe to where:
                 - `'user'`
                 - `'app'`
                 - `'any'`
-    - `onSubscribe` - Callback called when a client subscribes to this subscription endpoint.
-      `function(socket, path)`
+    - `onSubscribe` - Callback called when a client subscribes to this subscription endpoint using
+      the signature `function(socket, path, params)` where:
         - `socket` - the [`Socket`](#socket) object of the incoming connection.
         - `path` - the path the client subscribed to
-    - `onUnsubscribe` - Callback called when a client unsubscribes from this subscription endpoint.
-      `function(socket, path)`.
+        - `params` - the parameters parsed from the subscription request path if the subscription
+          path definition contains parameters.
+    - `onUnsubscribe` - Callback called when a client unsubscribes from this subscription endpoint
+      using the signature `function(socket, path)` where:
         - `socket` - the [`Socket`](#socket) object of the incoming connection.
         - `path` - Path of the unsubscribed route.
 
@@ -221,6 +224,16 @@ Closes a client connection.
 ### `socket.send(message, [callback])`
 
 Sends a custom message to the client where:
+- `message` - the message sent to the client. Can be any type which can be safely converted to
+  string using `JSON.stringify()`.
+- `callback` - optional callback method using signature `function(err)` where:
+    - `err` - an error condition.
+
+### `socket.publish(path, message, [callback])`
+
+Sends a subscription update to a specific client where:
+- `path` - the subscription string. Note that if the client did not subscribe to the provided `path`,
+  the client will generate an error.
 - `message` - the message sent to the client. Can be any type which can be safely converted to
   string using `JSON.stringify()`.
 - `callback` - optional callback method using signature `function(err)` where:
