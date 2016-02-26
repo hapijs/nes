@@ -100,9 +100,14 @@ describe('Listener', () => {
 
                     expect(err).to.not.exist();
                     const client = new Nes.Client('http://localhost:' + server.info.port);
+                    let e = 0;
                     client.onError = function (err) {
 
-                        expect(err.message).to.equal('Disconnecting due to heartbeat timeout');
+                        ++e;
+
+                        if (e === 1) {
+                            expect(err.message).to.equal('Disconnecting due to heartbeat timeout');
+                        }
                     };
 
                     let d = 0;
