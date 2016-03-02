@@ -2,6 +2,7 @@
 
 // Load modules
 
+const Boom = require('boom');
 const Code = require('code');
 const Hapi = require('hapi');
 const Hoek = require('hoek');
@@ -275,11 +276,12 @@ describe('Listener', () => {
             const server = new Hapi.Server();
             let client;
 
-            const onSubscribe = function (socket, path) {
+            const onSubscribe = function (socket, path, params, next) {
 
                 expect(socket).to.exist();
                 expect(path).to.equal('/');
                 client.disconnect();
+                return next();
             };
 
             const onUnsubscribe = function (socket, path) {
@@ -314,11 +316,12 @@ describe('Listener', () => {
             const server = new Hapi.Server();
             let client;
 
-            const onSubscribe = function (socket, path, params) {
+            const onSubscribe = function (socket, path, params, next) {
 
                 expect(socket).to.exist();
                 expect(path).to.equal('/foo');
                 client.unsubscribe('/foo');
+                return next();
             };
 
             const onUnsubscribe = function (socket, path) {
@@ -343,6 +346,41 @@ describe('Listener', () => {
                     client.connect(() => {
 
                         client.subscribe('/foo', Hoek.ignore, Hoek.ignore);
+                    });
+                });
+            });
+        });
+
+        it('errors on subscription onSubscribe callback error', (done) => {
+
+            const server = new Hapi.Server();
+
+            const onSubscribe = function (socket, path, params, next) {
+
+                return next(Boom.badRequest('nah'));
+            };
+
+            server.connection();
+            server.register({ register: Nes, options: { auth: false } }, (err) => {
+
+                expect(err).to.not.exist();
+                server.connection();
+
+                server.subscription('/', { onSubscribe: onSubscribe });
+
+                server.start((err) => {
+
+                    expect(err).to.not.exist();
+                    const client = new Nes.Client('http://localhost:' + server.connections[0].info.port);
+                    client.connect(() => {
+
+                        client.subscribe('/', Hoek.ignore, (err) => {
+
+                            expect(err).to.exist();
+                            expect(err.message).to.equal('nah');
+                            client.disconnect();
+                            server.stop(done);
+                        });
                     });
                 });
             });

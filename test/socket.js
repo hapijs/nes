@@ -176,13 +176,14 @@ describe('Socket', () => {
 
             const server = new Hapi.Server();
 
-            const onSubscribe = function (socket, path, params) {
+            const onSubscribe = function (socket, path, params, next) {
 
                 expect(socket).to.exist();
                 expect(path).to.equal('/1');
                 expect(params.id).to.equal('1');
 
                 socket.publish(path, 'Initial state');
+                return next();
             };
 
             server.connection();
@@ -216,7 +217,7 @@ describe('Socket', () => {
 
             const server = new Hapi.Server();
 
-            const onSubscribe = function (socket, path, params) {
+            const onSubscribe = function (socket, path, params, next) {
 
                 expect(socket).to.exist();
                 expect(path).to.equal('/1');
@@ -227,6 +228,8 @@ describe('Socket', () => {
                     expect(err).to.not.exist();
                     socket.publish(path, 'Updated state');
                 });
+
+                return next();      // Does not wait for publish callback
             };
 
             server.connection();
