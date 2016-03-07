@@ -42,6 +42,7 @@ describe('Listener', () => {
                     client.onError = Hoek.ignore;
                     client.onDisconnect = function () {
 
+                        client.disconnect();
                         server.stop(done);
                     };
 
@@ -133,7 +134,11 @@ describe('Listener', () => {
                                 setTimeout(() => {
 
                                     expect(d).to.equal(1);
-                                    setTimeout(() => server.stop(done), 100);
+                                    setTimeout(() => {
+
+                                        client.disconnect();
+                                        server.stop(done);
+                                    }, 100);
                                 }, 100);
                             }, 120);                                                        // Two interval cycles
                         });
@@ -288,6 +293,7 @@ describe('Listener', () => {
 
                 expect(socket).to.exist();
                 expect(path).to.equal('/');
+                client.disconnect();
                 server.stop(done);
             };
 
@@ -328,6 +334,7 @@ describe('Listener', () => {
 
                 expect(socket).to.exist();
                 expect(path).to.equal('/foo');
+                client.disconnect();
                 server.stop(done);
             };
 
@@ -709,6 +716,7 @@ describe('Listener', () => {
                         expect(err).to.not.exist();
                         expect(countSockets(server)).to.equal(1);
 
+                        client.disconnect();
                         server.stop(done);
                     });
                 });
@@ -730,18 +738,18 @@ describe('Listener', () => {
                 server.start((err) => {
 
                     expect(err).to.not.exist();
-                    let client = new Nes.Client('http://localhost:' + server.info.port);
+                    const client = new Nes.Client('http://localhost:' + server.info.port);
                     client.connect((err) => {
 
                         expect(err).to.not.exist();
 
                         client.subscribe('/b', Hoek.ignore, Hoek.ignore);
 
-                        client = new Nes.Client('http://localhost:' + server.info.port);
-                        client.connect((err) => {
+                        const client2 = new Nes.Client('http://localhost:' + server.info.port);
+                        client2.connect((err) => {
 
                             expect(err).to.not.exist();
-                            client.subscribe('/a/b', Hoek.ignore, (err) => {
+                            client2.subscribe('/a/b', Hoek.ignore, (err) => {
 
                                 expect(err).to.not.exist();
                                 expect(countSockets(server)).to.equal(2);
@@ -752,6 +760,8 @@ describe('Listener', () => {
 
                                 expect(countSockets(server, { subscription: '/foo' })).to.equal(0);
 
+                                client.disconnect();
+                                client2.disconnect();
                                 server.stop(done);
                             });
                         });
@@ -780,6 +790,7 @@ describe('Listener', () => {
                         server.connection();
                         expect(countSockets(server)).to.equal(1);
 
+                        client.disconnect();
                         server.stop(done);
                     });
                 });
