@@ -2,6 +2,7 @@
 
 // Load modules
 
+const Boom = require('boom');
 const Code = require('code');
 const Hapi = require('hapi');
 const Hoek = require('hoek');
@@ -108,6 +109,101 @@ describe('Browser', () => {
                             };
 
                             client._ws.onclose({ code: 9999, reason: 'bug', wasClean: false });
+                        });
+                    });
+                });
+            });
+        });
+
+        describe('overrideReconnectionAuth()', () => {
+
+            it('reconnects automatically', (done) => {
+
+                const server = new Hapi.Server();
+                server.connection();
+
+                server.auth.scheme('custom', (srv, options) => {
+
+                    return {
+                        authenticate: function (request, reply) {
+
+                            const authorization = request.headers.authorization;
+                            if (!authorization) {
+                                return reply(Boom.unauthorized(null, 'Custom'));
+                            }
+
+                            const parts = authorization.split(/\s+/);
+                            return reply.continue({ credentials: { user: parts[1] } });
+                        }
+                    };
+                });
+
+                server.auth.strategy('default', 'custom', 'optional');
+
+                server.route({
+                    method: 'GET',
+                    path: '/',
+                    config: {
+                        auth: {
+                            mode: 'optional'
+                        },
+                        handler: function (request, reply) {
+
+                            if (request.auth.isAuthenticated) {
+                                return reply(request.auth.credentials.user);
+                            }
+
+                            return reply('nope');
+                        }
+                    }
+                });
+
+                server.register(Nes, (err) => {
+
+                    expect(err).to.not.exist();
+
+                    server.start((err) => {
+
+                        expect(err).to.not.exist();
+                        const client = new Nes.Client('http://localhost:' + server.info.port);
+
+                        client.onError = Hoek.ignore;
+
+                        let c = 0;
+                        client.onConnect = function () {
+
+                            ++c;
+                            if (c === 2) {
+                                client.request('/', (err, result) => {
+
+                                    expect(err).to.not.exist();
+                                    expect(result).to.equal('john');
+                                    client.disconnect();
+
+                                    expect(client.overrideReconnectionAuth({ headers: { authorization: 'Custom steve' } })).to.be.false();
+
+                                    server.stop(done);
+                                });
+                            }
+                        };
+
+                        client.onDisconnect = function (willReconnect, log) {
+
+                            if (c === 1) {
+                                expect(client.overrideReconnectionAuth({ headers: { authorization: 'Custom john' } })).to.be.true();
+                            }
+                        };
+
+                        client.connect({ delay: 10 }, (err) => {
+
+                            expect(err).to.not.exist();
+
+                            client.request('/', (err, result) => {
+
+                                expect(err).to.not.exist();
+                                expect(result).to.equal('nope');
+                                client._ws.close();
+                            });
                         });
                     });
                 });

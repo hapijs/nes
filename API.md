@@ -1,4 +1,4 @@
-# 4.0.x API Reference
+# 4.1.x API Reference
 
 - [Registration](#registration)
 - [Server](#server)
@@ -28,6 +28,7 @@
     - [`client.subscribe(path, handler, callback)`](#clientsubscribepath-handler-callback)
     - [`client.unsubscribe(path, [handler])`](#clientunsubscribepath-handler)
     - [`client.subscriptions()`](#clientsubscriptions)
+    - [`client.overrideReconnectionAuth(auth)`](#clientoverriderecinnectionauthauth)
     - [Errors](#errors)
 
 ## Registration
@@ -376,6 +377,14 @@ Cancels a subscription where:
 ### `client.subscriptions()`
 
 Returns an array of the current subscription paths.
+
+### `client.overrideReconnectionAuth(auth)`
+
+Sets or overrides the authentication credentials used to reconnect the client on disconnect when
+the client is configured to automatically reconnect, where:
+- `auth` - same as the `auth` option passed to [`client.connect()`](#clientconnectoptions-callback).
+
+Returns `true` if reconnection is enabled, otherwise `false` (in which case the method was ignored).
 
 ### Errors
 
