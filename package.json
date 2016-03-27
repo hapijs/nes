@@ -11,7 +11,7 @@
     "websocket"
   ],
   "engines": {
-    "node": ">=5.0.0"
+    "node": ">=4.3.0"
   },
   "dependencies": {
     "boom": "3.x.x",
