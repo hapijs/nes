@@ -289,10 +289,11 @@ describe('Listener', () => {
                 return next();
             };
 
-            const onUnsubscribe = function (socket, path) {
+            const onUnsubscribe = function (socket, path, params) {
 
                 expect(socket).to.exist();
                 expect(path).to.equal('/');
+                expect(params).to.deep.equal({});
                 client.disconnect();
                 server.stop(done);
             };
@@ -330,10 +331,11 @@ describe('Listener', () => {
                 return next();
             };
 
-            const onUnsubscribe = function (socket, path) {
+            const onUnsubscribe = function (socket, path, params) {
 
                 expect(socket).to.exist();
                 expect(path).to.equal('/foo');
+                expect(params).to.deep.equal({ params: 'foo' });
                 client.disconnect();
                 server.stop(done);
             };
