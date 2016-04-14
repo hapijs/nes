@@ -1,4 +1,4 @@
-# 4.2.x API Reference
+# 4.3.x API Reference
 
 - [Registration](#registration)
 - [Server](#server)
@@ -143,13 +143,17 @@ Declares a subscription path client can subscribe to where:
           contains path parameters.
         - `message` - the message being published.
         - `options` - additional information about the subscription and client:
+            - `socket` - the current socket being published to.
             - `credentials` - the client credentials if authenticated.
             - `params` - the parameters parsed from the publish message path if the subscription
               path contains parameters.
             - `internal` - the `internal` options data passed to the publish call, if defined.
-        - `next` - the continuation method using signature `function(isMatch)` where:
+        - `next` - the continuation method using signature `function(isMatch, [override])` where:
             - `isMatch` - a boolean to indicate if the published message should be sent to the
               current client where `true` means the message will be sent.
+            - `override` - an optional `message` to send to this `socket` instead of the published
+              one. Note that if you want to modify `message`, you must clone it first or the changes
+              will apply to all other sockets.
     - `auth` - the subscription authentication options with the following supported values:
         - `false` - no authentication required to subscribe.
         - a configuration object with the following optional keys:

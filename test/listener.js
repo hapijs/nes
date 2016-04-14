@@ -477,6 +477,94 @@ describe('Listener', () => {
             });
         });
 
+        it('publishes with a filter override', (done) => {
+
+            const server = new Hapi.Server();
+            server.connection();
+
+            server.register({ register: Nes, options: { auth: false } }, (err) => {
+
+                expect(err).to.not.exist();
+
+                const filter = function (path, update, options, next) {
+
+                    return next(update.a === 1, { a: 5 });
+                };
+
+                server.subscription('/updates', { filter: filter });
+
+                server.start((err) => {
+
+                    expect(err).to.not.exist();
+                    const client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect((err) => {
+
+                        expect(err).to.not.exist();
+
+                        const handler = (update) => {
+
+                            expect(update).to.deep.equal({ a: 5 });
+                            client.disconnect();
+                            server.stop(done);
+                        };
+
+                        client.subscribe('/updates', handler, (err) => {
+
+                            expect(err).to.not.exist();
+                            server.publish('/updates', { a: 2 });
+                            server.publish('/updates', { a: 1 });
+                        });
+                    });
+                });
+            });
+        });
+
+        it('publishes with filter (socket)', (done) => {
+
+            const server = new Hapi.Server();
+            server.connection();
+
+            server.register({ register: Nes, options: { auth: false } }, (err) => {
+
+                expect(err).to.not.exist();
+
+                const filter = function (path, update, options, next) {
+
+                    if (update.a === 1) {
+                        options.socket.publish(path, { a: 5 });
+                    }
+
+                    return next(false);
+                };
+
+                server.subscription('/updates', { filter: filter });
+
+                server.start((err) => {
+
+                    expect(err).to.not.exist();
+                    const client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect((err) => {
+
+                        expect(err).to.not.exist();
+
+                        const handler = (update) => {
+
+                            expect(update).to.deep.equal({ a: 5 });
+                            client.disconnect();
+                            server.stop(done);
+                        };
+
+                        client.subscribe('/updates', handler, (err) => {
+
+                            expect(err).to.not.exist();
+                            server.publish('/updates', { a: 2 });
+                            server.publish('/updates', { a: 1 });
+                        });
+                    });
+                });
+            });
+        });
+
         it('passes internal options to filter', (done) => {
 
             const server = new Hapi.Server();
