@@ -5,6 +5,7 @@
     - [`server.broadcast(message, [options])`](#serverbroadcastmessage-options)
     - [`server.subscription(path, [options])`](#serversubscriptionpath-options)
     - [`server.publish(path, message, [options])`](#serverpublishpath-message-options)
+    - [`server.eachSocket(each, [options])`](servereachSocketeach-options)
 - [Socket](#socket)
     - [`socket.id`](#socketid)
     - [`socket.app`](#socketapp)
@@ -173,6 +174,9 @@ Declares a subscription path client can subscribe to where:
                 - `'user'`
                 - `'app'`
                 - `'any'`
+            - `index` - if `true`, authenticated socket with `user` property in `credentials` are
+              mapped for usage in [`server.publish()`](#serverpublishpath-message-options) calls.
+              Defaults to `false`.
     - `onSubscribe` - a method called when a client subscribes to this subscription endpoint using
       the signature `function(socket, path, params, next)` where:
         - `socket` - the [`Socket`](#socket) object of the incoming connection.
@@ -203,8 +207,11 @@ Sends a message to all the subscribed clients where:
 - `options` - optional object that may include
     - `internal` - Internal data that is passed to `filter` and may be used to filter messages
       on data that is not sent to the client.
+    - `user` - optional user filter. When provided, the message will be sent only to authenticated
+      sockets with `credentials.user` equal to  `user`. Requires the subscription `auth.index`
+      options to be configured to `true`.
 
-### `server.eachSocket(each, options)`
+### `server.eachSocket(each, [options])`
 
 Iterates over all connected sockets, optionally filtering on those that have subscribed to
 a given subscription. This operation is synchronous.
