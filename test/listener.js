@@ -207,6 +207,134 @@ describe('Listener', () => {
             });
         });
 
+        it('sends to all user sockets', (done) => {
+
+            const server = new Hapi.Server();
+            server.connection();
+
+            const implementation = function (srv, options) {
+
+                return {
+                    authenticate: function (request, reply) {
+
+                        return reply.continue({ credentials: { user: request.headers.authorization } });
+                    }
+                };
+            };
+
+            server.auth.scheme('custom', implementation);
+            server.auth.strategy('default', 'custom', true);
+
+            const password = 'some_not_random_password_that_is_also_long_enough';
+            server.register({ register: Nes, options: { auth: { type: 'direct', password: password, index: true } } }, (err) => {
+
+                expect(err).to.not.exist();
+
+                server.start((err) => {
+
+                    expect(err).to.not.exist();
+                    const client1 = new Nes.Client('http://localhost:' + server.info.port);
+                    client1.connect({ auth: { headers: { authorization: 'steve' } } }, (err) => {
+
+                        expect(err).to.not.exist();
+
+                        const updates = [];
+                        const handler = (update) => updates.push(update);
+
+                        client1.onUpdate = handler;
+
+                        const client2 = new Nes.Client('http://localhost:' + server.info.port);
+                        client2.connect({ auth: { headers: { authorization: 'steve' } } }, (err) => {
+
+                            expect(err).to.not.exist();
+                            client2.onUpdate = handler;
+
+                            server.broadcast('x', { user: 'steve' });
+                            server.broadcast('y', { user: 'john' });
+                            setTimeout(() => {
+
+                                expect(updates).to.deep.equal(['x', 'x']);
+                                client1.disconnect();
+                                client2.disconnect();
+                                server.stop(done);
+                            }, 50);
+                        });
+                    });
+                });
+            });
+        });
+
+        it('errors on missing auth index (disabled)', (done) => {
+
+            const server = new Hapi.Server();
+            server.connection();
+
+            const implementation = function (srv, options) {
+
+                return {
+                    authenticate: function (request, reply) {
+
+                        return reply.continue({ credentials: { user: request.headers.authorization } });
+                    }
+                };
+            };
+
+            server.auth.scheme('custom', implementation);
+            server.auth.strategy('default', 'custom', true);
+
+            const password = 'some_not_random_password_that_is_also_long_enough';
+            server.register({ register: Nes, options: { auth: { type: 'direct', password: password, index: false } } }, (err) => {
+
+                expect(err).to.not.exist();
+
+                server.start((err) => {
+
+                    expect(err).to.not.exist();
+                    expect(() => {
+
+                        server.broadcast('x', { user: 'steve' });
+                    }).to.throw('Socket auth indexing is disabled');
+
+                    server.stop(done);
+                });
+            });
+        });
+
+        it('errors on missing auth index (no auth)', (done) => {
+
+            const server = new Hapi.Server();
+            server.connection();
+
+            const implementation = function (srv, options) {
+
+                return {
+                    authenticate: function (request, reply) {
+
+                        return reply.continue({ credentials: { user: request.headers.authorization } });
+                    }
+                };
+            };
+
+            server.auth.scheme('custom', implementation);
+            server.auth.strategy('default', 'custom', true);
+
+            server.register({ register: Nes, options: { auth: false } }, (err) => {
+
+                expect(err).to.not.exist();
+
+                server.start((err) => {
+
+                    expect(err).to.not.exist();
+                    expect(() => {
+
+                        server.broadcast('x', { user: 'steve' });
+                    }).to.throw('Socket auth indexing is disabled');
+
+                    server.stop(done);
+                });
+            });
+        });
+
         it('logs invalid message', (done) => {
 
             const server = new Hapi.Server();
@@ -775,84 +903,65 @@ describe('Listener', () => {
         });
     });
 
-    describe('eachSocket()', () => {
+    describe('Sockets', () => {
 
-        const countSockets = function (server, options) {
+        describe('auth()', () => {
 
-            let seen = 0;
-            server.eachSocket((socket) => {
+            it('adds user socket', (done) => {
 
-                expect(socket).to.exist();
-                seen++;
-            }, options);
-            return seen;
-        };
+                const server = new Hapi.Server();
+                server.connection();
 
-        it('returns connected sockets', (done) => {
+                const implementation = function (srv, options) {
 
-            const server = new Hapi.Server();
-            server.connection();
+                    return {
+                        authenticate: function (request, reply) {
 
-            server.register({ register: Nes, options: { auth: false } }, (err) => {
+                            return reply.continue({ credentials: { user: 'steve' } });
+                        }
+                    };
+                };
 
-                expect(err).to.not.exist();
+                server.auth.scheme('custom', implementation);
+                server.auth.strategy('default', 'custom', true);
 
-                server.start((err) => {
-
-                    expect(err).to.not.exist();
-                    const client = new Nes.Client('http://localhost:' + server.info.port);
-                    client.connect((err) => {
-
-                        expect(err).to.not.exist();
-                        expect(countSockets(server)).to.equal(1);
-
-                        client.disconnect();
-                        server.stop(done);
-                    });
-                });
-            });
-        });
-
-        it('returns sockets on a subscription', (done) => {
-
-            const server = new Hapi.Server();
-            server.connection();
-
-            server.register({ register: Nes, options: { auth: false } }, (err) => {
-
-                expect(err).to.not.exist();
-
-                server.subscription('/a/{id}');
-                server.subscription('/b');
-
-                server.start((err) => {
+                const password = 'some_not_random_password_that_is_also_long_enough';
+                server.register({ register: Nes, options: { auth: { type: 'direct', password: password } } }, (err) => {
 
                     expect(err).to.not.exist();
-                    const client = new Nes.Client('http://localhost:' + server.info.port);
-                    client.connect((err) => {
+
+                    server.subscription('/', { auth: { entity: 'user' } });
+
+                    server.start((err) => {
 
                         expect(err).to.not.exist();
-
-                        client.subscribe('/b', Hoek.ignore, Hoek.ignore);
-
-                        const client2 = new Nes.Client('http://localhost:' + server.info.port);
-                        client2.connect((err) => {
+                        const client1 = new Nes.Client('http://localhost:' + server.info.port);
+                        client1.connect({ auth: { headers: { authorization: 'Custom steve' } } }, (err) => {
 
                             expect(err).to.not.exist();
-                            client2.subscribe('/a/b', Hoek.ignore, (err) => {
+
+                            const updates = [];
+                            const handler = (update) => updates.push(update);
+
+                            client1.subscribe('/', handler, (err) => {
 
                                 expect(err).to.not.exist();
-                                expect(countSockets(server)).to.equal(2);
-                                expect(countSockets(server, { subscription: '/a/a' })).to.equal(0);
-                                expect(countSockets(server, { subscription: '/a/b' })).to.equal(1);
+                                const client2 = new Nes.Client('http://localhost:' + server.info.port);
+                                client2.connect({ auth: { headers: { authorization: 'Custom steve' } } }, (err) => {
 
-                                expect(countSockets(server, { subscription: '/b' })).to.equal(1);
+                                    expect(err).to.not.exist();
+                                    client2.subscribe('/', handler, (err) => {
 
-                                expect(countSockets(server, { subscription: '/foo' })).to.equal(0);
+                                        expect(err).to.not.exist();
+                                        server.publish('/', 'heya');
+                                        setTimeout(() => {
 
-                                client.disconnect();
-                                client2.disconnect();
-                                server.stop(done);
+                                            client1.disconnect();
+                                            client2.disconnect();
+                                            server.stop(done);
+                                        }, 50);
+                                    });
+                                });
                             });
                         });
                     });
@@ -860,28 +969,114 @@ describe('Listener', () => {
             });
         });
 
-        it('ignores not participating connections', (done) => {
+        describe('eachSocket()', () => {
 
-            const server = new Hapi.Server();
-            server.connection();
+            const countSockets = function (server, options) {
 
-            server.register({ register: Nes, options: { auth: false } }, (err) => {
+                let seen = 0;
+                server.eachSocket((socket) => {
 
-                expect(err).to.not.exist();
+                    expect(socket).to.exist();
+                    seen++;
+                }, options);
+                return seen;
+            };
 
-                server.start((err) => {
+            it('returns connected sockets', (done) => {
+
+                const server = new Hapi.Server();
+                server.connection();
+
+                server.register({ register: Nes, options: { auth: false } }, (err) => {
 
                     expect(err).to.not.exist();
-                    const client = new Nes.Client('http://localhost:' + server.info.port);
-                    client.connect((err) => {
+
+                    server.start((err) => {
 
                         expect(err).to.not.exist();
+                        const client = new Nes.Client('http://localhost:' + server.info.port);
+                        client.connect((err) => {
 
-                        server.connection();
-                        expect(countSockets(server)).to.equal(1);
+                            expect(err).to.not.exist();
+                            expect(countSockets(server)).to.equal(1);
 
-                        client.disconnect();
-                        server.stop(done);
+                            client.disconnect();
+                            server.stop(done);
+                        });
+                    });
+                });
+            });
+
+            it('returns sockets on a subscription', (done) => {
+
+                const server = new Hapi.Server();
+                server.connection();
+
+                server.register({ register: Nes, options: { auth: false } }, (err) => {
+
+                    expect(err).to.not.exist();
+
+                    server.subscription('/a/{id}');
+                    server.subscription('/b');
+
+                    server.start((err) => {
+
+                        expect(err).to.not.exist();
+                        const client = new Nes.Client('http://localhost:' + server.info.port);
+                        client.connect((err) => {
+
+                            expect(err).to.not.exist();
+
+                            client.subscribe('/b', Hoek.ignore, Hoek.ignore);
+
+                            const client2 = new Nes.Client('http://localhost:' + server.info.port);
+                            client2.connect((err) => {
+
+                                expect(err).to.not.exist();
+                                client2.subscribe('/a/b', Hoek.ignore, (err) => {
+
+                                    expect(err).to.not.exist();
+                                    expect(countSockets(server)).to.equal(2);
+                                    expect(countSockets(server, { subscription: '/a/a' })).to.equal(0);
+                                    expect(countSockets(server, { subscription: '/a/b' })).to.equal(1);
+
+                                    expect(countSockets(server, { subscription: '/b' })).to.equal(1);
+
+                                    expect(countSockets(server, { subscription: '/foo' })).to.equal(0);
+
+                                    client.disconnect();
+                                    client2.disconnect();
+                                    server.stop(done);
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+
+            it('ignores not participating connections', (done) => {
+
+                const server = new Hapi.Server();
+                server.connection();
+
+                server.register({ register: Nes, options: { auth: false } }, (err) => {
+
+                    expect(err).to.not.exist();
+
+                    server.start((err) => {
+
+                        expect(err).to.not.exist();
+                        const client = new Nes.Client('http://localhost:' + server.info.port);
+                        client.connect((err) => {
+
+                            expect(err).to.not.exist();
+
+                            server.connection();
+                            expect(countSockets(server)).to.equal(1);
+
+                            client.disconnect();
+                            server.stop(done);
+                        });
                     });
                 });
             });

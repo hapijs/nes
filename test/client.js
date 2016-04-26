@@ -865,7 +865,7 @@ describe('Browser', () => {
                         path: '/',
                         handler: function (request, reply) {
 
-                            request.connection.plugins.nes._listener._sockets.forEach((socket) => {
+                            request.connection.plugins.nes._listener._sockets._forEach((socket) => {
 
                                 socket._ws.send('{');
                             });
@@ -917,7 +917,7 @@ describe('Browser', () => {
                         path: '/',
                         handler: function (request, reply) {
 
-                            request.connection.plugins.nes._listener._sockets.forEach((socket) => {
+                            request.connection.plugins.nes._listener._sockets._forEach((socket) => {
 
                                 socket._ws.send('+abc');
                             });
@@ -969,7 +969,7 @@ describe('Browser', () => {
                         path: '/',
                         handler: function (request, reply) {
 
-                            request.connection.plugins.nes._listener._sockets.forEach((socket) => {
+                            request.connection.plugins.nes._listener._sockets._forEach((socket) => {
 
                                 socket._ws.send('{"id":100,"type":"response","statusCode":200,"payload":"hello","headers":{}}');
                             });
@@ -1021,7 +1021,7 @@ describe('Browser', () => {
                         path: '/',
                         handler: function (request, reply) {
 
-                            request.connection.plugins.nes._listener._sockets.forEach((socket) => {
+                            request.connection.plugins.nes._listener._sockets._forEach((socket) => {
 
                                 socket._ws.send('{"id":2,"type":"unknown","statusCode":200,"payload":"hello","headers":{}}');
                             });

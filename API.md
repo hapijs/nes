@@ -1,10 +1,10 @@
-# 4.3.x API Reference
+# 4.4.x API Reference
 
 - [Registration](#registration)
 - [Server](#server)
-    - [`server.broadcast(message)`](#serverbroadcastmessage)
+    - [`server.broadcast(message, [options])`](#serverbroadcastmessage-options)
     - [`server.subscription(path, [options])`](#serversubscriptionpath-options)
-    - [`server.publish(path, message)`](#serverpublishpath-message)
+    - [`server.publish(path, message, [options])`](#serverpublishpath-message-options)
 - [Socket](#socket)
     - [`socket.id`](#socketid)
     - [`socket.app`](#socketapp)
@@ -100,6 +100,8 @@ method. The plugin accepts the following optional registration options:
         - `domain` - the cookie domain when using type `'cookie'`. Defaults to no domain.
         - `ttl` - the cookie expiration milliseconds when using type `'cookie'`. Defaults to current
           session only.
+        - `index` - if `true`, authenticated socket with `user` property in `credentials` are mapped
+          for usage in [`server.broadcast()`](#serverbroadcastmessage-options) calls. Defaults to `false`.
 - `headers` - an optional array of header field names to include in server responses to the client.
   If set to `'*'` (without an array), allows all headers. Defaults to `null` (no headers).
 - `payload` - optional message payload settings where:
@@ -121,11 +123,15 @@ method. The plugin accepts the following optional registration options:
 The plugin decorates the server with a few new methods for interacting with the incoming WebSocket
 connections.
 
-### `server.broadcast(message)`
+### `server.broadcast(message, [options])`
 
 Sends a message to all connected clients where:
 - `message` - the message sent to the clients. Can be any type which can be safely converted to
   string using `JSON.stringify()`.
+- `options` - optional object with the following:
+    - `user` - optional user filter. When provided, the message will be sent only to authenticated
+      sockets with `credentials.user` equal to  `user`. Requires the `auth.index` options to be
+      configured to `true`.
 
 Note that in a multi server deployment, only the client connected to the current server will receive
 the message.
@@ -184,7 +190,7 @@ Declares a subscription path client can subscribe to where:
         - `params` - the parameters parsed from the subscription request path if the subscription
           path definition contains parameters.
 
-### `server.publish(path, message, options)`
+### `server.publish(path, message, [options])`
 
 Sends a message to all the subscribed clients where:
 - `path` - the subscription path. The path is matched first against the available subscriptions
@@ -197,7 +203,6 @@ Sends a message to all the subscribed clients where:
 - `options` - optional object that may include
     - `internal` - Internal data that is passed to `filter` and may be used to filter messages
       on data that is not sent to the client.
-
 
 ### `server.eachSocket(each, options)`
 

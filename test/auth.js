@@ -838,7 +838,7 @@ describe('authentication', () => {
 
                 const filter = function (path, update, options, next) {
 
-                    return next(options.credentials.id === update);
+                    return next(options.credentials.user === update);
                 };
 
                 server.subscription('/', { filter: filter });
@@ -993,7 +993,7 @@ describe('authentication', () => {
             server.auth.scheme('custom', internals.implementation);
             server.auth.strategy('default', 'custom', true);
 
-            server.register({ register: Nes, options: { auth: { type: 'direct', password: password } } }, (err) => {
+            server.register({ register: Nes, options: { auth: { type: 'direct', password: password, index: true } } }, (err) => {
 
                 expect(err).to.not.exist();
 
@@ -1033,7 +1033,7 @@ describe('authentication', () => {
             server.auth.scheme('custom', internals.implementation);
             server.auth.strategy('default', 'custom', true);
 
-            server.register({ register: Nes, options: { auth: { type: 'direct', password: password } } }, (err) => {
+            server.register({ register: Nes, options: { auth: { type: 'direct', password: password, index: true } } }, (err) => {
 
                 expect(err).to.not.exist();
 
@@ -1449,16 +1449,15 @@ internals.implementation = function (server, options) {
 
     const users = {
         john: {
-            id: 'john',
-            user: true,
+            user: 'john',
             scope: 'a'
         },
         ed: {
-            id: 'ed',
+            user: 'ed',
             scope: ['a', 'b', 5]
         },
         app: {
-            id: 'app'
+            app: 'app'
         }
     };
 

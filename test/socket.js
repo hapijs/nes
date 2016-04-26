@@ -295,7 +295,7 @@ describe('Socket', () => {
                         const a = { id: 1, type: 'other' };
                         a.c = a;                    // Circular reference
 
-                        server.connections[0].plugins.nes._listener._sockets.forEach((socket) => {
+                        server.connections[0].plugins.nes._listener._sockets._forEach((socket) => {
 
                             socket._send(a, Hoek.ignore);
                         });
