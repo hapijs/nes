@@ -5,7 +5,7 @@
     - [`server.broadcast(message, [options])`](#serverbroadcastmessage-options)
     - [`server.subscription(path, [options])`](#serversubscriptionpath-options)
     - [`server.publish(path, message, [options])`](#serverpublishpath-message-options)
-    - [`server.eachSocket(each, [options])`](servereachSocketeach-options)
+    - [`server.eachSocket(each, [options])`](#servereachsocketeach-options)
 - [Socket](#socket)
     - [`socket.id`](#socketid)
     - [`socket.app`](#socketapp)
@@ -219,7 +219,7 @@ a given subscription. This operation is synchronous.
 - `each` - Iteration callback in the form `function(socket)`.
 - `options` - Optional options object
     - `subscription` - When set to a string path, limits the results to sockets that are 
-      to that path.
+      subscribed to that path.
 
 ## Socket
 
