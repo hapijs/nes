@@ -94,7 +94,7 @@ describe('Listener', () => {
                     path: '/',
                     handler: function (request, reply) {
 
-                        setTimeout(() => reply('hello'), 100);
+                        setTimeout(() => reply('hello'), 110);
                     }
                 });
 
@@ -134,13 +134,11 @@ describe('Listener', () => {
                                 setTimeout(() => {
 
                                     expect(d).to.equal(1);
-                                    setTimeout(() => {
 
-                                        client.disconnect();
-                                        server.stop(done);
-                                    }, 100);
-                                }, 100);
-                            }, 120);                                                        // Two interval cycles
+                                    client.disconnect();
+                                    server.stop(done);
+                                }, 120);
+                            }, 130);                                                        // Two interval cycles
                         });
                     });
                 });
@@ -955,6 +953,106 @@ describe('Listener', () => {
                     expect(err).to.not.exist();
                     server.stop(done);
                 });
+            });
+        });
+    });
+
+    describe('eachSocket()', () => {
+
+        it('publishes to selected user', (done) => {
+
+            const server = new Hapi.Server();
+            server.connection();
+
+            const implementation = function (srv, options) {
+
+                return {
+                    authenticate: function (request, reply) {
+
+                        return reply.continue({ credentials: { user: 'steve' } });
+                    }
+                };
+            };
+
+            server.auth.scheme('custom', implementation);
+            server.auth.strategy('default', 'custom', 'optional');
+
+            const password = 'some_not_random_password_that_is_also_long_enough';
+            server.register({ register: Nes, options: { auth: { type: 'direct', password: password } } }, (err) => {
+
+                expect(err).to.not.exist();
+
+                server.subscription('/', { auth: { mode: 'optional', entity: 'user', index: true } });
+
+                server.start((err) => {
+
+                    expect(err).to.not.exist();
+                    const client1 = new Nes.Client('http://localhost:' + server.info.port);
+                    client1.connect({ auth: { headers: { authorization: 'Custom steve' } } }, (err) => {
+
+                        expect(err).to.not.exist();
+
+                        const updates = [];
+                        const handler = (update) => updates.push(update);
+
+                        client1.subscribe('/', handler, (err) => {
+
+                            expect(err).to.not.exist();
+                            const client2 = new Nes.Client('http://localhost:' + server.info.port);
+                            client2.connect({ auth: { headers: { authorization: 'Custom steve' } } }, (err) => {
+
+                                expect(err).to.not.exist();
+                                client2.subscribe('/', handler, (err) => {
+
+                                    expect(err).to.not.exist();
+                                    const client3 = new Nes.Client('http://localhost:' + server.info.port);
+                                    client3.connect({ auth: false }, (err) => {
+
+                                        expect(err).to.not.exist();
+                                        client3.subscribe('/', handler, (err) => {
+
+                                            expect(err).to.not.exist();
+
+                                            server.eachSocket((socket) => socket.publish('/', 'heya'), { user: 'steve', subscription: '/' });
+                                            server.eachSocket((socket) => socket.publish('/', 'wowa'), { user: 'john', subscription: '/' });
+                                            setTimeout(() => {
+
+                                                client1.unsubscribe('/');
+                                                client2.unsubscribe('/');
+                                                client3.unsubscribe('/');
+
+                                                setTimeout(() => {
+
+                                                    client1.disconnect();
+                                                    client2.disconnect();
+                                                    client3.disconnect();
+
+                                                    expect(updates).to.deep.equal(['heya', 'heya']);
+                                                    server.stop(done);
+                                                }, 50);
+                                            }, 50);
+                                        });
+                                    });
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+        });
+
+        it('throws on missing subscription with user option', (done) => {
+
+            const server = new Hapi.Server();
+            server.connection();
+            server.register({ register: Nes, options: { auth: false } }, (err) => {
+
+                expect(err).to.not.exist();
+                expect(() => {
+
+                    server.eachSocket(Hoek.ignore, { user: 'steve' });
+                }).to.throw('Cannot specify user filter without a subscription path');
+                done();
             });
         });
     });

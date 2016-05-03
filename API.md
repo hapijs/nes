@@ -1,4 +1,4 @@
-# 4.5.x API Reference
+# 4.6.x API Reference
 
 - [Registration](#registration)
 - [Server](#server)
@@ -220,6 +220,9 @@ a given subscription. This operation is synchronous.
 - `options` - Optional options object
     - `subscription` - When set to a string path, limits the results to sockets that are 
       subscribed to that path.
+    - `user` - optional user filter. When provided, the `each` method will be invoked with
+      authenticated sockets with `credentials.user` equal to  `user`. Requires the subscription
+      `auth.index` options to be configured to `true`.
 
 ## Socket
 
