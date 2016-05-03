@@ -1,4 +1,4 @@
-# 4.4.x API Reference
+# 4.5.x API Reference
 
 - [Registration](#registration)
 - [Server](#server)
@@ -13,6 +13,7 @@
     - [`socket.disconnect()`](#socketdisconnect)
     - [`socket.send(message, [callback])`](#socketsendmessage-callback)
     - [`socket.publish(path, message, [callback])`](#socketpublishpath-message-callback)
+    - [`socket.revoke(path, message, [callback])`](#socketrevokepath-message-callback)
 - [Request](#request)
     - [`request.socket`](#requestsocket)
 - [Client](#client)
@@ -256,9 +257,20 @@ Sends a custom message to the client where:
 
 Sends a subscription update to a specific client where:
 - `path` - the subscription string. Note that if the client did not subscribe to the provided `path`,
-  the client will generate an error.
+  the client will ignore the update silently.
 - `message` - the message sent to the client. Can be any type which can be safely converted to
   string using `JSON.stringify()`.
+- `callback` - optional callback method using signature `function(err)` where:
+    - `err` - an error condition.
+
+### `socket.revoke(path, message, [callback])`
+
+Revokes a subscription and optionally includes a last update where:
+- `path` - the subscription string. Note that if the client is not subscribe to the provided `path`,
+  the client will ignore the it silently.
+- `message` - an optional last subscription update sent to the client. Can be any type which can be
+  safely converted to string using `JSON.stringify()`. Pass `null` to revoke the subscription without
+  sending a last update.
 - `callback` - optional callback method using signature `function(err)` where:
     - `err` - an error condition.
 
@@ -376,8 +388,11 @@ Subscribes to a server subscription where:
 - `path` - the requested subscription path. Paths are just like HTTP request paths (e.g.
   `'/item/5'` or `'/updates'` based on the paths supported by the server).
 - `handler` - the function used to receive subscription updates using the
-  signature `function(message)` where:
+  signature `function(message, flags)` where:
     - `message` - the subscription update sent by the server.
+    - `flags` - an object with the following optional flags:
+        - `revoked` - set to `true` when the message is the last update from the server due to
+          a subscription revocation.
 - `callback` - the callback function called when the subscription request was received by the server
   or failed to transmit using the signature `function(err)` where:
     - `err` - if present, indicates the subscription request has failed.

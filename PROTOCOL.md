@@ -1,4 +1,4 @@
-# nes Protocol v2.1.x
+# nes Protocol v2.2.x
 
 ## Message
 
@@ -24,6 +24,7 @@ Each outgoing request from the server to the client contains:
     - `'message'` - send custom message.
     - `'update'` - a custom message push from the server.
     - `'pub'` - a subscription update.
+    - `'revoke'` - server forcedly removed the client from a subscription.
 - additional type-specific fields.
 
 If a message is too large to send as a single WebSocket update, it can be chunked into multiple
@@ -352,6 +353,28 @@ A message sent from the server to all subscribed clients:
     path: '/box/blue',
     message: {
         status: 'closed'
+    }
+}
+```
+
+## Revoked
+
+Flow: `server` -> `client`
+
+The server forcefully removed the client from a subscription:
+- `type` - set to `'revoke'`.
+- `path` - the subscription path.
+- `message` - any value (string, object, etc.). An optional last message sent to the client for the
+  specified subscription.
+
+For example:
+
+```js
+{
+    type: 'revoke',
+    path: '/box/blue',
+    message: {
+        reason: 'channel permissions changed'
     }
 }
 ```
