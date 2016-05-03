@@ -365,7 +365,6 @@ describe('Socket', () => {
 
                         const handler = (update) => {
 
-                            client.disconnect();
                             server.stop(done);
                         };
 

@@ -31,15 +31,17 @@ describe('Browser', () => {
 
             it('logs error to console by default', { parallel: false }, (done) => {
 
+                const client = new Nes.Client('http://nosuchexamplecom');
+
                 const orig = console.error;
                 console.error = (err) => {
 
                     expect(err).to.exist();
                     console.error = orig;
+                    client.disconnect();
                     done();
                 };
 
-                const client = new Nes.Client('http://nosuchexamplecom');
                 client.connect((err) => {
 
                     expect(err).to.exist();
@@ -63,6 +65,7 @@ describe('Browser', () => {
                     expect(err).to.exist();
                     expect(err.message).to.equal('Socket error');
                     expect(err.type).to.equal('ws');
+                    client.disconnect();
                     done();
                 });
             });
@@ -105,6 +108,7 @@ describe('Browser', () => {
                             client.onDisconnect = (willReconnect, log) => {
 
                                 expect(log.explanation).to.equal('Unknown');
+                                client.disconnect();
                                 server.stop(done);
                             };
 
@@ -369,6 +373,7 @@ describe('Browser', () => {
 
                                 expect(c).to.equal(1);
                                 expect(r).to.equal('f');
+                                client.disconnect();
                                 server.stop(done);
                             }, 15);
                         });
@@ -591,6 +596,7 @@ describe('Browser', () => {
 
                                 expect(c).to.equal(3);
                                 expect(r).to.equal('ttf');
+                                client.disconnect();
                                 server.stop(done);
                             }, 100);
                         });
@@ -1584,6 +1590,7 @@ describe('Browser', () => {
                         client.onError = Hoek.ignore;
                         client.onDisconnect = function () {
 
+                            client.disconnect();
                             server.stop(done);
                         };
 
@@ -1612,6 +1619,7 @@ describe('Browser', () => {
                         client.onError = Hoek.ignore;
                         client.onDisconnect = function () {
 
+                            client.disconnect();
                             server.stop(done);
                         };
 
