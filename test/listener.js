@@ -488,6 +488,46 @@ describe('Listener', () => {
             });
         });
 
+        it('listen on multiple connections', (done) => {
+
+            const server = new Hapi.Server();
+            server.connection();
+            server.connection();
+            server.connection();
+
+            server.register({ register: Nes, options: { auth: false } }, (err) => {
+
+                expect(err).to.not.exist();
+                server.connection();
+
+                server.subscription('/');
+
+                server.start((err) => {
+
+                    expect(err).to.not.exist();
+                    const client = new Nes.Client('http://localhost:' + server.connections[0].info.port);
+                    client.connect(() => {
+
+                        const updates = [];
+                        const handler = (update) => updates.push(update);
+
+                        client.subscribe('/', handler, (err) => {
+
+                            expect(err).to.not.exist();
+                            server.publish('/', 'heya');
+
+                            setTimeout(() => {
+
+                                expect(updates).to.deep.equal(['heya']);
+                                client.disconnect();
+                                server.stop(done);
+                            }, 50);
+                        });
+                    });
+                });
+            });
+        });
+
         it('errors on subscription onSubscribe callback error', (done) => {
 
             const server = new Hapi.Server();
