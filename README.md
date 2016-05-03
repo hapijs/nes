@@ -5,7 +5,7 @@ servers. Instead of treating the WebSocket connections as a separate platform wi
 and application context, **nes** builds on top of the existing **hapi** architecture to provide a
 flexible and organic extension.
 
-Protocol version: 2.1.x (different from module version)
+Protocol version: 2.2.x (different from module version)
 
 [![Build Status](https://secure.travis-ci.org/hapijs/nes.svg)](http://travis-ci.org/hapijs/nes)
 
@@ -106,7 +106,7 @@ var Nes = require('nes');
 var client = new Nes.Client('ws://localhost');
 client.connect(function (err) {
 
-    var handler = function (update) {
+    var handler = function (update, flags) {
 
         // update -> { id: 5, status: 'complete' }
         // Second publish is not received (doesn't match)
