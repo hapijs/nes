@@ -1,4 +1,4 @@
-# nes Protocol v2.2.x
+# nes Protocol v2.3.x
 
 ## Message
 
@@ -21,6 +21,7 @@ Each outgoing request from the server to the client contains:
     - `'hello'` - connection initialization and authentication.
     - `'request'` - endpoint request.
     - `'sub'` - subscribe to a path.
+    - `'unsub'` - unsubscribe from a path.
     - `'message'` - send custom message.
     - `'update'` - a custom message push from the server.
     - `'pub'` - a subscription update.
@@ -302,7 +303,7 @@ For example:
 
 ## Unsubscribe
 
-Flow: `client` -> `server`
+Flow: `client` -> `server` -> `client`
 
 Unsubscribe from a server subscription:
 - `type` - set to `'unsub'`.
@@ -319,7 +320,19 @@ For example:
 }
 ```
 
-There is no server response.
+The server response includes:
+- `type` - set to `'sub'`.
+- `id` - the same `id` received from the client.
+- the [standard error fields](#errors) if failed.
+
+For example:
+
+```js
+{
+    type: 'unsub',
+    id: 5
+}
+```
 
 ## Update
 

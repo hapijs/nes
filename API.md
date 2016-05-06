@@ -1,4 +1,4 @@
-# 4.6.x API Reference
+# 5.0.x API Reference
 
 - [Registration](#registration)
 - [Server](#server)
@@ -28,7 +28,7 @@
     - [`client.request(options, callback)`](#clientrequestoptions-callback)
     - [`client.message(message, callback)`](#clientmessagemessage-callback)
     - [`client.subscribe(path, handler, callback)`](#clientsubscribepath-handler-callback)
-    - [`client.unsubscribe(path, [handler])`](#clientunsubscribepath-handler)
+    - [`client.unsubscribe(path, handler, callback)`](#clientunsubscribepath-handler-callback)
     - [`client.subscriptions()`](#clientsubscriptions)
     - [`client.overrideReconnectionAuth(auth)`](#clientoverriderecinnectionauthauth)
     - [Errors](#errors)
@@ -194,6 +194,8 @@ Declares a subscription path client can subscribe to where:
         - `path` - Path of the unsubscribed route.
         - `params` - the parameters parsed from the subscription request path if the subscription
           path definition contains parameters.
+        - `next` - the continuation method required to complete the unsubscribe request using the
+          signature `function()`.
 
 ### `server.publish(path, message, [options])`
 
@@ -403,12 +405,15 @@ Subscribes to a server subscription where:
 Note that when `subscribe()` is called before the client connects, any server errors will be
 received via the `connect()` callback.
 
-### `client.unsubscribe(path, [handler])`
+### `client.unsubscribe(path, handler, callback)`
 
 Cancels a subscription where:
 - `path` - the subscription path used to subscribe.
-- `handler` - an optional handler used to remove a specific handler from a subscription.
-  Defaults to `null` which removes all existing handlers for the given path.
+- `handler` - remove a specific handler from a subscription or `null` to remove all handlers for
+  the given path.
+- `callback` - the callback function called when the subscription request was received by the server
+  or failed to transmit using the signature `function(err)` where:
+    - `err` - if present, indicates the request has failed.
 
 ### `client.subscriptions()`
 

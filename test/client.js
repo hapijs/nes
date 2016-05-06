@@ -1314,13 +1314,12 @@ describe('Browser', () => {
                                 expect(err.message).to.equal('Subscription not found');
                                 expect(err.type).to.equal('server');
 
-                                client.unsubscribe('/');
+                                client.unsubscribe('/', null, (err) => {
 
-                                setTimeout(() => {
-
+                                    expect(err).to.not.exist();
                                     client.disconnect();
                                     server.stop(done);
-                                }, 20);
+                                });
                             });
                         });
                     });
@@ -1352,13 +1351,12 @@ describe('Browser', () => {
                                 expect(err.message).to.equal('Subscription not found');
                                 expect(err.type).to.equal('server');
 
-                                client.unsubscribe('/', handler);
+                                client.unsubscribe('/', handler, (err) => {
 
-                                setTimeout(() => {
-
+                                    expect(err).to.not.exist();
                                     client.disconnect();
                                     server.stop(done);
-                                }, 20);
+                                });
                             });
                         });
                     });
@@ -1395,10 +1393,10 @@ describe('Browser', () => {
 
                 // Unsubscribe initial set
 
-                client.unsubscribe('/', handler1);
-                client.unsubscribe('/a', handler2);
-                client.unsubscribe('/a/b', handler3);
-                client.unsubscribe('/b/c', handler4);
+                client.unsubscribe('/', handler1, Hoek.ignore);
+                client.unsubscribe('/a', handler2, Hoek.ignore);
+                client.unsubscribe('/a/b', handler3, Hoek.ignore);
+                client.unsubscribe('/b/c', handler4, Hoek.ignore);
 
                 expect(client.subscriptions()).to.deep.equal(['/a', '/b/c']);
                 done();
@@ -1486,20 +1484,22 @@ describe('Browser', () => {
                                 expect(client.subscriptions()).to.deep.equal(['/']);
                                 expect(update1).to.equal('abc');
 
-                                client.unsubscribe('/');
-
-                                const handler2 = (update2, flags2) => {
-
-                                    expect(client.subscriptions()).to.deep.equal(['/']);
-                                    expect(update2).to.equal('def');
-                                    client.disconnect();
-                                    server.stop(done);
-                                };
-
-                                client.subscribe('/', handler2, (err) => {
+                                client.unsubscribe('/', null, (err) => {
 
                                     expect(err).to.not.exist();
-                                    server.publish('/', 'def');
+                                    const handler2 = (update2, flags2) => {
+
+                                        expect(client.subscriptions()).to.deep.equal(['/']);
+                                        expect(update2).to.equal('def');
+                                        client.disconnect();
+                                        server.stop(done);
+                                    };
+
+                                    client.subscribe('/', handler2, (err) => {
+
+                                        expect(err).to.not.exist();
+                                        server.publish('/', 'def');
+                                    });
                                 });
                             };
 
@@ -1606,10 +1606,13 @@ describe('Browser', () => {
                 client.subscribe('/a/b', Hoek.ignore, Hoek.ignore);
                 client.subscribe('/a/b', Hoek.ignore, Hoek.ignore);
 
-                client.unsubscribe('/a/b');
+                client.unsubscribe('/a/b', null, (err) => {
 
-                expect(client.subscriptions()).to.be.empty();
-                done();
+                    expect(err).to.not.exist();
+                    expect(client.subscriptions()).to.be.empty();
+                    done();
+                });
+
             });
 
             it('ignores unknown path', (done) => {
@@ -1621,8 +1624,8 @@ describe('Browser', () => {
                 client.subscribe('/a/b', handler1, Hoek.ignore);
                 client.subscribe('/b/c', Hoek.ignore, Hoek.ignore);
 
-                client.unsubscribe('/a/b/c', handler1);
-                client.unsubscribe('/b/c', handler1);
+                client.unsubscribe('/a/b/c', handler1, Hoek.ignore);
+                client.unsubscribe('/b/c', handler1, Hoek.ignore);
 
                 expect(client.subscriptions()).to.deep.equal(['/a/b', '/b/c']);
                 done();
@@ -1632,7 +1635,7 @@ describe('Browser', () => {
 
                 const client = new Nes.Client('http://localhost');
 
-                client.unsubscribe('', (err, update) => {
+                client.unsubscribe('', null, (err) => {
 
                     expect(err).to.exist();
                     expect(err.message).to.equal('Invalid path');
@@ -1645,7 +1648,7 @@ describe('Browser', () => {
 
                 const client = new Nes.Client('http://localhost');
 
-                client.unsubscribe('asd', (err, update) => {
+                client.unsubscribe('asd', null, (err) => {
 
                     expect(err).to.exist();
                     expect(err.message).to.equal('Invalid path');

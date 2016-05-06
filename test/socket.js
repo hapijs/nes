@@ -278,7 +278,7 @@ describe('Socket', () => {
 
                 expect(err).to.not.exist();
 
-                server.on('log', (event, tags) => {
+                server.once('log', (event, tags) => {
 
                     expect(event.data).to.equal('other');
                     client.disconnect();
@@ -936,8 +936,8 @@ describe('Socket', () => {
                             expect(err).to.not.exist();
                             const handler = (update) => {
 
-                                client.unsubscribe('/5');
-                                client.unsubscribe('/6');
+                                client.unsubscribe('/5', null, Hoek.ignore);
+                                client.unsubscribe('/6', null, Hoek.ignore);
 
                                 client.message('a', (err, message) => {
 
@@ -982,22 +982,26 @@ describe('Socket', () => {
 
                     expect(err).to.not.exist();
                     const client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.onError = Hoek.ignore;
                     client.connect(() => {
 
                         const handler = (update) => {
 
-                            client.unsubscribe('/6');
-                            client._send({ type: 'unsub', path: '/6' });
-
-                            client.message('a', (err, message) => {
+                            client.unsubscribe('/6', null, (err) => {
 
                                 expect(err).to.not.exist();
-                                const listener = server.connections[0].plugins.nes._listener;
-                                const match = listener._router.route('sub', '/6');
-                                expect(match.route.subscribers._items).to.deep.equal({});
+                                client._send({ type: 'unsub', path: '/6' });
 
-                                client.disconnect();
-                                server.stop(done);
+                                client.message('a', (err, message) => {
+
+                                    expect(err).to.not.exist();
+                                    const listener = server.connections[0].plugins.nes._listener;
+                                    const match = listener._router.route('sub', '/6');
+                                    expect(match.route.subscribers._items).to.deep.equal({});
+
+                                    client.disconnect();
+                                    server.stop(done);
+                                });
                             });
                         };
 

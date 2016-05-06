@@ -25,6 +25,62 @@ const expect = Code.expect;
 
 describe('Listener', () => {
 
+    it('refuses connection while stopping', (done) => {
+
+        const server = new Hapi.Server();
+        server.connection();
+        server.register({ register: Nes, options: { auth: false } }, (err) => {
+
+            expect(err).to.not.exist();
+
+            const onUnsubscribe = (socket, path, params, next) => {
+
+                setTimeout(next, 50);
+            };
+
+            server.subscription('/', { onUnsubscribe: onUnsubscribe });
+            server.start((err) => {
+
+                expect(err).to.not.exist();
+
+                const client = new Nes.Client('http://localhost:' + server.info.port);
+                client.onError = Hoek.ignore;
+                client.connect((err) => {
+
+                    expect(err).to.not.exist();
+                    client.subscribe('/', Hoek.ignore, (err) => {
+
+                        expect(err).to.not.exist();
+
+                        const client2 = new Nes.Client('http://localhost:' + server.info.port);
+                        client2.onError = Hoek.ignore;
+                        client2.onDisconnect = function () {
+
+                            client.disconnect();
+                            client2.disconnect();
+                            done();
+                        };
+
+                        server.ext('onPreStop', (srv, next) => {
+
+                            setTimeout(next, 50);
+                        });
+
+                        server.stop((err) => {
+
+                            expect(err).to.not.exist();
+                        });
+
+                        client2.connect((err) => {
+
+                            expect(err).to.exist();
+                        });
+                    });
+                });
+            });
+        });
+    });
+
     describe('_beat()', () => {
 
         it('disconnects client after timeout', (done) => {
@@ -342,7 +398,7 @@ describe('Listener', () => {
 
                 expect(err).to.not.exist();
 
-                server.on('log', (event, tags) => {
+                server.once('log', (event, tags) => {
 
                     expect(event.data).to.equal('update');
                     client.disconnect();
@@ -415,7 +471,7 @@ describe('Listener', () => {
                 return next();
             };
 
-            const onUnsubscribe = function (socket, path, params) {
+            const onUnsubscribe = function (socket, path, params, next) {
 
                 expect(socket).to.exist();
                 expect(path).to.equal('/');
@@ -453,11 +509,11 @@ describe('Listener', () => {
 
                 expect(socket).to.exist();
                 expect(path).to.equal('/foo');
-                client.unsubscribe('/foo');
+                client.unsubscribe('/foo', null, Hoek.ignore);
                 return next();
             };
 
-            const onUnsubscribe = function (socket, path, params) {
+            const onUnsubscribe = function (socket, path, params, next) {
 
                 expect(socket).to.exist();
                 expect(path).to.equal('/foo');
@@ -796,7 +852,8 @@ describe('Listener', () => {
 
                 expect(err).to.not.exist();
 
-                server.subscription('/', { auth: { mode: 'optional', entity: 'user', index: true } });
+                const onUnsubscribe = (socket, path, params, next) => next();
+                server.subscription('/', { onUnsubscribe, auth: { mode: 'optional', entity: 'user', index: true } });
 
                 server.start((err) => {
 
@@ -831,19 +888,24 @@ describe('Listener', () => {
                                             server.publish('/', 'wowa', { user: 'john' });
                                             setTimeout(() => {
 
-                                                client1.unsubscribe('/');
-                                                client2.unsubscribe('/');
-                                                client3.unsubscribe('/');
+                                                client1.unsubscribe('/', null, (err) => {
 
-                                                setTimeout(() => {
+                                                    expect(err).to.not.exist();
+                                                    client2.unsubscribe('/', null, (err) => {
 
-                                                    client1.disconnect();
-                                                    client2.disconnect();
-                                                    client3.disconnect();
+                                                        expect(err).to.not.exist();
+                                                        client3.unsubscribe('/', null, (err) => {
 
-                                                    expect(updates).to.deep.equal(['heya', 'heya']);
-                                                    server.stop(done);
-                                                }, 50);
+                                                            expect(err).to.not.exist();
+                                                            client1.disconnect();
+                                                            client2.disconnect();
+                                                            client3.disconnect();
+
+                                                            expect(updates).to.deep.equal(['heya', 'heya']);
+                                                            server.stop(done);
+                                                        });
+                                                    });
+                                                });
                                             }, 50);
                                         });
                                     });
@@ -1017,19 +1079,24 @@ describe('Listener', () => {
                                             server.eachSocket((socket) => socket.publish('/', 'wowa'), { user: 'john', subscription: '/' });
                                             setTimeout(() => {
 
-                                                client1.unsubscribe('/');
-                                                client2.unsubscribe('/');
-                                                client3.unsubscribe('/');
+                                                client1.unsubscribe('/', null, (err) => {
 
-                                                setTimeout(() => {
+                                                    expect(err).to.not.exist();
+                                                    client2.unsubscribe('/', null, (err) => {
 
-                                                    client1.disconnect();
-                                                    client2.disconnect();
-                                                    client3.disconnect();
+                                                        expect(err).to.not.exist();
+                                                        client3.unsubscribe('/', null, (err) => {
 
-                                                    expect(updates).to.deep.equal(['heya', 'heya']);
-                                                    server.stop(done);
-                                                }, 50);
+                                                            expect(err).to.not.exist();
+                                                            client1.disconnect();
+                                                            client2.disconnect();
+                                                            client3.disconnect();
+
+                                                            expect(updates).to.deep.equal(['heya', 'heya']);
+                                                            server.stop(done);
+                                                        });
+                                                    });
+                                                });
                                             }, 50);
                                         });
                                     });
