@@ -35,6 +35,10 @@ describe('Listener', () => {
 
             const onUnsubscribe = (socket, path, params, next) => {
 
+                server.publish('/', 'ignore');
+                server.eachSocket(Hoek.ignore);
+                server.broadcast('ignore');
+
                 setTimeout(next, 50);
             };
 
