@@ -718,7 +718,6 @@ describe('authentication', () => {
                         expect(err).to.exist();
                         expect(c).to.equal(0);
 
-                        client._ws.close();
                         setTimeout(() => {
 
                             expect(c).to.equal(0);

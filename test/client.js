@@ -31,26 +31,32 @@ describe('Browser', () => {
 
             it('logs error to console by default', { parallel: false }, (done) => {
 
-                const client = new Nes.Client('http://nosuchexamplecom');
+                const server = new Hapi.Server();
+                server.connection();
+                server.register({ register: Nes, options: { auth: false } }, (err) => {
 
-                const orig = console.error;
-                console.error = (err) => {
+                    expect(err).to.not.exist();
+                    server.start((err) => {
 
-                    expect(err).to.exist();
-                    console.error = orig;
-                    client.disconnect();
-                    done();
-                };
+                        expect(err).to.not.exist();
+                        const client = new Nes.Client('http://localhost:' + server.info.port);
 
-                client.connect((err) => {
+                        const orig = console.error;
+                        console.error = (err) => {
 
-                    expect(err).to.exist();
-                    expect(err.message).to.equal('Socket error');
-                    expect(err.type).to.equal('ws');
+                            expect(err).to.exist();
+                            console.error = orig;
+                            client.disconnect();
+                            done();
+                        };
+
+                        client.connect((err) => {
+
+                            expect(err).to.not.exist();
+                            client._ws.emit('error', new Error('test'));
+                        });
+                    });
                 });
-
-                client._ws.emit('error', new Error('test'));
-                client._ws.emit('open');
             });
         });
 
@@ -70,22 +76,56 @@ describe('Browser', () => {
                 });
             });
 
-            it('handles error before open events', (done) => {
+            it('errors if already connected', (done) => {
 
-                const client = new Nes.Client('http://nosuchexamplecom');
-                client.onError = Hoek.ignore;
+                const server = new Hapi.Server();
+                server.connection();
+                server.register({ register: Nes, options: { auth: false } }, (err) => {
 
-                client.connect((err) => {
+                    expect(err).to.not.exist();
+                    server.start((err) => {
 
-                    expect(err).to.exist();
-                    expect(err.message).to.equal('Socket error');
-                    expect(err.type).to.equal('ws');
+                        expect(err).to.not.exist();
+                        const client = new Nes.Client('http://localhost:' + server.info.port);
 
-                    done();
+                        client.connect({ reconnect: false }, (err) => {
+
+                            expect(err).to.not.exist();
+                            client.connect((err) => {
+
+                                expect(err).to.be.an.error('Already connected');
+                                client.disconnect();
+                                server.stop(done);
+                            });
+                        });
+                    });
                 });
+            });
 
-                client._ws.emit('error', new Error('test'));
-                client._ws.emit('open');
+            it('errors if set to reconnect', (done) => {
+
+                const server = new Hapi.Server();
+                server.connection();
+                server.register({ register: Nes, options: { auth: false } }, (err) => {
+
+                    expect(err).to.not.exist();
+                    server.start((err) => {
+
+                        expect(err).to.not.exist();
+                        const client = new Nes.Client('http://localhost:' + server.info.port);
+
+                        client.connect((err) => {
+
+                            expect(err).to.not.exist();
+                            client.connect((err) => {
+
+                                expect(err).to.be.an.error('Cannot connect while client attempts to reconnect');
+                                client.disconnect();
+                                server.stop(done);
+                            });
+                        });
+                    });
+                });
             });
         });
 
@@ -239,8 +279,95 @@ describe('Browser', () => {
                         client.connect(() => {
 
                             client.disconnect();
-                            client.disconnect();
+                            setTimeout(() => {
+
+                                client.disconnect();
+                                server.stop(done);
+                            }, 5);
+                        });
+                    });
+                });
+            });
+
+            it('avoids closing a socket in closing state', (done) => {
+
+                const server = new Hapi.Server();
+                server.connection();
+                server.register({ register: Nes, options: { auth: false } }, (err) => {
+
+                    expect(err).to.not.exist();
+
+                    server.start((err) => {
+
+                        expect(err).to.not.exist();
+                        const client = new Nes.Client('http://localhost:' + server.info.port);
+                        client.connect(() => {
+
+                            client._ws.close();
+                            client.disconnect(() => {
+
+                                server.stop(done);
+                            });
+                        });
+                    });
+                });
+            });
+
+            it('closes socket while connecting', (done) => {
+
+                const server = new Hapi.Server();
+                server.connection();
+                server.register({ register: Nes, options: { auth: false } }, (err) => {
+
+                    expect(err).to.not.exist();
+
+                    server.start((err) => {
+
+                        expect(err).to.not.exist();
+                        const client = new Nes.Client('http://localhost:' + server.info.port);
+                        client.connect((err) => {
+
+                            expect(err).to.be.an.error('Connection terminated while while to connect');
                             server.stop(done);
+                        });
+
+                        client.disconnect();
+                    });
+                });
+            });
+
+            it('disconnects once', (done) => {
+
+                const server = new Hapi.Server();
+                server.connection();
+                server.register({ register: Nes, options: { auth: false } }, (err) => {
+
+                    expect(err).to.not.exist();
+
+                    server.start((err) => {
+
+                        expect(err).to.not.exist();
+                        const client = new Nes.Client('http://localhost:' + server.info.port);
+                        client.connect((err) => {
+
+                            expect(err).to.not.exist();
+
+                            let disconnected = 0;
+                            client.onDisconnect = () => ++disconnected;
+
+                            let counter = 0;
+                            const count = () => ++counter;
+
+                            client.disconnect(count);
+                            client.disconnect(count);
+                            client.disconnect(count);
+
+                            setTimeout(() => {
+
+                                expect(counter).to.equal(3);
+                                expect(disconnected).to.equal(1);
+                                server.stop(done);
+                            }, 50);
                         });
                     });
                 });

@@ -1,4 +1,4 @@
-# 5.0.x API Reference
+# 6.0.x API Reference
 
 - [Registration](#registration)
 - [Server](#server)
@@ -23,7 +23,7 @@
     - [`client.onDisconnect`](#clientondisconnect)
     - [`client.onUpdate`](#clientonupdate)
     - [`client.connect([options], callback)`](#clientconnectoptions-callback)
-    - [`client.disconnect()`](#clientdisconnect)
+    - [`client.disconnect([callback])`](#clientdisconnectcallback)
     - [`client.id`](#clientid)
     - [`client.request(options, callback)`](#clientrequestoptions-callback)
     - [`client.message(message, callback)`](#clientmessagemessage-callback)
@@ -246,9 +246,11 @@ The socket authentication state if any. Similar to the normal **hapi** `request.
 - `credentials` - the authentication credentials used.
 - `artifacts` - authentication artifacts specific to the authentication strategy used.
 
-### `socket.disconnect()`
+### `socket.disconnect([callback])`
 
-Closes a client connection.
+Closes a client connection where:
+- `callback` - optional callback for when the connection is fully closed using the signature
+  `function()`.
 
 ### `socket.send(message, [callback])`
 
