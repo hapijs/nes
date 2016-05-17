@@ -408,6 +408,17 @@ describe('Browser', () => {
             });
         });
 
+        describe('_cleanup()', () => {
+
+            it('ignores when client not connected', (done) => {
+
+                const client = new Nes.Client();
+
+                client._cleanup();
+                done();
+            });
+        });
+
         describe('_reconnect()', () => {
 
             it('reconnects automatically', (done) => {
