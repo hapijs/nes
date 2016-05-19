@@ -1037,7 +1037,7 @@ describe('Browser', () => {
                             client.request('/', (err, payload, statusCode, headers) => {
 
                                 expect(err).to.not.exist();
-                                expect(logged.message).to.equal('Unexpected end of input');
+                                expect(logged.message).to.match(/Unexpected end of(?: JSON)? input/);
                                 expect(logged.type).to.equal('protocol');
 
                                 client.disconnect();
