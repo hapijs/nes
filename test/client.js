@@ -373,6 +373,61 @@ describe('Browser', () => {
                 });
             });
 
+            it('logs manual disconnection request', (done) => {
+
+                const server = new Hapi.Server();
+                server.connection();
+                server.register({ register: Nes, options: { auth: false } }, (err) => {
+
+                    expect(err).to.not.exist();
+
+                    server.start((err) => {
+
+                        expect(err).to.not.exist();
+                        const client = new Nes.Client('http://localhost:' + server.info.port);
+                        client.connect((err) => {
+
+                            expect(err).to.not.exist();
+                            client.onDisconnect = (willReconnect, log) => {
+
+                                expect(log.wasRequested).to.be.true();
+                                server.stop(done);
+                            };
+
+                            client.disconnect();
+                        });
+                    });
+                });
+            });
+
+            it('logs error disconnection request an not requested', (done) => {
+
+                const server = new Hapi.Server();
+                server.connection();
+                server.register({ register: Nes, options: { auth: false } }, (err) => {
+
+                    expect(err).to.not.exist();
+
+                    server.start((err) => {
+
+                        expect(err).to.not.exist();
+                        const client = new Nes.Client('http://localhost:' + server.info.port);
+                        client.onError = Hoek.ignore;
+                        client.connect((err) => {
+
+                            expect(err).to.not.exist();
+                            client.onDisconnect = (willReconnect, log) => {
+
+                                expect(log.wasRequested).to.be.false();
+                                server.stop(done);
+                            };
+
+                            client._ws.close();
+                        });
+                    });
+                });
+            });
+
             it('allows closing from inside request callback', (done) => {
 
                 const server = new Hapi.Server();
@@ -723,7 +778,7 @@ describe('Browser', () => {
                         };
 
                         let r = '';
-                        client.onDisconnect = function (willReconnect) {
+                        client.onDisconnect = function (willReconnect, log) {
 
                             r += willReconnect ? 't' : 'f';
                         };
