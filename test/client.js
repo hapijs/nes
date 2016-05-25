@@ -353,7 +353,7 @@ describe('Browser', () => {
                             expect(err).to.not.exist();
 
                             let disconnected = 0;
-                            client.onDisconnect = () => ++disconnected;
+                            client.onDisconnect = (willReconnect, log) => ++disconnected;
 
                             let counter = 0;
                             const count = () => ++counter;
@@ -549,7 +549,7 @@ describe('Browser', () => {
                         };
 
                         let r = '';
-                        client.onDisconnect = function (willReconnect) {
+                        client.onDisconnect = function (willReconnect, log) {
 
                             r += willReconnect ? 't' : 'f';
                         };
@@ -635,7 +635,7 @@ describe('Browser', () => {
                         };
 
                         let r = '';
-                        client.onDisconnect = function (willReconnect) {
+                        client.onDisconnect = function (willReconnect, log) {
 
                             r += willReconnect ? 't' : 'f';
                         };
@@ -1287,7 +1287,7 @@ describe('Browser', () => {
 
                             const handler = (update, flags) => {
 
-                                expect(client.subscriptions()).to.deep.equal(['/']);
+                                expect(client.subscriptions()).to.equal(['/']);
                                 expect(update).to.equal('heya');
                                 client.disconnect();
                                 server.stop(done);
@@ -1316,6 +1316,13 @@ describe('Browser', () => {
                         expect(err).to.not.exist();
                         const client = new Nes.Client('http://localhost:' + server.info.port);
 
+                        client.onDisconnect = function (willReconnect, log) {
+
+                            expect(log.wasRequested).to.be.false();
+                            client.disconnect();
+                            server.stop(done);
+                        };
+
                         client.subscribe('/b', Hoek.ignore, (err) => {
 
                             expect(err).to.not.exist();
@@ -1327,9 +1334,6 @@ describe('Browser', () => {
                                 expect(err.type).to.equal('server');
                                 expect(err.statusCode).to.equal(404);
                                 expect(client.subscriptions()).to.be.empty();
-
-                                client.disconnect();
-                                server.stop(done);
                             });
                         });
                     });
@@ -1591,7 +1595,7 @@ describe('Browser', () => {
                 client.unsubscribe('/a/b', handler3, Hoek.ignore);
                 client.unsubscribe('/b/c', handler4, Hoek.ignore);
 
-                expect(client.subscriptions()).to.deep.equal(['/a', '/b/c']);
+                expect(client.subscriptions()).to.equal(['/a', '/b/c']);
                 done();
             });
 
@@ -1674,7 +1678,7 @@ describe('Browser', () => {
 
                             const handler1 = (update1, flags1) => {
 
-                                expect(client.subscriptions()).to.deep.equal(['/']);
+                                expect(client.subscriptions()).to.equal(['/']);
                                 expect(update1).to.equal('abc');
 
                                 client.unsubscribe('/', null, (err) => {
@@ -1682,7 +1686,7 @@ describe('Browser', () => {
                                     expect(err).to.not.exist();
                                     const handler2 = (update2, flags2) => {
 
-                                        expect(client.subscriptions()).to.deep.equal(['/']);
+                                        expect(client.subscriptions()).to.equal(['/']);
                                         expect(update2).to.equal('def');
                                         client.disconnect();
                                         server.stop(done);
@@ -1725,7 +1729,7 @@ describe('Browser', () => {
 
                             const handler = (update, flags) => {
 
-                                expect(client.subscriptions()).to.deep.equal([]);
+                                expect(client.subscriptions()).to.equal([]);
                                 expect(update).to.equal('heya');
                                 expect(flags.revoked).to.be.true();
                                 client.disconnect();
@@ -1735,7 +1739,7 @@ describe('Browser', () => {
                             client.subscribe('/', handler, (err) => {
 
                                 expect(err).to.not.exist();
-                                expect(client.subscriptions()).to.deep.equal(['/']);
+                                expect(client.subscriptions()).to.equal(['/']);
                                 server.eachSocket((socket) => socket.revoke('/', 'heya'));
                             });
                         });
@@ -1768,7 +1772,7 @@ describe('Browser', () => {
                             client.subscribe('/', handler, (err) => {
 
                                 expect(err).to.not.exist();
-                                expect(client.subscriptions()).to.deep.equal(['/']);
+                                expect(client.subscriptions()).to.equal(['/']);
                                 server.eachSocket((socket) => {
 
                                     socket.revoke('/', null, (err) => {
@@ -1776,7 +1780,7 @@ describe('Browser', () => {
                                         expect(err).to.not.exist();
                                         setTimeout(() => {
 
-                                            expect(client.subscriptions()).to.deep.equal([]);
+                                            expect(client.subscriptions()).to.equal([]);
                                             expect(updated).to.be.false();
                                             client.disconnect();
                                             server.stop(done);
@@ -1820,7 +1824,7 @@ describe('Browser', () => {
                 client.unsubscribe('/a/b/c', handler1, Hoek.ignore);
                 client.unsubscribe('/b/c', handler1, Hoek.ignore);
 
-                expect(client.subscriptions()).to.deep.equal(['/a/b', '/b/c']);
+                expect(client.subscriptions()).to.equal(['/a/b', '/b/c']);
                 done();
             });
 
@@ -1866,7 +1870,7 @@ describe('Browser', () => {
                         expect(err).to.not.exist();
                         const client = new Nes.Client('http://localhost:' + server.info.port);
                         client.onError = Hoek.ignore;
-                        client.onDisconnect = function () {
+                        client.onDisconnect = function (willReconnect, log) {
 
                             client.disconnect();
                             server.stop(done);
@@ -1895,7 +1899,7 @@ describe('Browser', () => {
                         expect(err).to.not.exist();
                         const client = new Nes.Client('http://localhost:' + server.info.port);
                         client.onError = Hoek.ignore;
-                        client.onDisconnect = function () {
+                        client.onDisconnect = function (willReconnect, log) {
 
                             client.disconnect();
                             server.stop(done);

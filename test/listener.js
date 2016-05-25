@@ -311,7 +311,7 @@ describe('Listener', () => {
                             server.broadcast('y', { user: 'john' });
                             setTimeout(() => {
 
-                                expect(updates).to.deep.equal(['x', 'x']);
+                                expect(updates).to.equal(['x', 'x']);
                                 client1.disconnect();
                                 client2.disconnect();
                                 server.stop(done);
@@ -479,7 +479,7 @@ describe('Listener', () => {
 
                 expect(socket).to.exist();
                 expect(path).to.equal('/');
-                expect(params).to.deep.equal({});
+                expect(params).to.equal({});
                 client.disconnect();
                 server.stop(done);
             };
@@ -521,7 +521,7 @@ describe('Listener', () => {
 
                 expect(socket).to.exist();
                 expect(path).to.equal('/foo');
-                expect(params).to.deep.equal({ params: 'foo' });
+                expect(params).to.equal({ params: 'foo' });
                 client.disconnect();
                 server.stop(done);
             };
@@ -576,7 +576,7 @@ describe('Listener', () => {
 
                             setTimeout(() => {
 
-                                expect(updates).to.deep.equal(['heya']);
+                                expect(updates).to.equal(['heya']);
                                 client.disconnect();
                                 server.stop(done);
                             }, 50);
@@ -687,7 +687,7 @@ describe('Listener', () => {
 
                         const handler = (update) => {
 
-                            expect(update).to.deep.equal({ a: 1 });
+                            expect(update).to.equal({ a: 1 });
                             client.disconnect();
                             server.stop(done);
                         };
@@ -729,7 +729,7 @@ describe('Listener', () => {
 
                         const handler = (update) => {
 
-                            expect(update).to.deep.equal({ a: 5 });
+                            expect(update).to.equal({ a: 5 });
                             client.disconnect();
                             server.stop(done);
                         };
@@ -775,7 +775,7 @@ describe('Listener', () => {
 
                         const handler = (update) => {
 
-                            expect(update).to.deep.equal({ a: 5 });
+                            expect(update).to.equal({ a: 5 });
                             client.disconnect();
                             server.stop(done);
                         };
@@ -817,7 +817,7 @@ describe('Listener', () => {
 
                         const handler = (update) => {
 
-                            expect(update).to.deep.equal({ a: 1 });
+                            expect(update).to.equal({ a: 1 });
                             client.disconnect();
                             server.stop(done);
                         };
@@ -905,7 +905,7 @@ describe('Listener', () => {
                                                             client2.disconnect();
                                                             client3.disconnect();
 
-                                                            expect(updates).to.deep.equal(['heya', 'heya']);
+                                                            expect(updates).to.equal(['heya', 'heya']);
                                                             server.stop(done);
                                                         });
                                                     });
@@ -1096,7 +1096,7 @@ describe('Listener', () => {
                                                             client2.disconnect();
                                                             client3.disconnect();
 
-                                                            expect(updates).to.deep.equal(['heya', 'heya']);
+                                                            expect(updates).to.equal(['heya', 'heya']);
                                                             server.stop(done);
                                                         });
                                                     });
@@ -1166,9 +1166,9 @@ describe('Listener', () => {
                                     server.stop(() => {
 
                                         const listener = server.connections[0].plugins.nes._listener;
-                                        expect(listener._sockets._items).to.deep.equal({});
+                                        expect(listener._sockets._items).to.equal({});
                                         const match = listener._router.route('sub', '/5');
-                                        expect(match.route.subscribers._items).to.deep.equal({});
+                                        expect(match.route.subscribers._items).to.equal({});
                                         done();
                                     });
                                 }, 10);

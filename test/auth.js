@@ -807,7 +807,7 @@ describe('authentication', () => {
                         expect(err).to.not.exist();
                         const handler = (update) => {
 
-                            expect(client.subscriptions()).to.deep.equal(['/']);
+                            expect(client.subscriptions()).to.equal(['/']);
                             expect(update).to.equal('heya');
                             client.disconnect();
                             server.stop(done);
@@ -894,7 +894,7 @@ describe('authentication', () => {
 
                             expect(err).to.exist();
                             expect(err.message).to.equal('Authentication required to subscribe');
-                            expect(client.subscriptions()).to.deep.equal([]);
+                            expect(client.subscriptions()).to.equal([]);
 
                             client.disconnect();
                             server.stop(done);
@@ -928,7 +928,7 @@ describe('authentication', () => {
                         const handler = (update) => {
 
                             expect(update).to.equal('heya');
-                            expect(client.subscriptions()).to.deep.equal(['/']);
+                            expect(client.subscriptions()).to.equal(['/']);
 
                             client.disconnect();
                             server.stop(done);
@@ -968,7 +968,7 @@ describe('authentication', () => {
                         const handler = (update) => {
 
                             expect(update).to.equal('heya');
-                            expect(client.subscriptions()).to.deep.equal(['/']);
+                            expect(client.subscriptions()).to.equal(['/']);
 
                             client.disconnect();
                             server.stop(done);
@@ -1008,7 +1008,7 @@ describe('authentication', () => {
                         const handler = (update) => {
 
                             expect(update).to.equal('heya');
-                            expect(client.subscriptions()).to.deep.equal(['/']);
+                            expect(client.subscriptions()).to.equal(['/']);
 
                             client.disconnect();
                             server.stop(done);
@@ -1048,7 +1048,7 @@ describe('authentication', () => {
                         const handler = (update) => {
 
                             expect(update).to.equal('heya');
-                            expect(client.subscriptions()).to.deep.equal(['/']);
+                            expect(client.subscriptions()).to.equal(['/']);
 
                             client.disconnect();
                             server.stop(done);
@@ -1090,7 +1090,7 @@ describe('authentication', () => {
 
                             expect(err).to.exist();
                             expect(err.message).to.equal('User credentials cannot be used on an application subscription');
-                            expect(client.subscriptions()).to.deep.equal([]);
+                            expect(client.subscriptions()).to.equal([]);
 
                             client.disconnect();
                             server.stop(done);
@@ -1126,7 +1126,7 @@ describe('authentication', () => {
 
                             expect(err).to.exist();
                             expect(err.message).to.equal('Application credentials cannot be used on a user subscription');
-                            expect(client.subscriptions()).to.deep.equal([]);
+                            expect(client.subscriptions()).to.equal([]);
 
                             client.disconnect();
                             server.stop(done);
@@ -1160,7 +1160,7 @@ describe('authentication', () => {
                         const handler = (update) => {
 
                             expect(update).to.equal('heya');
-                            expect(client.subscriptions()).to.deep.equal(['/']);
+                            expect(client.subscriptions()).to.equal(['/']);
 
                             client.disconnect();
                             server.stop(done);
@@ -1200,7 +1200,7 @@ describe('authentication', () => {
                         const handler = (update) => {
 
                             expect(update).to.equal('heya');
-                            expect(client.subscriptions()).to.deep.equal(['/']);
+                            expect(client.subscriptions()).to.equal(['/']);
 
                             client.disconnect();
                             server.stop(done);
@@ -1240,7 +1240,7 @@ describe('authentication', () => {
                         const handler = (update) => {
 
                             expect(update).to.equal('heya');
-                            expect(client.subscriptions()).to.deep.equal(['/']);
+                            expect(client.subscriptions()).to.equal(['/']);
 
                             client.disconnect();
                             server.stop(done);
@@ -1280,7 +1280,7 @@ describe('authentication', () => {
                         const handler = (update) => {
 
                             expect(update).to.equal('heya');
-                            expect(client.subscriptions()).to.deep.equal(['/']);
+                            expect(client.subscriptions()).to.equal(['/']);
 
                             client.disconnect();
                             server.stop(done);
@@ -1320,7 +1320,7 @@ describe('authentication', () => {
                         const handler = (update) => {
 
                             expect(update).to.equal('heya');
-                            expect(client.subscriptions()).to.deep.equal(['/5']);
+                            expect(client.subscriptions()).to.equal(['/5']);
 
                             client.disconnect();
                             server.stop(done);
@@ -1361,7 +1361,7 @@ describe('authentication', () => {
 
                             expect(err).to.exist();
                             expect(err.message).to.equal('Insufficient scope to subscribe, expected any of: b');
-                            expect(client.subscriptions()).to.deep.equal([]);
+                            expect(client.subscriptions()).to.equal([]);
 
                             client.disconnect();
                             server.stop(done);
@@ -1396,7 +1396,7 @@ describe('authentication', () => {
 
                             expect(err).to.exist();
                             expect(err.message).to.equal('Insufficient scope to subscribe, expected any of: x');
-                            expect(client.subscriptions()).to.deep.equal([]);
+                            expect(client.subscriptions()).to.equal([]);
 
                             client.disconnect();
                             server.stop(done);
@@ -1431,7 +1431,7 @@ describe('authentication', () => {
 
                             expect(err).to.exist();
                             expect(err.message).to.equal('Insufficient scope to subscribe, expected any of: x');
-                            expect(client.subscriptions()).to.deep.equal([]);
+                            expect(client.subscriptions()).to.equal([]);
 
                             client.disconnect();
                             server.stop(done);

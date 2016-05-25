@@ -51,7 +51,7 @@ describe('register()', () => {
                         expect(err).to.not.exist();
                         expect(payload).to.equal('hello');
                         expect(statusCode).to.equal(200);
-                        expect(headers).to.deep.equal({ 'content-type': 'text/html; charset=utf-8' });
+                        expect(headers).to.equal({ 'content-type': 'text/html; charset=utf-8' });
 
                         client.disconnect();
                         server.stop(done);

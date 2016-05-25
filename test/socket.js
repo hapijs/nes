@@ -526,7 +526,7 @@ describe('Socket', () => {
                     client.on('message', (data, flags) => {
 
                         const message = JSON.parse(data);
-                        expect(message.payload).to.deep.equal({
+                        expect(message.payload).to.equal({
                             error: 'Bad Request',
                             message: 'Cannot parse message'
                         });
@@ -600,7 +600,7 @@ describe('Socket', () => {
                     client.on('message', (data, flags) => {
 
                         const message = JSON.parse(data);
-                        expect(message.payload).to.deep.equal({
+                        expect(message.payload).to.equal({
                             error: 'Bad Request',
                             message: 'Message missing id'
                         });
@@ -694,7 +694,7 @@ describe('Socket', () => {
                             return;
                         }
 
-                        expect(message.payload).to.deep.equal({
+                        expect(message.payload).to.equal({
                             error: 'Bad Request',
                             message: 'Message missing method'
                         });
@@ -750,7 +750,7 @@ describe('Socket', () => {
                             return;
                         }
 
-                        expect(message.payload).to.deep.equal({
+                        expect(message.payload).to.equal({
                             error: 'Bad Request',
                             message: 'Message missing path'
                         });
@@ -806,7 +806,7 @@ describe('Socket', () => {
                             return;
                         }
 
-                        expect(message.payload).to.deep.equal({
+                        expect(message.payload).to.equal({
                             error: 'Bad Request',
                             message: 'Unknown message type'
                         });
@@ -849,7 +849,7 @@ describe('Socket', () => {
                     client.on('message', (data, flags) => {
 
                         const message = JSON.parse(data);
-                        expect(message.payload).to.deep.equal({
+                        expect(message.payload).to.equal({
                             error: 'Bad Request',
                             message: 'Incorrect protocol version (expected 2 but received 1)'
                         });
@@ -887,7 +887,7 @@ describe('Socket', () => {
                     client.on('message', (data, flags) => {
 
                         const message = JSON.parse(data);
-                        expect(message.payload).to.deep.equal({
+                        expect(message.payload).to.equal({
                             error: 'Bad Request',
                             message: 'Incorrect protocol version (expected 2 but received none)'
                         });
@@ -944,7 +944,7 @@ describe('Socket', () => {
                                     expect(err).to.not.exist();
                                     const listener = server.connections[0].plugins.nes._listener;
                                     const match = listener._router.route('sub', '/5');
-                                    expect(match.route.subscribers._items).to.deep.equal({});
+                                    expect(match.route.subscribers._items).to.equal({});
 
                                     client.disconnect();
                                     server.stop(done);
@@ -997,7 +997,7 @@ describe('Socket', () => {
                                     expect(err).to.not.exist();
                                     const listener = server.connections[0].plugins.nes._listener;
                                     const match = listener._router.route('sub', '/6');
-                                    expect(match.route.subscribers._items).to.deep.equal({});
+                                    expect(match.route.subscribers._items).to.equal({});
 
                                     client.disconnect();
                                     server.stop(done);
