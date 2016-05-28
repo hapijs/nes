@@ -400,7 +400,7 @@ describe('Browser', () => {
                 });
             });
 
-            it('logs error disconnection request an not requested', (done) => {
+            it('logs error disconnection request as not requested', (done) => {
 
                 const server = new Hapi.Server();
                 server.connection();
@@ -413,6 +413,35 @@ describe('Browser', () => {
                         expect(err).to.not.exist();
                         const client = new Nes.Client('http://localhost:' + server.info.port);
                         client.onError = Hoek.ignore;
+                        client.connect((err) => {
+
+                            expect(err).to.not.exist();
+                            client.onDisconnect = (willReconnect, log) => {
+
+                                expect(log.wasRequested).to.be.false();
+                                server.stop(done);
+                            };
+
+                            client._ws.close();
+                        });
+                    });
+                });
+            });
+
+            it('logs error disconnection request as not requested after manual disconnect while already disconnected', (done) => {
+
+                const server = new Hapi.Server();
+                server.connection();
+                server.register({ register: Nes, options: { auth: false } }, (err) => {
+
+                    expect(err).to.not.exist();
+
+                    server.start((err) => {
+
+                        expect(err).to.not.exist();
+                        const client = new Nes.Client('http://localhost:' + server.info.port);
+                        client.onError = Hoek.ignore;
+                        client.disconnect();
                         client.connect((err) => {
 
                             expect(err).to.not.exist();
