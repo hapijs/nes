@@ -28,6 +28,76 @@ describe('authentication', () => {
 
     const password = 'some_not_random_password_that_is_also_long_enough';
 
+    it('times out when hello is delayed', (done) => {
+
+        const server = new Hapi.Server();
+        server.connection();
+
+        server.auth.scheme('custom', internals.implementation);
+        server.auth.strategy('default', 'custom', true);
+
+        server.register({ register: Nes, options: { auth: { timeout: 100 } } }, (err) => {
+
+            expect(err).to.not.exist();
+
+            server.route({
+                method: 'GET',
+                path: '/',
+                handler: function (request, reply) {
+
+                    return reply('hello');
+                }
+            });
+
+            server.start((err) => {
+
+                expect(err).to.not.exist();
+                const client = new Nes.Client('http://localhost:' + server.info.port);
+                client._hello = Hoek.ignore;
+                client.onError = Hoek.ignore;
+                client.onDisconnect = () => {
+
+                    server.stop(done);
+                };
+
+                client.connect({ auth: { headers: { authorization: 'Custom john' } } }, Hoek.ignore);
+            });
+        });
+    });
+
+    it('disables times out when hello is delayed', (done) => {
+
+        const server = new Hapi.Server();
+        server.connection();
+
+        server.auth.scheme('custom', internals.implementation);
+        server.auth.strategy('default', 'custom', true);
+
+        server.register({ register: Nes, options: { auth: { timeout: false } } }, (err) => {
+
+            expect(err).to.not.exist();
+
+            server.route({
+                method: 'GET',
+                path: '/',
+                handler: function (request, reply) {
+
+                    return reply('hello');
+                }
+            });
+
+            server.start((err) => {
+
+                expect(err).to.not.exist();
+                const client = new Nes.Client('http://localhost:' + server.info.port);
+                client._hello = Hoek.ignore;
+                client.onError = Hoek.ignore;
+                setTimeout(() => server.stop(done), 100);
+                client.connect({ auth: { headers: { authorization: 'Custom john' } } }, Hoek.ignore);
+            });
+        });
+    });
+
     describe('cookie', () => {
 
         it('protects an endpoint', (done) => {

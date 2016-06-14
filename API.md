@@ -1,4 +1,4 @@
-# 6.0.x API Reference
+# 6.2.x API Reference
 
 - [Registration](#registration)
 - [Server](#server)
@@ -104,6 +104,9 @@ method. The plugin accepts the following optional registration options:
           session only.
         - `index` - if `true`, authenticated socket with `user` property in `credentials` are mapped
           for usage in [`server.broadcast()`](#serverbroadcastmessage-options) calls. Defaults to `false`.
+        - `timeout` - number of milliseconds after which a new connection is disconnected if authentication
+          is required but the connection has not yet sent a hello message. No timeout if set to `false`.
+          Defaults to `5000` (5 seconds).
 - `headers` - an optional array of header field names to include in server responses to the client.
   If set to `'*'` (without an array), allows all headers. Defaults to `null` (no headers).
 - `payload` - optional message payload settings where:
