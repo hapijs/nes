@@ -85,6 +85,37 @@ describe('Listener', () => {
         });
     });
 
+    it('limits number of connections', (done) => {
+
+        const server = new Hapi.Server();
+        server.connection();
+        server.register({ register: Nes, options: { auth: false, maxConnections: 1 } }, (err) => {
+
+            expect(err).to.not.exist();
+
+            server.start((err) => {
+
+                expect(err).to.not.exist();
+                const client = new Nes.Client('http://localhost:' + server.info.port);
+                client.connect((err) => {
+
+                    expect(err).to.not.exist();
+
+                    const client2 = new Nes.Client('http://localhost:' + server.info.port);
+                    client2.onError = Hoek.ignore;
+
+                    client2.connect((err) => {
+
+                        expect(err).to.exist();
+                        client.disconnect();
+                        client2.disconnect();
+                        server.stop(done);
+                    });
+                });
+            });
+        });
+    });
+
     describe('_beat()', () => {
 
         it('disconnects client after timeout', (done) => {

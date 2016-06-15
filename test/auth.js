@@ -65,7 +65,7 @@ describe('authentication', () => {
         });
     });
 
-    it('disables times out when hello is delayed', (done) => {
+    it('disables timeout when hello is delayed', (done) => {
 
         const server = new Hapi.Server();
         server.connection();
@@ -142,6 +142,56 @@ describe('authentication', () => {
                                 expect(statusCode).to.equal(200);
 
                                 client.disconnect();
+                                server.stop(done);
+                            });
+                        });
+                    });
+                });
+            });
+        });
+
+        it('limits connections per user', (done) => {
+
+            const server = new Hapi.Server();
+            server.connection();
+
+            server.register({ register: Nes, options: { auth: { type: 'cookie', maxConnectionsPerUser: 1, index: true } } }, (err) => {
+
+                expect(err).to.not.exist();
+
+                server.auth.scheme('custom', internals.implementation);
+                server.auth.strategy('default', 'custom', true);
+
+                server.route({
+                    method: 'GET',
+                    path: '/',
+                    handler: function (request, reply) {
+
+                        return reply('hello');
+                    }
+                });
+
+                server.start((err) => {
+
+                    expect(err).to.not.exist();
+                    server.inject({ url: '/nes/auth', headers: { authorization: 'Custom john' } }, (res) => {
+
+                        expect(res.result.status).to.equal('authenticated');
+
+                        const header = res.headers['set-cookie'][0];
+                        const cookie = header.match(/(?:[^\x00-\x20\(\)<>@\,;\:\\"\/\[\]\?\=\{\}\x7F]+)\s*=\s*(?:([^\x00-\x20\"\,\;\\\x7F]*))/);
+
+                        const client = new Nes.Client('http://localhost:' + server.info.port, { ws: { headers: { cookie: 'nes=' + cookie[1] } } });
+                        client.connect((err) => {
+
+                            expect(err).to.not.exist();
+                            const client2 = new Nes.Client('http://localhost:' + server.info.port, { ws: { headers: { cookie: 'nes=' + cookie[1] } } });
+                            client2.connect((err) => {
+
+                                expect(err).to.be.an.error('Too many connections for the authenticated user');
+
+                                client.disconnect();
+                                client2.disconnect();
                                 server.stop(done);
                             });
                         });
@@ -644,6 +694,48 @@ describe('authentication', () => {
                             expect(statusCode).to.equal(200);
 
                             client.disconnect();
+                            server.stop(done);
+                        });
+                    });
+                });
+            });
+        });
+
+        it('limits number of connections per user', (done) => {
+
+            const server = new Hapi.Server();
+            server.connection();
+
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom', true);
+
+            server.register({ register: Nes, options: { auth: { index: true, maxConnectionsPerUser: 1 } } }, (err) => {
+
+                expect(err).to.not.exist();
+
+                server.route({
+                    method: 'GET',
+                    path: '/',
+                    handler: function (request, reply) {
+
+                        return reply('hello');
+                    }
+                });
+
+                server.start((err) => {
+
+                    expect(err).to.not.exist();
+                    const client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect({ auth: { headers: { authorization: 'Custom john' } } }, (err) => {
+
+                        expect(err).to.not.exist();
+                        const client2 = new Nes.Client('http://localhost:' + server.info.port);
+                        client2.connect({ auth: { headers: { authorization: 'Custom john' } } }, (err) => {
+
+                            expect(err).to.be.an.error('Too many connections for the authenticated user');
+
+                            client.disconnect();
+                            client2.disconnect();
                             server.stop(done);
                         });
                     });

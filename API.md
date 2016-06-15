@@ -107,6 +107,8 @@ method. The plugin accepts the following optional registration options:
         - `timeout` - number of milliseconds after which a new connection is disconnected if authentication
           is required but the connection has not yet sent a hello message. No timeout if set to `false`.
           Defaults to `5000` (5 seconds).
+        - `maxConnectionsPerUser` - if specified, limits authenticated users to a maximum number of
+          client connections. Requires the `index` option enabled. Defaults to `false`.
 - `headers` - an optional array of header field names to include in server responses to the client.
   If set to `'*'` (without an array), allows all headers. Defaults to `null` (no headers).
 - `payload` - optional message payload settings where:
@@ -122,6 +124,8 @@ method. The plugin accepts the following optional registration options:
           (15 seconds).
         - `timeout` - timeout in milliseconds after a heartbeat is sent to the client and before the
           client is considered disconnected by the server. Defaults to `5000` (5 seconds).
+- `maxConnections` - if specified, limits the number of simultaneous client connections. Defaults to
+  `false`.
 
 ## Server
 
