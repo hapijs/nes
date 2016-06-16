@@ -297,7 +297,87 @@ describe('Socket', () => {
 
                         server.connections[0].plugins.nes._listener._sockets._forEach((socket) => {
 
-                            socket._send(a, Hoek.ignore);
+                            socket._send(a, null, Hoek.ignore);
+                        });
+                    });
+                });
+            });
+        });
+
+        it('reuses previously stringified value', (done) => {
+
+            const server = new Hapi.Server();
+            server.connection();
+            server.register({ register: Nes, options: { auth: false } }, (err) => {
+
+                expect(err).to.not.exist();
+
+                server.route({
+                    method: 'GET',
+                    path: '/',
+                    handler: function (request, reply) {
+
+                        return reply(JSON.stringify({ a: 1, b: 2 })).type('application/json');
+                    }
+                });
+
+                server.start((err) => {
+
+                    expect(err).to.not.exist();
+                    const client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect(() => {
+
+                        client.request('/', (err, payload, statusCode, headers) => {
+
+                            expect(err).to.not.exist();
+                            expect(payload).to.equal({ a: 1, b: 2 });
+                            expect(statusCode).to.equal(200);
+
+                            client.disconnect();
+                            server.stop(done);
+                        });
+                    });
+                });
+            });
+        });
+
+        it('ignores previously stringified value when no content-type header', (done) => {
+
+            const server = new Hapi.Server();
+            server.connection();
+            server.register({ register: Nes, options: { auth: false } }, (err) => {
+
+                expect(err).to.not.exist();
+
+                server.route({
+                    method: 'GET',
+                    path: '/',
+                    handler: function (request, reply) {
+
+                        return reply(JSON.stringify({ a: 1, b: 2 }));
+                    }
+                });
+
+                server.ext('onPreResponse', (request, reply) => {
+
+                    request.response._contentType = null;
+                    return reply.continue();
+                });
+
+                server.start((err) => {
+
+                    expect(err).to.not.exist();
+                    const client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect(() => {
+
+                        client.request('/', (err, payload, statusCode, headers) => {
+
+                            expect(err).to.not.exist();
+                            expect(payload).to.equal('{"a":1,"b":2}');
+                            expect(statusCode).to.equal(200);
+
+                            client.disconnect();
+                            server.stop(done);
                         });
                     });
                 });
