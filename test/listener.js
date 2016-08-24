@@ -116,6 +116,50 @@ describe('Listener', () => {
         });
     });
 
+    it('rejects unknown origin', (done) => {
+
+        const server = new Hapi.Server();
+        server.connection();
+        server.register({ register: Nes, options: { auth: false, origin: ['http://localhost:12345'] } }, (err) => {
+
+            expect(err).to.not.exist();
+
+            server.start((err) => {
+
+                expect(err).to.not.exist();
+                const client = new Nes.Client('http://localhost:' + server.info.port);
+                client.connect((err) => {
+
+                    expect(err).to.exist();
+                    client.disconnect();
+                    server.stop(done);
+                });
+            });
+        });
+    });
+
+    it('accepts known origin', (done) => {
+
+        const server = new Hapi.Server();
+        server.connection();
+        server.register({ register: Nes, options: { auth: false, origin: ['http://localhost:12345'] } }, (err) => {
+
+            expect(err).to.not.exist();
+
+            server.start((err) => {
+
+                expect(err).to.not.exist();
+                const client = new Nes.Client('http://localhost:' + server.info.port, { ws: { origin: 'http://localhost:12345' } });
+                client.connect((err) => {
+
+                    expect(err).not.to.exist();
+                    client.disconnect();
+                    server.stop(done);
+                });
+            });
+        });
+    });
+
     describe('_beat()', () => {
 
         it('disconnects client after timeout', (done) => {
