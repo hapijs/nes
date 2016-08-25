@@ -261,7 +261,7 @@ describe('authentication', () => {
             server.auth.scheme('custom', internals.implementation);
             server.auth.strategy('default', 'custom', true);
 
-            server.register({ register: Nes, options: { auth: { type: 'cookie', password: password, route: { mode: 'optional' } } } }, (err) => {
+            server.register({ register: Nes, options: { auth: { type: 'cookie', password, route: { mode: 'optional' } } } }, (err) => {
 
                 expect(err).to.not.exist();
 
@@ -308,7 +308,7 @@ describe('authentication', () => {
             server.auth.scheme('custom', internals.implementation);
             server.auth.strategy('default', 'custom', true);
 
-            server.register({ register: Nes, options: { auth: { type: 'cookie', password: password, route: { mode: 'optional' } } } }, (err) => {
+            server.register({ register: Nes, options: { auth: { type: 'cookie', password, route: { mode: 'optional' } } } }, (err) => {
 
                 expect(err).to.not.exist();
 
@@ -400,7 +400,7 @@ describe('authentication', () => {
             server.auth.scheme('custom', internals.implementation);
             server.auth.strategy('default', 'custom', true);
 
-            server.register({ register: Nes, options: { auth: { type: 'cookie', password: password, path: '/nes/xyz' } } }, (err) => {
+            server.register({ register: Nes, options: { auth: { type: 'cookie', password, path: '/nes/xyz' } } }, (err) => {
 
                 expect(err).to.not.exist();
 
@@ -435,7 +435,7 @@ describe('authentication', () => {
             server.auth.scheme('custom', internals.implementation);
             server.auth.strategy('default', 'custom', true);
 
-            server.register({ register: Nes, options: { auth: { type: 'token', password: password } } }, (err) => {
+            server.register({ register: Nes, options: { auth: { type: 'token', password } } }, (err) => {
 
                 expect(err).to.not.exist();
 
@@ -483,7 +483,7 @@ describe('authentication', () => {
             server.auth.scheme('custom', internals.implementation);
             server.auth.strategy('default', 'custom', true);
 
-            server.register({ register: Nes, options: { auth: { type: 'token', password: password, iron: Iron.defaults } } }, (err) => {
+            server.register({ register: Nes, options: { auth: { type: 'token', password, iron: Iron.defaults } } }, (err) => {
 
                 expect(err).to.not.exist();
 
@@ -531,7 +531,7 @@ describe('authentication', () => {
             server.auth.scheme('custom', internals.implementation);
             server.auth.strategy('default', 'custom', true);
 
-            server.register({ register: Nes, options: { auth: { type: 'token', password: password } } }, (err) => {
+            server.register({ register: Nes, options: { auth: { type: 'token', password } } }, (err) => {
 
                 expect(err).to.not.exist();
 
@@ -569,7 +569,7 @@ describe('authentication', () => {
             server.auth.scheme('custom', internals.implementation);
             server.auth.strategy('default', 'custom', true);
 
-            server.register({ register: Nes, options: { auth: { type: 'token', password: password } } }, (err) => {
+            server.register({ register: Nes, options: { auth: { type: 'token', password } } }, (err) => {
 
                 expect(err).to.not.exist();
 
@@ -626,7 +626,7 @@ describe('authentication', () => {
             server.auth.scheme('custom', internals.implementation);
             server.auth.strategy('default', 'custom', true);
 
-            server.register({ register: Nes, options: { auth: { type: 'token', password: password } } }, (err) => {
+            server.register({ register: Nes, options: { auth: { type: 'token', password } } }, (err) => {
 
                 expect(err).to.not.exist();
                 server.start((err) => {
@@ -793,7 +793,7 @@ describe('authentication', () => {
             server.auth.scheme('custom', internals.implementation);
             server.auth.strategy('default', 'custom', true);
 
-            server.register({ register: Nes, options: { auth: { type: 'direct', password: password } } }, (err) => {
+            server.register({ register: Nes, options: { auth: { type: 'direct', password } } }, (err) => {
 
                 expect(err).to.not.exist();
 
@@ -860,7 +860,7 @@ describe('authentication', () => {
             server.auth.scheme('custom', internals.implementation);
             server.auth.strategy('default', 'custom', true);
 
-            server.register({ register: Nes, options: { auth: { type: 'direct', password: password } } }, (err) => {
+            server.register({ register: Nes, options: { auth: { type: 'direct', password } } }, (err) => {
 
                 expect(err).to.not.exist();
                 server.start((err) => {
@@ -900,7 +900,7 @@ describe('authentication', () => {
             server.auth.scheme('custom', internals.implementation);
             server.auth.strategy('default', 'custom', true);
 
-            server.register({ register: Nes, options: { auth: { type: 'direct', password: password } } }, (err) => {
+            server.register({ register: Nes, options: { auth: { type: 'direct', password } } }, (err) => {
 
                 expect(err).to.not.exist();
 
@@ -927,7 +927,7 @@ describe('authentication', () => {
             server.auth.scheme('custom', internals.implementation);
             server.auth.strategy('default', 'custom', true);
 
-            server.register({ register: Nes, options: { auth: { type: 'direct', password: password } } }, (err) => {
+            server.register({ register: Nes, options: { auth: { type: 'direct', password } } }, (err) => {
 
                 expect(err).to.not.exist();
 
@@ -954,7 +954,7 @@ describe('authentication', () => {
             server.auth.scheme('custom', internals.implementation);
             server.auth.strategy('default', 'custom', true);
 
-            server.register({ register: Nes, options: { auth: { type: 'direct', password: password } } }, (err) => {
+            server.register({ register: Nes, options: { auth: { type: 'direct', password } } }, (err) => {
 
                 expect(err).to.not.exist();
 
@@ -993,7 +993,7 @@ describe('authentication', () => {
             server.auth.scheme('custom', internals.implementation);
             server.auth.strategy('default', 'custom', true);
 
-            server.register({ register: Nes, options: { auth: { type: 'direct', password: password } } }, (err) => {
+            server.register({ register: Nes, options: { auth: { type: 'direct', password } } }, (err) => {
 
                 expect(err).to.not.exist();
 
@@ -1002,7 +1002,7 @@ describe('authentication', () => {
                     return next(options.credentials.user === update);
                 };
 
-                server.subscription('/', { filter: filter });
+                server.subscription('/', { filter });
 
                 server.start((err) => {
 
@@ -1038,7 +1038,7 @@ describe('authentication', () => {
             server.auth.scheme('custom', internals.implementation);
             server.auth.strategy('default', 'custom');
 
-            server.register({ register: Nes, options: { auth: { type: 'direct', password: password } } }, (err) => {
+            server.register({ register: Nes, options: { auth: { type: 'direct', password } } }, (err) => {
 
                 expect(err).to.not.exist();
 
@@ -1074,7 +1074,7 @@ describe('authentication', () => {
             server.auth.scheme('custom', internals.implementation);
             server.auth.strategy('default', 'custom');
 
-            server.register({ register: Nes, options: { auth: { type: 'direct', password: password } } }, (err) => {
+            server.register({ register: Nes, options: { auth: { type: 'direct', password } } }, (err) => {
 
                 expect(err).to.not.exist();
 
@@ -1114,7 +1114,7 @@ describe('authentication', () => {
             server.auth.scheme('custom', internals.implementation);
             server.auth.strategy('default', 'custom', 'optional');
 
-            server.register({ register: Nes, options: { auth: { type: 'direct', password: password } } }, (err) => {
+            server.register({ register: Nes, options: { auth: { type: 'direct', password } } }, (err) => {
 
                 expect(err).to.not.exist();
 
@@ -1154,7 +1154,7 @@ describe('authentication', () => {
             server.auth.scheme('custom', internals.implementation);
             server.auth.strategy('default', 'custom', true);
 
-            server.register({ register: Nes, options: { auth: { type: 'direct', password: password, index: true } } }, (err) => {
+            server.register({ register: Nes, options: { auth: { type: 'direct', password, index: true } } }, (err) => {
 
                 expect(err).to.not.exist();
 
@@ -1194,7 +1194,7 @@ describe('authentication', () => {
             server.auth.scheme('custom', internals.implementation);
             server.auth.strategy('default', 'custom', true);
 
-            server.register({ register: Nes, options: { auth: { type: 'direct', password: password, index: true } } }, (err) => {
+            server.register({ register: Nes, options: { auth: { type: 'direct', password, index: true } } }, (err) => {
 
                 expect(err).to.not.exist();
 
@@ -1234,7 +1234,7 @@ describe('authentication', () => {
             server.auth.scheme('custom', internals.implementation);
             server.auth.strategy('default', 'custom', true);
 
-            server.register({ register: Nes, options: { auth: { type: 'direct', password: password } } }, (err) => {
+            server.register({ register: Nes, options: { auth: { type: 'direct', password } } }, (err) => {
 
                 expect(err).to.not.exist();
 
@@ -1270,7 +1270,7 @@ describe('authentication', () => {
             server.auth.scheme('custom', internals.implementation);
             server.auth.strategy('default', 'custom', true);
 
-            server.register({ register: Nes, options: { auth: { type: 'direct', password: password } } }, (err) => {
+            server.register({ register: Nes, options: { auth: { type: 'direct', password } } }, (err) => {
 
                 expect(err).to.not.exist();
 
@@ -1306,7 +1306,7 @@ describe('authentication', () => {
             server.auth.scheme('custom', internals.implementation);
             server.auth.strategy('default', 'custom', true);
 
-            server.register({ register: Nes, options: { auth: { type: 'direct', password: password } } }, (err) => {
+            server.register({ register: Nes, options: { auth: { type: 'direct', password } } }, (err) => {
 
                 expect(err).to.not.exist();
 
@@ -1346,7 +1346,7 @@ describe('authentication', () => {
             server.auth.scheme('custom', internals.implementation);
             server.auth.strategy('default', 'custom', true);
 
-            server.register({ register: Nes, options: { auth: { type: 'direct', password: password } } }, (err) => {
+            server.register({ register: Nes, options: { auth: { type: 'direct', password } } }, (err) => {
 
                 expect(err).to.not.exist();
 
@@ -1386,7 +1386,7 @@ describe('authentication', () => {
             server.auth.scheme('custom', internals.implementation);
             server.auth.strategy('default', 'custom', true);
 
-            server.register({ register: Nes, options: { auth: { type: 'direct', password: password } } }, (err) => {
+            server.register({ register: Nes, options: { auth: { type: 'direct', password } } }, (err) => {
 
                 expect(err).to.not.exist();
 
@@ -1426,7 +1426,7 @@ describe('authentication', () => {
             server.auth.scheme('custom', internals.implementation);
             server.auth.strategy('default', 'custom', true);
 
-            server.register({ register: Nes, options: { auth: { type: 'direct', password: password } } }, (err) => {
+            server.register({ register: Nes, options: { auth: { type: 'direct', password } } }, (err) => {
 
                 expect(err).to.not.exist();
 
@@ -1466,7 +1466,7 @@ describe('authentication', () => {
             server.auth.scheme('custom', internals.implementation);
             server.auth.strategy('default', 'custom', true);
 
-            server.register({ register: Nes, options: { auth: { type: 'direct', password: password } } }, (err) => {
+            server.register({ register: Nes, options: { auth: { type: 'direct', password } } }, (err) => {
 
                 expect(err).to.not.exist();
 
@@ -1506,7 +1506,7 @@ describe('authentication', () => {
             server.auth.scheme('custom', internals.implementation);
             server.auth.strategy('default', 'custom', true);
 
-            server.register({ register: Nes, options: { auth: { type: 'direct', password: password } } }, (err) => {
+            server.register({ register: Nes, options: { auth: { type: 'direct', password } } }, (err) => {
 
                 expect(err).to.not.exist();
 
@@ -1541,7 +1541,7 @@ describe('authentication', () => {
             server.auth.scheme('custom', internals.implementation);
             server.auth.strategy('default', 'custom', true);
 
-            server.register({ register: Nes, options: { auth: { type: 'direct', password: password } } }, (err) => {
+            server.register({ register: Nes, options: { auth: { type: 'direct', password } } }, (err) => {
 
                 expect(err).to.not.exist();
 
@@ -1576,7 +1576,7 @@ describe('authentication', () => {
             server.auth.scheme('custom', internals.implementation);
             server.auth.strategy('default', 'custom', true);
 
-            server.register({ register: Nes, options: { auth: { type: 'direct', password: password } } }, (err) => {
+            server.register({ register: Nes, options: { auth: { type: 'direct', password } } }, (err) => {
 
                 expect(err).to.not.exist();
 

@@ -126,6 +126,8 @@ method. The plugin accepts the following optional registration options:
           client is considered disconnected by the server. Defaults to `5000` (5 seconds).
 - `maxConnections` - if specified, limits the number of simultaneous client connections. Defaults to
   `false`.
+- `origin` - an origin string or an array of origin strings incoming client requests must match for
+  the connection to be permitted. Defaults to no origin validation.
 
 ## Server
 

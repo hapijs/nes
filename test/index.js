@@ -74,7 +74,7 @@ describe('register()', () => {
             server.stop(done);
         };
 
-        server.register({ register: Nes, options: { onConnection: onConnection, auth: false } }, (err) => {
+        server.register({ register: Nes, options: { onConnection, auth: false } }, (err) => {
 
             expect(err).to.not.exist();
 
@@ -109,7 +109,7 @@ describe('register()', () => {
             server.stop(done);
         };
 
-        server.register({ register: Nes, options: { onDisconnection: onDisconnection, auth: false } }, (err) => {
+        server.register({ register: Nes, options: { onDisconnection, auth: false } }, (err) => {
 
             expect(err).to.not.exist();
 

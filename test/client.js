@@ -1011,7 +1011,7 @@ describe('Client', () => {
 
             const server = new Hapi.Server();
             server.connection();
-            server.register({ register: Nes, options: { onMessage: onMessage } }, (err) => {
+            server.register({ register: Nes, options: { onMessage } }, (err) => {
 
                 expect(err).to.not.exist();
 

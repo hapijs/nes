@@ -36,7 +36,7 @@ describe('Socket', () => {
             socket.app.x = 'hello';
         };
 
-        server.register({ register: Nes, options: { onConnection: onConnection, auth: false } }, (err) => {
+        server.register({ register: Nes, options: { onConnection, auth: false } }, (err) => {
 
             expect(err).to.not.exist();
 
@@ -80,7 +80,7 @@ describe('Socket', () => {
 
             const server = new Hapi.Server();
             server.connection();
-            server.register({ register: Nes, options: { onMessage: onMessage } }, (err) => {
+            server.register({ register: Nes, options: { onMessage } }, (err) => {
 
                 expect(err).to.not.exist();
 
@@ -114,7 +114,7 @@ describe('Socket', () => {
 
             const server = new Hapi.Server();
             server.connection();
-            server.register({ register: Nes, options: { onConnection: onConnection } }, (err) => {
+            server.register({ register: Nes, options: { onConnection } }, (err) => {
 
                 expect(err).to.not.exist();
 
@@ -148,7 +148,7 @@ describe('Socket', () => {
 
             const server = new Hapi.Server();
             server.connection();
-            server.register({ register: Nes, options: { onConnection: onConnection } }, (err) => {
+            server.register({ register: Nes, options: { onConnection } }, (err) => {
 
                 expect(err).to.not.exist();
 
@@ -192,7 +192,7 @@ describe('Socket', () => {
                 expect(err).to.not.exist();
                 server.connection();
 
-                server.subscription('/{id}', { onSubscribe: onSubscribe });
+                server.subscription('/{id}', { onSubscribe });
 
                 server.start((err) => {
 
@@ -238,7 +238,7 @@ describe('Socket', () => {
                 expect(err).to.not.exist();
                 server.connection();
 
-                server.subscription('/{id}', { onSubscribe: onSubscribe });
+                server.subscription('/{id}', { onSubscribe });
 
                 server.start((err) => {
 
@@ -431,7 +431,7 @@ describe('Socket', () => {
                 connection = socket;
             };
 
-            server.register({ register: Nes, options: { onConnection: onConnection, auth: false, payload: { maxChunkChars: 5 } } }, (err) => {
+            server.register({ register: Nes, options: { onConnection, auth: false, payload: { maxChunkChars: 5 } } }, (err) => {
 
                 expect(err).to.not.exist();
 
@@ -999,7 +999,7 @@ describe('Socket', () => {
                 return next('b');
             };
 
-            server.register({ register: Nes, options: { auth: false, onMessage: onMessage } }, (err) => {
+            server.register({ register: Nes, options: { auth: false, onMessage } }, (err) => {
 
                 expect(err).to.not.exist();
 
@@ -1052,7 +1052,7 @@ describe('Socket', () => {
                 return next('b');
             };
 
-            server.register({ register: Nes, options: { auth: false, onMessage: onMessage } }, (err) => {
+            server.register({ register: Nes, options: { auth: false, onMessage } }, (err) => {
 
                 expect(err).to.not.exist();
 
@@ -1221,7 +1221,7 @@ describe('Socket', () => {
 
             const server = new Hapi.Server();
             server.connection();
-            server.register({ register: Nes, options: { onMessage: onMessage } }, (err) => {
+            server.register({ register: Nes, options: { onMessage } }, (err) => {
 
                 expect(err).to.not.exist();
 
@@ -1253,7 +1253,7 @@ describe('Socket', () => {
 
             const server = new Hapi.Server();
             server.connection();
-            server.register({ register: Nes, options: { onMessage: onMessage } }, (err) => {
+            server.register({ register: Nes, options: { onMessage } }, (err) => {
 
                 expect(err).to.not.exist();
 
@@ -1287,7 +1287,7 @@ describe('Socket', () => {
 
             const server = new Hapi.Server();
             server.connection();
-            server.register({ register: Nes, options: { onMessage: onMessage } }, (err) => {
+            server.register({ register: Nes, options: { onMessage } }, (err) => {
 
                 expect(err).to.not.exist();
 

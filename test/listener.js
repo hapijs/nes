@@ -42,7 +42,7 @@ describe('Listener', () => {
                 setTimeout(next, 50);
             };
 
-            server.subscription('/', { onUnsubscribe: onUnsubscribe });
+            server.subscription('/', { onUnsubscribe });
             server.start((err) => {
 
                 expect(err).to.not.exist();
@@ -359,7 +359,7 @@ describe('Listener', () => {
             server.auth.strategy('default', 'custom', true);
 
             const password = 'some_not_random_password_that_is_also_long_enough';
-            server.register({ register: Nes, options: { auth: { type: 'direct', password: password, index: true } } }, (err) => {
+            server.register({ register: Nes, options: { auth: { type: 'direct', password, index: true } } }, (err) => {
 
                 expect(err).to.not.exist();
 
@@ -416,7 +416,7 @@ describe('Listener', () => {
             server.auth.strategy('default', 'custom', true);
 
             const password = 'some_not_random_password_that_is_also_long_enough';
-            server.register({ register: Nes, options: { auth: { type: 'direct', password: password, index: false } } }, (err) => {
+            server.register({ register: Nes, options: { auth: { type: 'direct', password, index: false } } }, (err) => {
 
                 expect(err).to.not.exist();
 
@@ -565,7 +565,7 @@ describe('Listener', () => {
                 expect(err).to.not.exist();
                 server.connection();
 
-                server.subscription('/', { onSubscribe: onSubscribe, onUnsubscribe: onUnsubscribe });
+                server.subscription('/', { onSubscribe, onUnsubscribe });
 
                 server.start((err) => {
 
@@ -607,7 +607,7 @@ describe('Listener', () => {
                 expect(err).to.not.exist();
                 server.connection();
 
-                server.subscription('/{params*}', { onSubscribe: onSubscribe, onUnsubscribe: onUnsubscribe });
+                server.subscription('/{params*}', { onSubscribe, onUnsubscribe });
 
                 server.start((err) => {
 
@@ -676,7 +676,7 @@ describe('Listener', () => {
                 expect(err).to.not.exist();
                 server.connection();
 
-                server.subscription('/', { onSubscribe: onSubscribe });
+                server.subscription('/', { onSubscribe });
 
                 server.start((err) => {
 
@@ -750,7 +750,7 @@ describe('Listener', () => {
                     return next(update.a === 1);
                 };
 
-                server.subscription('/updates', { filter: filter });
+                server.subscription('/updates', { filter });
 
                 server.start((err) => {
 
@@ -792,7 +792,7 @@ describe('Listener', () => {
                     return next(update.a === 1, { a: 5 });
                 };
 
-                server.subscription('/updates', { filter: filter });
+                server.subscription('/updates', { filter });
 
                 server.start((err) => {
 
@@ -838,7 +838,7 @@ describe('Listener', () => {
                     return next(false);
                 };
 
-                server.subscription('/updates', { filter: filter });
+                server.subscription('/updates', { filter });
 
                 server.start((err) => {
 
@@ -880,7 +880,7 @@ describe('Listener', () => {
                     return next(options.internal.b === 1);
                 };
 
-                server.subscription('/updates', { filter: filter });
+                server.subscription('/updates', { filter });
 
                 server.start((err) => {
 
@@ -927,7 +927,7 @@ describe('Listener', () => {
             server.auth.strategy('default', 'custom', 'optional');
 
             const password = 'some_not_random_password_that_is_also_long_enough';
-            server.register({ register: Nes, options: { auth: { type: 'direct', password: password } } }, (err) => {
+            server.register({ register: Nes, options: { auth: { type: 'direct', password } } }, (err) => {
 
                 expect(err).to.not.exist();
 
@@ -1057,7 +1057,7 @@ describe('Listener', () => {
             server.auth.strategy('default', 'custom', 'optional');
 
             const password = 'some_not_random_password_that_is_also_long_enough';
-            server.register({ register: Nes, options: { auth: { type: 'direct', password: password } } }, (err) => {
+            server.register({ register: Nes, options: { auth: { type: 'direct', password } } }, (err) => {
 
                 expect(err).to.not.exist();
 
@@ -1119,7 +1119,7 @@ describe('Listener', () => {
             server.auth.strategy('default', 'custom', 'optional');
 
             const password = 'some_not_random_password_that_is_also_long_enough';
-            server.register({ register: Nes, options: { auth: { type: 'direct', password: password } } }, (err) => {
+            server.register({ register: Nes, options: { auth: { type: 'direct', password } } }, (err) => {
 
                 expect(err).to.not.exist();
 
