@@ -24,7 +24,7 @@
     "ws": "1.x.x"
   },
   "peerDependencies": {
-    "hapi": ">=11.1.0"
+    "hapi": ">=13.0.0"
   },
   "devDependencies": {
     "babel-cli": "^6.1.2",

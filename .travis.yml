@@ -8,8 +8,6 @@ node_js:
 sudo: false
 
 env:
-    - HAPI_VERSION="11"
-    - HAPI_VERSION="12"
     - HAPI_VERSION="13"
     - HAPI_VERSION="14"
     - HAPI_VERSION="15"
