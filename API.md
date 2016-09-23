@@ -204,9 +204,7 @@ Declares a subscription path client can subscribe to where:
         - `params` - the parameters parsed from the subscription request path if the subscription
           path definition contains parameters.
         - `next` - the continuation method required to complete the unsubscribe request using the
-          signature `function(err)` where:
-            - `err` - if present, indicates the subscription request failed and the error will be
-              passed back to the client.
+          signature `function()`
 
 ### `server.publish(path, message, [options])`
 
