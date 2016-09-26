@@ -198,7 +198,7 @@ Declares a subscription path client can subscribe to where:
             - `err` - if present, indicates the subscription request failed and the error will be
               passed back to the client.
     - `onUnsubscribe` - Callback called when a client unsubscribes from this subscription endpoint
-      using the signature `function(socket, path, params)` where:
+      using the signature `function(socket, path, params, next)` where:
         - `socket` - the [`Socket`](#socket) object of the incoming connection.
         - `path` - Path of the unsubscribed route.
         - `params` - the parameters parsed from the subscription request path if the subscription
