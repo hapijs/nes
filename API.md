@@ -1,4 +1,4 @@
-# 6.3.x API Reference
+# 6.4.x API Reference
 
 - [Registration](#registration)
 - [Server](#server)
@@ -10,6 +10,8 @@
     - [`socket.id`](#socketid)
     - [`socket.app`](#socketapp)
     - [`socket.auth`](#socketauth)
+    - [`socket.server`](#socketserver)
+    - [`socket.connection`](#socketconnection)
     - [`socket.disconnect()`](#socketdisconnect)
     - [`socket.send(message, [callback])`](#socketsendmessage-callback)
     - [`socket.publish(path, message, [callback])`](#socketpublishpath-message-callback)
@@ -254,6 +256,14 @@ The socket authentication state if any. Similar to the normal **hapi** `request.
 - `isAuthenticated` - a boolean set to `true` when authenticated.
 - `credentials` - the authentication credentials used.
 - `artifacts` - authentication artifacts specific to the authentication strategy used.
+
+### `socket.server`
+
+The socket's server reference.
+
+### `socket.connection`
+
+The socket's connection reference.
 
 ### `socket.disconnect([callback])`
 

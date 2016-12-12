@@ -45,6 +45,9 @@ describe('Socket', () => {
                 path: '/',
                 handler: function (request, reply) {
 
+                    expect(request.socket.connection).to.shallow.equal(server.connections[0]);
+                    expect(request.socket.server).to.shallow.equal(server);
+
                     return reply(request.socket.app.x);
                 }
             });
