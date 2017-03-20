@@ -1314,6 +1314,42 @@ describe('Socket', () => {
             });
         });
 
+        it('sends errors from callback (code)', (done) => {
+
+            const onMessage = function (socket, message, reply) {
+
+                expect(message).to.equal('winning');
+                const error = Boom.badRequest();
+                error.output.payload = {};
+                reply(error);
+            };
+
+            const server = new Hapi.Server();
+            server.connection();
+            server.register({ register: Nes, options: { onMessage } }, (err) => {
+
+                expect(err).to.not.exist();
+
+                server.start((err) => {
+
+                    expect(err).to.not.exist();
+                    const client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect(() => {
+
+                        client.message('winning', (err, response) => {
+
+                            expect(err).to.exist();
+                            expect(err.message).to.equal('Error');
+                            expect(err.statusCode).to.equal(400);
+                            expect(response).to.not.exist();
+                            client.disconnect();
+                            server.stop(done);
+                        });
+                    });
+                });
+            });
+        });
+
         it('errors if missing onMessage callback', (done) => {
 
             const server = new Hapi.Server();
