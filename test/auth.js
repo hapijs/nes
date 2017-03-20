@@ -1505,7 +1505,7 @@ describe('authentication', () => {
 
                 expect(err).to.not.exist();
 
-                server.subscription('/{id}', { auth: { scope: ['b', '{id}'] } });
+                server.subscription('/{id}', { auth: { scope: ['{params.id}'] } });
 
                 server.start((err) => {
 
