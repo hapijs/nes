@@ -392,6 +392,41 @@ describe('authentication', () => {
             });
         });
 
+        it('errors on invalid cookie', (done) => {
+
+            const server = new Hapi.Server();
+            server.connection();
+
+            server.register({ register: Nes, options: { auth: { type: 'cookie' } } }, (err) => {
+
+                expect(err).to.not.exist();
+
+                server.auth.scheme('custom', internals.implementation);
+                server.auth.strategy('default', 'custom', true);
+
+                server.route({
+                    method: 'GET',
+                    path: '/',
+                    handler: function (request, reply) {
+
+                        return reply('hello');
+                    }
+                });
+
+                server.start((err) => {
+
+                    expect(err).to.not.exist();
+                    const client = new Nes.Client('http://localhost:' + server.info.port, { ws: { headers: { cookie: '"' } } });
+                    client.connect((err) => {
+
+                        expect(err).to.be.an.error('Invalid nes authentication cookie');
+                        client.disconnect();
+                        server.stop(done);
+                    });
+                });
+            });
+        });
+
         it('overrides cookie path', (done) => {
 
             const server = new Hapi.Server();
