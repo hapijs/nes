@@ -125,6 +125,104 @@ describe('Client', () => {
                 });
             });
         });
+
+        it('fails to connect (using promises)', (done) => {
+
+            const client = new Nes.Client('http://0');
+
+            client.connect()
+                .then(() => {
+
+                    Code.fail('Connect succeed');
+                })
+                .catch((err) => {
+
+                    expect(err).to.exist();
+                    expect(err.message).to.equal('Socket error');
+                    expect(err.type).to.equal('ws');
+                    client.disconnect();
+                    done();
+                });
+        });
+
+        it('errors if already connected (using promises)', (done) => {
+
+            const server = new Hapi.Server();
+            server.connection();
+            server.register({ register: Nes, options: { auth: false } }, (err) => {
+
+                expect(err).to.not.exist();
+                server.start((err) => {
+
+                    expect(err).to.not.exist();
+                    const client = new Nes.Client('http://localhost:' + server.info.port);
+
+                    client.connect({ reconnect: false })
+                        .then(() => {
+
+                            expect(err).to.not.exist();
+                            client.connect()
+                                .then(() => {
+
+                                    Code.fail('second connection succeed');
+                                })
+                                .catch((err) => {
+
+                                    expect(err).to.be.an.error('Already connected');
+                                    client.disconnect(false)
+                                        .then(() => {
+
+                                            server.stop(done);
+                                        }
+                                    );
+                                });
+                        })
+                        .catch(() => {
+
+                            Code.fail('first connection failed');
+                        });
+                });
+            });
+        });
+
+        it('errors if set to reconnect (using promises)', (done) => {
+
+            const server = new Hapi.Server();
+            server.connection();
+            server.register({ register: Nes, options: { auth: false } }, (err) => {
+
+                expect(err).to.not.exist();
+                server.start((err) => {
+
+                    expect(err).to.not.exist();
+                    const client = new Nes.Client('http://localhost:' + server.info.port);
+
+                    client.connect()
+                        .then(() => {
+
+                            expect(err).to.not.exist();
+                            client.connect()
+                                .then()
+                                .catch((err) => {
+
+                                    expect(err).to.be.an.error('Cannot connect while client attempts to reconnect');
+                                    client.disconnect();
+                                    server.stop(done);
+                                });
+                        })
+                        .catch((err) => {
+
+                            expect(err).to.be.an.error('Already connected');
+                            client.disconnect(false)
+                                .then(() => {
+
+                                    server.stop(done);
+                                }
+                            );
+                        });
+                });
+            });
+        });
     });
 
     describe('_connect()', () => {
@@ -260,6 +358,17 @@ describe('Client', () => {
 
             client.disconnect();
             done();
+        });
+
+        it('ignores when client not connected (using promises)', (done) => {
+
+            const client = new Nes.Client();
+
+            client.disconnect(false)
+                .then(() => {
+
+                    done();
+                });
         });
 
         it('ignores when client is disconnecting', (done) => {
@@ -903,6 +1012,45 @@ describe('Client', () => {
             });
         });
 
+        it('defaults to GET (using promises)', (done) => {
+
+            const server = new Hapi.Server();
+            server.connection();
+            server.register({ register: Nes, options: { auth: false, headers: '*' } }, (err) => {
+
+                expect(err).to.not.exist();
+
+                server.route({
+                    method: 'GET',
+                    path: '/',
+                    handler: function (request, reply) {
+
+                        return reply('hello');
+                    }
+                });
+
+                server.start((err) => {
+
+                    expect(err).to.not.exist();
+                    const client = new Nes.Client('http://localhost:' + server.info.port);
+
+                    client.connect()
+                        .then(() => {
+
+                            client.request({ path: '/' })
+                                .then(([payload, statusCode, headers]) => {
+
+                                    expect(payload).to.equal('hello');
+                                    expect(statusCode).to.equal(200);
+                                    expect(headers).to.contain({ 'content-type': 'text/html; charset=utf-8' });
+                                    client.disconnect();
+                                    server.stop(done);
+                                });
+                        });
+                });
+            });
+        });
+
         it('errors when disconnected', (done) => {
 
             const client = new Nes.Client();
@@ -914,6 +1062,25 @@ describe('Client', () => {
                 expect(err.type).to.equal('disconnect');
                 done();
             });
+        });
+
+        it('errors when disconnected (using promises)', (done) => {
+
+            const client = new Nes.Client();
+
+            client.request('/')
+                .then((payload, statusCode, headers) => {
+
+                    Code.fail('Request succeed');
+                })
+                .catch((err) => {
+
+                    expect(err).to.exist();
+                    expect(err.message).to.equal('Failed to send message - server disconnected');
+                    expect(err.type).to.equal('disconnect');
+                    done();
+                }
+            );
         });
 
         it('errors on invalid payload', (done) => {
@@ -1034,6 +1201,50 @@ describe('Client', () => {
                                 server.stop(done);
                             }, 50);
                         });
+                    });
+                });
+            });
+        });
+
+        it('errors on timeout (using promises)', (done) => {
+
+            const onMessage = function (socket, message, reply) {
+
+                setTimeout(() => {
+
+                    return reply('hello');
+                }, 50);
+            };
+
+            const server = new Hapi.Server();
+            server.connection();
+            server.register({ register: Nes, options: { onMessage } }, (err) => {
+
+                expect(err).to.not.exist();
+
+                server.start((err) => {
+
+                    expect(err).to.not.exist();
+                    const client = new Nes.Client('http://localhost:' + server.info.port, { timeout: 20 });
+                    client.connect(() => {
+
+                        client.message('winning')
+                            .then((response) => {
+
+                                Code.fail('Message succeed');
+                            })
+                            .catch((err) => {
+
+                                expect(err).to.exist();
+                                expect(err.message).to.equal('Request timed out');
+                                expect(err.type).to.equal('timeout');
+
+                                setTimeout(() => {
+
+                                    client.disconnect();
+                                    server.stop(done);
+                                }, 50);
+                            });
                     });
                 });
             });
@@ -1330,6 +1541,40 @@ describe('Client', () => {
             });
         });
 
+        it('subscribes to a path (using promises)', (done) => {
+
+            const server = new Hapi.Server();
+            server.connection();
+            server.register({ register: Nes, options: { auth: false } }, (err) => {
+
+                expect(err).to.not.exist();
+
+                server.subscription('/', {});
+
+                server.start((err) => {
+
+                    expect(err).to.not.exist();
+                    const client = new Nes.Client('http://localhost:' + server.info.port);
+                    client.connect(() => {
+
+                        const handler = (update, flags) => {
+
+                            expect(client.subscriptions()).to.equal(['/']);
+                            expect(update).to.equal('heya');
+                            client.disconnect();
+                            server.stop(done);
+                        };
+
+                        client.subscribe('/', handler)
+                            .then(() => {
+
+                                server.publish('/', 'heya');
+                            });
+                    });
+                });
+            });
+        });
+
         it('subscribes to a unknown path (pre connect)', (done) => {
 
             const server = new Hapi.Server();
@@ -1372,6 +1617,51 @@ describe('Client', () => {
                             expect(client.subscriptions()).to.be.empty();
                         });
                     });
+                });
+            });
+        });
+
+        it('subscribes to a unknown path (pre connect) (using promises)', (done) => {
+
+            const server = new Hapi.Server();
+            server.connection();
+
+            const order = [];
+            const onConnection = () => order.push(1);
+            const onDisconnection = () => order.push(2);
+            server.register({ register: Nes, options: { auth: false, onConnection, onDisconnection } }, (err) => {
+
+                expect(err).to.not.exist();
+
+                server.start((err) => {
+
+                    expect(err).to.not.exist();
+                    const client = new Nes.Client('http://localhost:' + server.info.port);
+
+                    client.onDisconnect = function (willReconnect, log) {
+
+                        expect(log.wasRequested).to.be.false();
+
+                        setTimeout(() => {
+
+                            expect(order).to.equal([1, 2]);
+                            client.disconnect();                        // Disconnect after server disconnects automatically
+                            server.stop(done);
+                        }, 50);
+                    };
+
+                    client.subscribe('/b', Hoek.ignore)
+                        .then(() => {
+
+                            client.connect((err) => {
+
+                                expect(err).to.exist();
+                                expect(err.message).to.equal('Subscription not found');
+                                expect(err.type).to.equal('server');
+                                expect(err.statusCode).to.equal(404);
+                                expect(client.subscriptions()).to.be.empty();
+                            });
+                        });
                 });
             });
         });
@@ -1863,6 +2153,22 @@ describe('Client', () => {
 
         });
 
+        it('drops all handlers (using promises)', (done) => {
+
+            const client = new Nes.Client('http://localhost');
+
+            client.subscribe('/a/b', Hoek.ignore, Hoek.ignore);
+            client.subscribe('/a/b', Hoek.ignore, Hoek.ignore);
+
+            client.unsubscribe('/a/b', null)
+                .then(() => {
+
+                    expect(client.subscriptions()).to.be.empty();
+                    done();
+                });
+
+        });
+
         it('ignores unknown path', (done) => {
 
             const client = new Nes.Client('http://localhost');
@@ -1890,6 +2196,20 @@ describe('Client', () => {
                 expect(err.type).to.equal('user');
                 done();
             });
+        });
+
+        it('errors on missing path (using promises)', (done) => {
+
+            const client = new Nes.Client('http://localhost');
+
+            client.unsubscribe('', null)
+                .catch((err) => {
+
+                    expect(err).to.exist();
+                    expect(err.message).to.equal('Invalid path');
+                    expect(err.type).to.equal('user');
+                    done();
+                });
         });
 
         it('errors on invalid path', (done) => {
