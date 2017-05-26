@@ -1,4 +1,4 @@
-# 6.4.x API Reference
+# 6.5.x API Reference
 
 - [Registration](#registration)
 - [Server](#server)
@@ -349,7 +349,7 @@ where:
 A property used to set a custom message handler with the signature `function(message)`. Invoked whenever
 the server calls `server.broadcast()` or `socket.send()`.
 
-### `client.connect([options], callback)`
+### `client.connect([options], [callback])`
 
 Connects the client to the server where:
 - `options` - an optional configuration object with the following options:
@@ -367,19 +367,23 @@ Connects the client to the server where:
     - `retries` - number of reconnection attempts. Defaults to `Infinity` (unlimited).
     - `timeout` - socket connection timeout in milliseconds. Defaults to the WebSocket
       implementation timeout default.
-- `callback` - the server response callback using the signature `function(err)` where:
+- `callback` - the optional server response callback using the signature `function(err)` where:
     - `err` - an error response.
+If `callback` is omitted, connect return a `Promise` is returned.
 
-### `client.disconnect()`
+### `client.disconnect([callback])`
 
 Disconnects the client from the server and stops future reconnects.
+- `callback` - the optional server response callback using the signature `function(err)` where:
+    - `err` - an error response.
+If `callback` is set to `false`, disconnect return a `Promise`.
 
 ### `client.id`
 
 The unique socket identifier assigned by the server. The value is set after the connection is
 established.
 
-### `client.request(options, callback)`
+### `client.request(options, [callback])`
 
 Sends an endpoint request to the server where:
 - `options` - value can be one of:
@@ -398,8 +402,9 @@ Sends an endpoint request to the server where:
     - `statusCode` - the HTTP response status code.
     - `headers` - an object containing the HTTP response headers returned by the server (based on
       the server configuration).
+If `callback` is omitted, request return a `Promise` to handle using the signature `function([payload, statusCode, headers])`.
 
-### `client.message(message, callback)`
+### `client.message(message, [callback])`
 
 Sends a custom message to the server which is received by the server `onMessage` handler where:
 - `message` - the message sent to the server. Can be any type which can be safely converted to
@@ -407,8 +412,9 @@ Sends a custom message to the server which is received by the server `onMessage`
 - `callback` - the server response callback using the signature `function(err, message)` where:
     - `err` - an error response.
     - `message` - the server response if no error occurred.
+If `callback` is omitted, message return a `Promise`.
 
-### `client.subscribe(path, handler, callback)`
+### `client.subscribe(path, handler, [callback])`
 
 Subscribes to a server subscription where:
 - `path` - the requested subscription path. Paths are just like HTTP request paths (e.g.
@@ -422,11 +428,12 @@ Subscribes to a server subscription where:
 - `callback` - the callback function called when the subscription request was received by the server
   or failed to transmit using the signature `function(err)` where:
     - `err` - if present, indicates the subscription request has failed.
+If `callback` is omitted, subscribe return a `Promise`.
 
 Note that when `subscribe()` is called before the client connects, any server errors will be
 received via the `connect()` callback.
 
-### `client.unsubscribe(path, handler, callback)`
+### `client.unsubscribe(path, handler, [callback])`
 
 Cancels a subscription where:
 - `path` - the subscription path used to subscribe.
@@ -435,6 +442,7 @@ Cancels a subscription where:
 - `callback` - the callback function called when the subscription request was received by the server
   or failed to transmit using the signature `function(err)` where:
     - `err` - if present, indicates the request has failed.
+If `callback` is omitted, unsubscribe return a `Promise`.
 
 ### `client.subscriptions()`
 

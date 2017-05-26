@@ -17,6 +17,7 @@
     "boom": "4.x.x",
     "call": "3.x.x",
     "cryptiles": "3.x.x",
+    "es6-promisify": "^5.0.0",
     "hoek": "4.x.x",
     "iron": "4.x.x",
     "items": "^2.1.x",
@@ -34,7 +35,9 @@
     "lab": "13.x.x"
   },
   "babel": {
-    "presets": ["es2015"]
+    "presets": [
+      "es2015"
+    ]
   },
   "scripts": {
     "build-client": "mkdir -p dist; babel lib/client.js --out-file dist/client.js",
