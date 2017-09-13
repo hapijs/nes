@@ -104,8 +104,8 @@ method. The plugin accepts the following optional registration options:
         - `domain` - the cookie domain when using type `'cookie'`. Defaults to no domain.
         - `ttl` - the cookie expiration milliseconds when using type `'cookie'`. Defaults to current
           session only.
-        - `index` - if `true`, authenticated socket with `user` property in `credentials` are mapped
-          for usage in [`server.broadcast()`](#serverbroadcastmessage-options) calls. Defaults to `false`.
+        - `index` - the key property in `credentials` that is mapped
+          for usage in [`server.broadcast()`](#serverbroadcastmessage-options) calls. If `true`, the key property is `user`. Defaults to `false`.
         - `timeout` - number of milliseconds after which a new connection is disconnected if authentication
           is required but the connection has not yet sent a hello message. No timeout if set to `false`.
           Defaults to `5000` (5 seconds).
