@@ -323,9 +323,17 @@ describe('Client', () => {
 
                     expect(err).to.not.exist();
                     const client = new Nes.Client('http://localhost:' + server.info.port);
+
+                    const orig = client._connect;
+                    client._connect = (...args) => {
+
+                        orig.apply(client, args);
+                        client._ws.onerror = client._ws.onclose;
+                    };
+
                     client.connect((err) => {
 
-                        expect(err).to.be.an.error('Connection terminated while while to connect');
+                        expect(err).to.be.an.error('Connection terminated while waiting to connect');
                         server.stop(done);
                     });
 
@@ -747,9 +755,14 @@ describe('Client', () => {
                 server.start((err) => {
 
                     expect(err).to.not.exist();
-                    server.connections[0].plugins.nes._listener._wss.handleUpgrade = function () { };
 
                     const client = new Nes.Client('http://localhost:' + server.info.port);
+                    const orig = client._connect;
+                    client._connect = (...args) => {
+
+                        orig.apply(client, args);
+                        client._ws.onopen = null;
+                    };
 
                     let c = 0;
                     client.onConnect = function () {

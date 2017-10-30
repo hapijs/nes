@@ -1,17 +1,7 @@
 language: node_js
 
 node_js:
-  - "4"
-  - "6"
   - "8"
   - "node"
 
 sudo: false
-
-env:
-    - HAPI_VERSION="16"
-
-install:
-    - npm install
-    - npm install hapi@$HAPI_VERSION
-
