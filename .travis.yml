@@ -7,14 +7,3 @@ node_js:
   - "node"
 
 sudo: false
-
-env:
-    - HAPI_VERSION="13"
-    - HAPI_VERSION="14"
-    - HAPI_VERSION="15"
-    - HAPI_VERSION="16"
-
-install:
-    - npm install
-    - npm install hapi@$HAPI_VERSION
-
