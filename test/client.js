@@ -422,6 +422,28 @@ describe('Client', () => {
             await server.stop();
         });
 
+        it('aborts reconnecting', async () => {
+
+            const server = Hapi.server();
+            await server.register({ plugin: Nes, options: { auth: false } });
+
+            await server.start();
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            client.onError = Hoek.ignore;
+
+            let c = 0;
+            client.onConnect = () => ++c;
+
+            await client.connect({ delay: 100 });
+
+            client._ws.close();
+            await Hoek.wait(50);
+            await client.disconnect();
+
+            expect(c).to.equal(1);
+            await server.stop();
+        });
+
         it('does not reconnect automatically', async () => {
 
             const server = Hapi.server();
@@ -976,6 +998,30 @@ describe('Client', () => {
             expect(logged[1].message).to.equal('Received response for unknown request');
             expect(logged[1].type).to.equal('protocol');
 
+            client.disconnect();
+            await server.stop();
+        });
+
+        it('uses error when message is missing', async () => {
+
+            const server = Hapi.server();
+
+            const onSubscribe = (socket, path, params) => {
+
+                const error = Boom.badRequest();
+                delete error.output.payload.message;
+                throw error;
+            };
+
+            await server.register({ plugin: Nes, options: { auth: false } });
+
+            server.subscription('/', { onSubscribe });
+
+            await server.start();
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            await client.connect();
+
+            await expect(client.subscribe('/', Hoek.ignore)).to.reject('Bad Request');
             client.disconnect();
             await server.stop();
         });

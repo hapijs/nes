@@ -27,42 +27,47 @@ describe('Listener', () => {
     it('refuses connection while stopping', async () => {
 
         const server = Hapi.server();
-        await server.register({ plugin: Nes, options: { auth: false } });
 
-        server.ext('onPreStop', (srv) => {
+        const onConnection = (socket) => {
 
-            await Hoek.wait(50);
-        });
+            const orig = socket.disconnect;
+            socket.disconnect = async () => {
+
+                await Hoek.wait(50);
+                return orig.call(socket);
+            };
+        };
+
+        await server.register({ plugin: Nes, options: { auth: false, onConnection } });
 
         const onUnsubscribe = (socket, path, params) => {
 
             server.publish('/', 'ignore');
             server.eachSocket(Hoek.ignore);
             server.broadcast('ignore');
-
-            await Hoek.wait(50);
         };
 
         server.subscription('/', { onUnsubscribe });
         await server.start();
 
-        const client = new Nes.Client('http://localhost:' + server.info.port);
-        client.onError = Hoek.ignore;
-        await client.connect();
-        await client.subscribe('/', Hoek.ignore);
+        const team = new Teamwork({ meetings: 20 });
+
+        const clients = [];
+        for (let i = 0; i < 20; ++i) {
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            client.onDisconnect = () => team.attend();
+            client.onError = Hoek.ignore;
+            await client.connect();
+            await client.subscribe('/', Hoek.ignore);
+            clients.push(client);
+        }
 
         const client2 = new Nes.Client('http://localhost:' + server.info.port);
         client2.onError = Hoek.ignore;
 
-        const team = new Teamwork();
-        client.onDisconnect = () => team.attend();
-
-        await server.stop();
+        server.stop();
         await expect(client2.connect()).to.reject();
-
         await team.work;
-        client.disconnect();
-        client2.disconnect();
     });
 
     it('limits number of connections', async () => {
