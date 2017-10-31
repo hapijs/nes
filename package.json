@@ -14,25 +14,25 @@
     "node": ">=8.8.0"
   },
   "dependencies": {
-    "boom": "4.x.x",
-    "call": "3.x.x",
-    "cryptiles": "3.x.x",
-    "hoek": "4.x.x",
-    "iron": "4.x.x",
-    "items": "^2.1.x",
-    "joi": "10.x.x",
+    "boom": "6.x.x",
+    "call": "4.x.x",
+    "cryptiles": "4.x.x",
+    "hoek": "5.x.x",
+    "iron": "5.x.x",
+    "joi": "13.x.x",
+    "teamwork": "3.x.x",
     "ws": "3.x.x"
   },
   "peerDependencies": {
-    "hapi": ">=16.0.0"
+    "hapi": "17.0.0-rc9"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-preset-env": "^1.6.1",
     "babel-preset-minify": "^0.2.0",
-    "code": "4.x.x",
-    "hapi": "16.x.x",
-    "lab": "14.x.x"
+    "code": "5.x.x",
+    "hapi": "17.0.0-rc9",
+    "lab": "15.x.x"
   },
   "babel": {
     "presets": [

@@ -9,6 +9,7 @@ const Hoek = require('hoek');
 const Iron = require('iron');
 const Lab = require('lab');
 const Nes = require('../');
+const Teamwork = require('teamwork');
 
 
 // Declare internals
@@ -18,9 +19,7 @@ const internals = {};
 
 // Test shortcuts
 
-const lab = exports.lab = Lab.script();
-const describe = lab.describe;
-const it = lab.it;
+const { describe, it } = exports.lab = Lab.script();
 const expect = Code.expect;
 
 
@@ -28,1614 +27,1152 @@ describe('authentication', () => {
 
     const password = 'some_not_random_password_that_is_also_long_enough';
 
-    it('times out when hello is delayed', (done) => {
+    it('times out when hello is delayed', async () => {
 
-        const server = new Hapi.Server();
-        server.connection();
+        const server = Hapi.server();
 
         server.auth.scheme('custom', internals.implementation);
-        server.auth.strategy('default', 'custom', true);
+        server.auth.strategy('default', 'custom');
+        server.auth.default('default');
 
-        server.register({ register: Nes, options: { auth: { timeout: 100 } } }, (err) => {
+        await server.register({ plugin: Nes, options: { auth: { timeout: 100 } } });
 
-            expect(err).to.not.exist();
-
-            server.route({
-                method: 'GET',
-                path: '/',
-                handler: function (request, reply) {
-
-                    return reply('hello');
-                }
-            });
-
-            server.start((err) => {
-
-                expect(err).to.not.exist();
-                const client = new Nes.Client('http://localhost:' + server.info.port);
-                client._hello = Hoek.ignore;
-                client.onError = Hoek.ignore;
-                client.onDisconnect = () => {
-
-                    server.stop(done);
-                };
-
-                client.connect({ auth: { headers: { authorization: 'Custom john' } } }, Hoek.ignore);
-            });
+        server.route({
+            method: 'GET',
+            path: '/',
+            handler: () => 'hello'
         });
+
+        await server.start();
+        const client = new Nes.Client('http://localhost:' + server.info.port);
+        client._hello = () => Promise.resolve();
+        client.onError = Hoek.ignore;
+
+        const team = new Teamwork();
+        client.onDisconnect = () => team.attend();
+
+        await client.connect({ auth: { headers: { authorization: 'Custom john' } } });
+
+        await team.work;
+        await server.stop();
     });
 
-    it('disables timeout when hello is delayed', (done) => {
+    it('disables timeout when hello is delayed', async () => {
 
-        const server = new Hapi.Server();
-        server.connection();
+        const server = Hapi.server();
 
         server.auth.scheme('custom', internals.implementation);
-        server.auth.strategy('default', 'custom', true);
+        server.auth.strategy('default', 'custom');
+        server.auth.default('default');
 
-        server.register({ register: Nes, options: { auth: { timeout: false } } }, (err) => {
+        await server.register({ plugin: Nes, options: { auth: { timeout: false } } });
 
-            expect(err).to.not.exist();
-
-            server.route({
-                method: 'GET',
-                path: '/',
-                handler: function (request, reply) {
-
-                    return reply('hello');
-                }
-            });
-
-            server.start((err) => {
-
-                expect(err).to.not.exist();
-                const client = new Nes.Client('http://localhost:' + server.info.port);
-                client._hello = Hoek.ignore;
-                client.onError = Hoek.ignore;
-                setTimeout(() => server.stop(done), 100);
-                client.connect({ auth: { headers: { authorization: 'Custom john' } } }, Hoek.ignore);
-            });
+        server.route({
+            method: 'GET',
+            path: '/',
+            handler: () => 'hello'
         });
+
+        await server.start();
+        const client = new Nes.Client('http://localhost:' + server.info.port);
+        client._hello = () => Promise.resolve();
+        client.onError = Hoek.ignore;
+        const connecting = client.connect({ auth: { headers: { authorization: 'Custom john' } } });
+
+        await Hoek.wait(100);
+        await server.stop();
+        await connecting;
     });
 
     describe('cookie', () => {
 
-        it('protects an endpoint', (done) => {
+        it('protects an endpoint', async () => {
 
-            const server = new Hapi.Server();
-            server.connection();
+            const server = Hapi.server();
 
-            server.register({ register: Nes, options: { auth: { type: 'cookie' } } }, (err) => {
+            await server.register({ plugin: Nes, options: { auth: { type: 'cookie' } } });
 
-                expect(err).to.not.exist();
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
 
-                server.auth.scheme('custom', internals.implementation);
-                server.auth.strategy('default', 'custom', true);
-
-                server.route({
-                    method: 'GET',
-                    path: '/',
-                    handler: function (request, reply) {
-
-                        return reply('hello');
-                    }
-                });
-
-                server.start((err) => {
-
-                    expect(err).to.not.exist();
-                    server.inject({ url: '/nes/auth', headers: { authorization: 'Custom john' } }, (res) => {
-
-                        expect(res.result.status).to.equal('authenticated');
-
-                        const header = res.headers['set-cookie'][0];
-                        const cookie = header.match(/(?:[^\x00-\x20\(\)<>@\,;\:\\"\/\[\]\?\=\{\}\x7F]+)\s*=\s*(?:([^\x00-\x20\"\,\;\\\x7F]*))/);
-
-                        const client = new Nes.Client('http://localhost:' + server.info.port, { ws: { headers: { cookie: 'nes=' + cookie[1] } } });
-                        client.connect((err) => {
-
-                            expect(err).to.not.exist();
-                            client.request('/', (err, payload, statusCode, headers) => {
-
-                                expect(err).to.not.exist();
-                                expect(payload).to.equal('hello');
-                                expect(statusCode).to.equal(200);
-
-                                client.disconnect();
-                                server.stop(done);
-                            });
-                        });
-                    });
-                });
+            server.route({
+                method: 'GET',
+                path: '/',
+                handler: () => 'hello'
             });
+
+            await server.start();
+            const res = await server.inject({ url: '/nes/auth', headers: { authorization: 'Custom john' } });
+            expect(res.result.status).to.equal('authenticated');
+
+            const header = res.headers['set-cookie'][0];
+            const cookie = header.match(/(?:[^\x00-\x20\(\)<>@\,;\:\\"\/\[\]\?\=\{\}\x7F]+)\s*=\s*(?:([^\x00-\x20\"\,\;\\\x7F]*))/);
+
+            const client = new Nes.Client('http://localhost:' + server.info.port, { ws: { headers: { cookie: 'nes=' + cookie[1] } } });
+            await client.connect();
+
+            const { payload, statusCode } = await client.request('/');
+            expect(payload).to.equal('hello');
+            expect(statusCode).to.equal(200);
+
+            client.disconnect();
+            await server.stop();
         });
 
-        it('limits connections per user', (done) => {
+        it('limits connections per user', async () => {
 
-            const server = new Hapi.Server();
-            server.connection();
+            const server = Hapi.server();
 
-            server.register({ register: Nes, options: { auth: { type: 'cookie', maxConnectionsPerUser: 1, index: true } } }, (err) => {
+            await server.register({ plugin: Nes, options: { auth: { type: 'cookie', maxConnectionsPerUser: 1, index: true } } });
 
-                expect(err).to.not.exist();
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
 
-                server.auth.scheme('custom', internals.implementation);
-                server.auth.strategy('default', 'custom', true);
-
-                server.route({
-                    method: 'GET',
-                    path: '/',
-                    handler: function (request, reply) {
-
-                        return reply('hello');
-                    }
-                });
-
-                server.start((err) => {
-
-                    expect(err).to.not.exist();
-                    server.inject({ url: '/nes/auth', headers: { authorization: 'Custom john' } }, (res) => {
-
-                        expect(res.result.status).to.equal('authenticated');
-
-                        const header = res.headers['set-cookie'][0];
-                        const cookie = header.match(/(?:[^\x00-\x20\(\)<>@\,;\:\\"\/\[\]\?\=\{\}\x7F]+)\s*=\s*(?:([^\x00-\x20\"\,\;\\\x7F]*))/);
-
-                        const client = new Nes.Client('http://localhost:' + server.info.port, { ws: { headers: { cookie: 'nes=' + cookie[1] } } });
-                        client.connect((err) => {
-
-                            expect(err).to.not.exist();
-                            const client2 = new Nes.Client('http://localhost:' + server.info.port, { ws: { headers: { cookie: 'nes=' + cookie[1] } } });
-                            client2.connect((err) => {
-
-                                expect(err).to.be.an.error('Too many connections for the authenticated user');
-
-                                client.disconnect();
-                                client2.disconnect();
-                                server.stop(done);
-                            });
-                        });
-                    });
-                });
+            server.route({
+                method: 'GET',
+                path: '/',
+                handler: () => 'hello'
             });
+
+            await server.start();
+            const res = await server.inject({ url: '/nes/auth', headers: { authorization: 'Custom john' } });
+            expect(res.result.status).to.equal('authenticated');
+
+            const header = res.headers['set-cookie'][0];
+            const cookie = header.match(/(?:[^\x00-\x20\(\)<>@\,;\:\\"\/\[\]\?\=\{\}\x7F]+)\s*=\s*(?:([^\x00-\x20\"\,\;\\\x7F]*))/);
+
+            const client = new Nes.Client('http://localhost:' + server.info.port, { ws: { headers: { cookie: 'nes=' + cookie[1] } } });
+            await client.connect();
+
+            const client2 = new Nes.Client('http://localhost:' + server.info.port, { ws: { headers: { cookie: 'nes=' + cookie[1] } } });
+            await expect(client2.connect()).to.reject('Too many connections for the authenticated user');
+
+            client.disconnect();
+            client2.disconnect();
+            await server.stop();
         });
 
-        it('protects an endpoint (no default auth)', (done) => {
+        it('protects an endpoint (no default auth)', async () => {
 
-            const server = new Hapi.Server();
-            server.connection();
+            const server = Hapi.server();
 
             server.auth.scheme('custom', internals.implementation);
             server.auth.strategy('default', 'custom');
 
-            server.register({ register: Nes, options: { auth: { type: 'cookie', route: 'default' } } }, (err) => {
+            await server.register({ plugin: Nes, options: { auth: { type: 'cookie', route: 'default' } } });
 
-                expect(err).to.not.exist();
-
-                server.route({
-                    method: 'GET',
-                    path: '/',
-                    config: {
-                        auth: 'default',
-                        handler: function (request, reply) {
-
-                            return reply('hello');
-                        }
-                    }
-                });
-
-                server.start((err) => {
-
-                    expect(err).to.not.exist();
-                    server.inject({ url: '/nes/auth', headers: { authorization: 'Custom john' } }, (res) => {
-
-                        expect(res.result.status).to.equal('authenticated');
-
-                        const header = res.headers['set-cookie'][0];
-                        const cookie = header.match(/(?:[^\x00-\x20\(\)<>@\,;\:\\"\/\[\]\?\=\{\}\x7F]+)\s*=\s*(?:([^\x00-\x20\"\,\;\\\x7F]*))/);
-
-                        const client = new Nes.Client('http://localhost:' + server.info.port, { ws: { headers: { cookie: 'nes=' + cookie[1] } } });
-                        client.connect((err) => {
-
-                            expect(err).to.not.exist();
-                            client.request('/', (err, payload, statusCode, headers) => {
-
-                                expect(err).to.not.exist();
-                                expect(payload).to.equal('hello');
-                                expect(statusCode).to.equal(200);
-
-                                client.disconnect();
-                                server.stop(done);
-                            });
-                        });
-                    });
-                });
+            server.route({
+                method: 'GET',
+                path: '/',
+                config: {
+                    auth: 'default',
+                    handler: () => 'hello'
+                }
             });
+
+            await server.start();
+            const res = await server.inject({ url: '/nes/auth', headers: { authorization: 'Custom john' } });
+            expect(res.result.status).to.equal('authenticated');
+
+            const header = res.headers['set-cookie'][0];
+            const cookie = header.match(/(?:[^\x00-\x20\(\)<>@\,;\:\\"\/\[\]\?\=\{\}\x7F]+)\s*=\s*(?:([^\x00-\x20\"\,\;\\\x7F]*))/);
+
+            const client = new Nes.Client('http://localhost:' + server.info.port, { ws: { headers: { cookie: 'nes=' + cookie[1] } } });
+            await client.connect();
+
+            const { payload, statusCode } = await client.request('/');
+            expect(payload).to.equal('hello');
+            expect(statusCode).to.equal(200);
+
+            client.disconnect();
+            await server.stop();
         });
 
-        it('errors on missing auth on an authentication endpoint', (done) => {
+        it('errors on missing auth on an authentication endpoint', async () => {
 
-            const server = new Hapi.Server();
-            server.connection();
+            const server = Hapi.server();
 
             server.auth.scheme('custom', internals.implementation);
-            server.auth.strategy('default', 'custom', true);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
 
-            server.register({ register: Nes, options: { auth: { type: 'cookie', password, route: { mode: 'optional' } } } }, (err) => {
+            await server.register({ plugin: Nes, options: { auth: { type: 'cookie', password, route: { mode: 'optional' } } } });
 
-                expect(err).to.not.exist();
-
-                server.route({
-                    method: 'GET',
-                    path: '/',
-                    handler: function (request, reply) {
-
-                        return reply('hello');
-                    }
-                });
-
-                server.start((err) => {
-
-                    expect(err).to.not.exist();
-                    server.inject('/nes/auth', (res) => {
-
-                        expect(res.result.status).to.equal('unauthenticated');
-
-                        const client = new Nes.Client('http://localhost:' + server.info.port);
-                        client.connect((err) => {
-
-                            expect(err).to.not.exist();
-                            client.request('/', (err, payload, statusCode, headers) => {
-
-                                expect(err).to.exist();
-                                expect(err.message).to.equal('Missing authentication');
-                                expect(err.statusCode).to.equal(401);
-
-                                client.disconnect();
-                                server.stop(done);
-                            });
-                        });
-                    });
-                });
+            server.route({
+                method: 'GET',
+                path: '/',
+                handler: () => 'hello'
             });
+
+            await server.start();
+            const res = await server.inject('/nes/auth');
+            expect(res.result.status).to.equal('unauthenticated');
+
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            await client.connect();
+
+            const err = await expect(client.request('/')).to.reject('Missing authentication');
+            expect(err.statusCode).to.equal(401);
+
+            client.disconnect();
+            await server.stop();
         });
 
-        it('errors on missing auth on an authentication endpoint (other cookies)', (done) => {
+        it('errors on missing auth on an authentication endpoint (other cookies)', async () => {
 
-            const server = new Hapi.Server();
-            server.connection();
+            const server = Hapi.server();
 
             server.auth.scheme('custom', internals.implementation);
-            server.auth.strategy('default', 'custom', true);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
 
-            server.register({ register: Nes, options: { auth: { type: 'cookie', password, route: { mode: 'optional' } } } }, (err) => {
+            await server.register({ plugin: Nes, options: { auth: { type: 'cookie', password, route: { mode: 'optional' } } } });
 
-                expect(err).to.not.exist();
-
-                server.route({
-                    method: 'GET',
-                    path: '/',
-                    handler: function (request, reply) {
-
-                        return reply('hello');
-                    }
-                });
-
-                server.start((err) => {
-
-                    expect(err).to.not.exist();
-                    server.inject('/nes/auth', (res) => {
-
-                        expect(res.result.status).to.equal('unauthenticated');
-
-                        const client = new Nes.Client('http://localhost:' + server.info.port, { ws: { headers: { cookie: 'xnes=123' } } });
-                        client.connect((err) => {
-
-                            expect(err).to.not.exist();
-                            client.request('/', (err, payload, statusCode, headers) => {
-
-                                expect(err).to.exist();
-                                expect(err.message).to.equal('Missing authentication');
-                                expect(err.statusCode).to.equal(401);
-
-                                client.disconnect();
-                                server.stop(done);
-                            });
-                        });
-                    });
-                });
+            server.route({
+                method: 'GET',
+                path: '/',
+                handler: () => 'hello'
             });
+
+            await server.start();
+            const res = await server.inject('/nes/auth');
+            expect(res.result.status).to.equal('unauthenticated');
+
+            const client = new Nes.Client('http://localhost:' + server.info.port, { ws: { headers: { cookie: 'xnes=123' } } });
+            await client.connect();
+
+            const err = await expect(client.request('/')).to.reject('Missing authentication');
+            expect(err.statusCode).to.equal(401);
+
+            client.disconnect();
+            await server.stop();
         });
 
-        it('errors on double auth', (done) => {
+        it('errors on double auth', async () => {
 
-            const server = new Hapi.Server();
-            server.connection();
+            const server = Hapi.server();
 
-            server.register({ register: Nes, options: { auth: { type: 'cookie' } } }, (err) => {
+            await server.register({ plugin: Nes, options: { auth: { type: 'cookie' } } });
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
 
-                expect(err).to.not.exist();
-                server.auth.scheme('custom', internals.implementation);
-                server.auth.strategy('default', 'custom', true);
-
-                server.route({
-                    method: 'GET',
-                    path: '/',
-                    handler: function (request, reply) {
-
-                        return reply('hello');
-                    }
-                });
-
-                server.start((err) => {
-
-                    expect(err).to.not.exist();
-                    server.inject({ url: '/nes/auth', headers: { authorization: 'Custom john' } }, (res) => {
-
-                        expect(res.result.status).to.equal('authenticated');
-
-                        const header = res.headers['set-cookie'][0];
-                        const cookie = header.match(/(?:[^\x00-\x20\(\)<>@\,;\:\\"\/\[\]\?\=\{\}\x7F]+)\s*=\s*(?:([^\x00-\x20\"\,\;\\\x7F]*))/);
-
-                        const client = new Nes.Client('http://localhost:' + server.info.port, { ws: { headers: { cookie: 'nes=' + cookie[1] } } });
-                        client.connect({ auth: 'something' }, (err) => {
-
-                            expect(err).to.exist();
-                            expect(err.message).to.equal('Connection already authenticated');
-                            expect(err.statusCode).to.equal(400);
-
-                            client.disconnect();
-                            server.stop(done);
-                        });
-                    });
-                });
+            server.route({
+                method: 'GET',
+                path: '/',
+                handler: () => 'hello'
             });
+
+            await server.start();
+            const res = await server.inject({ url: '/nes/auth', headers: { authorization: 'Custom john' } });
+            expect(res.result.status).to.equal('authenticated');
+
+            const header = res.headers['set-cookie'][0];
+            const cookie = header.match(/(?:[^\x00-\x20\(\)<>@\,;\:\\"\/\[\]\?\=\{\}\x7F]+)\s*=\s*(?:([^\x00-\x20\"\,\;\\\x7F]*))/);
+
+            const client = new Nes.Client('http://localhost:' + server.info.port, { ws: { headers: { cookie: 'nes=' + cookie[1] } } });
+            const err = await expect(client.connect({ auth: 'something' })).to.reject('Connection already authenticated');
+            expect(err.statusCode).to.equal(400);
+
+            client.disconnect();
+            await server.stop();
         });
 
-        it('errors on invalid cookie', (done) => {
+        it('errors on invalid cookie', async () => {
 
-            const server = new Hapi.Server();
-            server.connection();
+            const server = Hapi.server();
 
-            server.register({ register: Nes, options: { auth: { type: 'cookie' } } }, (err) => {
-
-                expect(err).to.not.exist();
-
-                server.auth.scheme('custom', internals.implementation);
-                server.auth.strategy('default', 'custom', true);
-
-                server.route({
-                    method: 'GET',
-                    path: '/',
-                    handler: function (request, reply) {
-
-                        return reply('hello');
-                    }
-                });
-
-                server.start((err) => {
-
-                    expect(err).to.not.exist();
-                    const client = new Nes.Client('http://localhost:' + server.info.port, { ws: { headers: { cookie: '"' } } });
-                    client.connect((err) => {
-
-                        expect(err).to.be.an.error('Invalid nes authentication cookie');
-                        client.disconnect();
-                        server.stop(done);
-                    });
-                });
-            });
-        });
-
-        it('overrides cookie path', (done) => {
-
-            const server = new Hapi.Server();
-            server.connection();
+            await server.register({ plugin: Nes, options: { auth: { type: 'cookie' } } });
 
             server.auth.scheme('custom', internals.implementation);
-            server.auth.strategy('default', 'custom', true);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
 
-            server.register({ register: Nes, options: { auth: { type: 'cookie', password, path: '/nes/xyz' } } }, (err) => {
-
-                expect(err).to.not.exist();
-
-                server.route({
-                    method: 'GET',
-                    path: '/',
-                    handler: function (request, reply) {
-
-                        return reply('hello');
-                    }
-                });
-
-                server.inject({ url: '/nes/auth', headers: { authorization: 'Custom john' } }, (res) => {
-
-                    expect(res.result.status).to.equal('authenticated');
-
-                    const header = res.headers['set-cookie'][0];
-                    expect(header).to.contain('Path=/nes/xyz');
-                    done();
-                });
+            server.route({
+                method: 'GET',
+                path: '/',
+                handler: () => 'hello'
             });
+
+            await server.start();
+            const client = new Nes.Client('http://localhost:' + server.info.port, { ws: { headers: { cookie: '"' } } });
+            await expect(client.connect()).to.reject('Invalid nes authentication cookie');
+            client.disconnect();
+            await server.stop();
+        });
+
+        it('overrides cookie path', async () => {
+
+            const server = Hapi.server();
+
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
+
+            await server.register({ plugin: Nes, options: { auth: { type: 'cookie', password, path: '/nes/xyz' } } });
+
+            server.route({
+                method: 'GET',
+                path: '/',
+                handler: () => 'hello'
+            });
+
+            const res = await server.inject({ url: '/nes/auth', headers: { authorization: 'Custom john' } });
+            expect(res.result.status).to.equal('authenticated');
+
+            const header = res.headers['set-cookie'][0];
+            expect(header).to.contain('Path=/nes/xyz');
         });
     });
 
     describe('token', () => {
 
-        it('protects an endpoint', (done) => {
+        it('protects an endpoint', async () => {
 
-            const server = new Hapi.Server();
-            server.connection();
+            const server = Hapi.server();
 
             server.auth.scheme('custom', internals.implementation);
-            server.auth.strategy('default', 'custom', true);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
 
-            server.register({ register: Nes, options: { auth: { type: 'token', password } } }, (err) => {
+            await server.register({ plugin: Nes, options: { auth: { type: 'token', password } } });
 
-                expect(err).to.not.exist();
-
-                server.route({
-                    method: 'GET',
-                    path: '/',
-                    handler: function (request, reply) {
-
-                        return reply('hello');
-                    }
-                });
-
-                server.start((err) => {
-
-                    expect(err).to.not.exist();
-                    server.inject({ url: '/nes/auth', headers: { authorization: 'Custom john' } }, (res) => {
-
-                        expect(res.result.status).to.equal('authenticated');
-                        expect(res.result.token).to.exist();
-
-                        const client = new Nes.Client('http://localhost:' + server.info.port);
-                        client.connect({ auth: res.result.token }, (err) => {
-
-                            expect(err).to.not.exist();
-                            client.request('/', (err, payload, statusCode, headers) => {
-
-                                expect(err).to.not.exist();
-                                expect(payload).to.equal('hello');
-                                expect(statusCode).to.equal(200);
-
-                                client.disconnect();
-                                server.stop(done);
-                            });
-                        });
-                    });
-                });
+            server.route({
+                method: 'GET',
+                path: '/',
+                handler: () => 'hello'
             });
+
+            await server.start();
+            const res = await server.inject({ url: '/nes/auth', headers: { authorization: 'Custom john' } });
+            expect(res.result.status).to.equal('authenticated');
+            expect(res.result.token).to.exist();
+
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            await client.connect({ auth: res.result.token });
+            const { payload, statusCode } = await client.request('/');
+            expect(payload).to.equal('hello');
+            expect(statusCode).to.equal(200);
+
+            client.disconnect();
+            await server.stop();
         });
 
-        it('protects an endpoint (token with iron settings)', (done) => {
+        it('protects an endpoint (token with iron settings)', async () => {
 
-            const server = new Hapi.Server();
-            server.connection();
+            const server = Hapi.server();
 
             server.auth.scheme('custom', internals.implementation);
-            server.auth.strategy('default', 'custom', true);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
 
-            server.register({ register: Nes, options: { auth: { type: 'token', password, iron: Iron.defaults } } }, (err) => {
+            await server.register({ plugin: Nes, options: { auth: { type: 'token', password, iron: Iron.defaults } } });
 
-                expect(err).to.not.exist();
-
-                server.route({
-                    method: 'GET',
-                    path: '/',
-                    handler: function (request, reply) {
-
-                        return reply('hello');
-                    }
-                });
-
-                server.start((err) => {
-
-                    expect(err).to.not.exist();
-                    server.inject({ url: '/nes/auth', headers: { authorization: 'Custom john' } }, (res) => {
-
-                        expect(res.result.status).to.equal('authenticated');
-                        expect(res.result.token).to.exist();
-
-                        const client = new Nes.Client('http://localhost:' + server.info.port);
-                        client.connect({ auth: res.result.token }, (err) => {
-
-                            expect(err).to.not.exist();
-                            client.request('/', (err, payload, statusCode, headers) => {
-
-                                expect(err).to.not.exist();
-                                expect(payload).to.equal('hello');
-                                expect(statusCode).to.equal(200);
-
-                                client.disconnect();
-                                server.stop(done);
-                            });
-                        });
-                    });
-                });
+            server.route({
+                method: 'GET',
+                path: '/',
+                handler: () => 'hello'
             });
+
+            await server.start();
+            const res = await server.inject({ url: '/nes/auth', headers: { authorization: 'Custom john' } });
+            expect(res.result.status).to.equal('authenticated');
+            expect(res.result.token).to.exist();
+
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            await client.connect({ auth: res.result.token });
+            const { payload, statusCode } = await client.request('/');
+            expect(payload).to.equal('hello');
+            expect(statusCode).to.equal(200);
+
+            client.disconnect();
+            await server.stop();
         });
 
-        it('errors on invalid token', (done) => {
+        it('errors on invalid token', async () => {
 
-            const server = new Hapi.Server();
-            server.connection();
+            const server = Hapi.server();
 
             server.auth.scheme('custom', internals.implementation);
-            server.auth.strategy('default', 'custom', true);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
 
-            server.register({ register: Nes, options: { auth: { type: 'token', password } } }, (err) => {
+            await server.register({ plugin: Nes, options: { auth: { type: 'token', password } } });
 
-                expect(err).to.not.exist();
-
-                server.route({
-                    method: 'GET',
-                    path: '/',
-                    handler: function (request, reply) {
-
-                        return reply('hello');
-                    }
-                });
-
-                server.start((err) => {
-
-                    expect(err).to.not.exist();
-                    const client = new Nes.Client('http://localhost:' + server.info.port);
-                    client.connect({ auth: 'abc' }, (err) => {
-
-                        expect(err).to.exist();
-                        expect(err.message).to.equal('Invalid token');
-                        expect(err.statusCode).to.equal(401);
-
-                        client.disconnect();
-                        server.stop(done);
-                    });
-                });
+            server.route({
+                method: 'GET',
+                path: '/',
+                handler: () => 'hello'
             });
+
+            await server.start();
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const err = await expect(client.connect({ auth: 'abc' })).to.reject('Invalid token');
+            expect(err.statusCode).to.equal(401);
+
+            client.disconnect();
+            await server.stop();
         });
 
-        it('errors on missing token', (done) => {
+        it('errors on missing token', async () => {
 
-            const server = new Hapi.Server();
-            server.connection();
+            const server = Hapi.server();
 
             server.auth.scheme('custom', internals.implementation);
-            server.auth.strategy('default', 'custom', true);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
 
-            server.register({ register: Nes, options: { auth: { type: 'token', password } } }, (err) => {
+            await server.register({ plugin: Nes, options: { auth: { type: 'token', password } } });
 
-                expect(err).to.not.exist();
-
-                server.route({
-                    method: 'GET',
-                    path: '/',
-                    handler: function (request, reply) {
-
-                        return reply('hello');
-                    }
-                });
-
-                server.start((err) => {
-
-                    expect(err).to.not.exist();
-                    const client = new Nes.Client('http://localhost:' + server.info.port);
-                    client.connect({ auth: '' }, (err) => {
-
-                        expect(err).to.exist();
-                        expect(err.message).to.equal('Connection requires authentication');
-                        expect(err.statusCode).to.equal(401);
-
-                        client.disconnect();
-                        server.stop(done);
-                    });
-                });
+            server.route({
+                method: 'GET',
+                path: '/',
+                handler: () => 'hello'
             });
+
+            await server.start();
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const err = await expect(client.connect({ auth: '' })).to.reject('Connection requires authentication');
+            expect(err.statusCode).to.equal(401);
+
+            client.disconnect();
+            await server.stop();
         });
 
-        it('errors on invalid iron password', (done) => {
+        it('errors on invalid iron password', async () => {
 
-            const server = new Hapi.Server();
-            server.connection();
+            const server = Hapi.server();
 
             server.auth.scheme('custom', internals.implementation);
-            server.auth.strategy('default', 'custom', true);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
 
-            server.register({ register: Nes, options: { auth: { type: 'token', password: new Buffer('') } } }, (err) => {
-
-                expect(err).to.not.exist();
-                server.inject({ url: '/nes/auth', headers: { authorization: 'Custom john' } }, (res) => {
-
-                    expect(res.statusCode).to.equal(500);
-                    done();
-                });
-            });
+            await server.register({ plugin: Nes, options: { auth: { type: 'token', password: new Buffer('') } } });
+            const res = await server.inject({ url: '/nes/auth', headers: { authorization: 'Custom john' } });
+            expect(res.statusCode).to.equal(500);
         });
 
-        it('errors on double authentication', (done) => {
+        it('errors on double authentication', async () => {
 
-            const server = new Hapi.Server();
-            server.connection();
+            const server = Hapi.server();
 
             server.auth.scheme('custom', internals.implementation);
-            server.auth.strategy('default', 'custom', true);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
 
-            server.register({ register: Nes, options: { auth: { type: 'token', password } } }, (err) => {
+            await server.register({ plugin: Nes, options: { auth: { type: 'token', password } } });
+            await server.start();
+            const res = await server.inject({ url: '/nes/auth', headers: { authorization: 'Custom john' } });
+            expect(res.result.status).to.equal('authenticated');
+            expect(res.result.token).to.exist();
 
-                expect(err).to.not.exist();
-                server.start((err) => {
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            await client.connect({ auth: res.result.token });
+            const err = await expect(client._hello(res.result.token)).to.reject('Connection already initialized');
+            expect(err.statusCode).to.equal(400);
 
-                    expect(err).to.not.exist();
-                    server.inject({ url: '/nes/auth', headers: { authorization: 'Custom john' } }, (res) => {
-
-                        expect(res.result.status).to.equal('authenticated');
-                        expect(res.result.token).to.exist();
-
-                        const client = new Nes.Client('http://localhost:' + server.info.port);
-                        client.connect({ auth: res.result.token }, (err) => {
-
-                            expect(err).to.not.exist();
-                            client._hello(res.result.token, (err) => {
-
-                                expect(err).to.exist();
-                                expect(err.message).to.equal('Connection already initialized');
-                                expect(err.statusCode).to.equal(400);
-
-                                client.disconnect();
-                                server.stop(done);
-                            });
-                        });
-                    });
-                });
-            });
+            client.disconnect();
+            await server.stop();
         });
     });
 
     describe('direct', () => {
 
-        it('protects an endpoint', (done) => {
+        it('protects an endpoint', async () => {
 
-            const server = new Hapi.Server();
-            server.connection();
-
-            server.auth.scheme('custom', internals.implementation);
-            server.auth.strategy('default', 'custom', true);
-
-            server.register(Nes, (err) => {
-
-                expect(err).to.not.exist();
-
-                server.route({
-                    method: 'GET',
-                    path: '/',
-                    handler: function (request, reply) {
-
-                        return reply('hello');
-                    }
-                });
-
-                server.start((err) => {
-
-                    expect(err).to.not.exist();
-                    const client = new Nes.Client('http://localhost:' + server.info.port);
-                    client.connect({ auth: { headers: { authorization: 'Custom john' } } }, (err) => {
-
-                        expect(err).to.not.exist();
-                        client.request('/', (err, payload, statusCode, headers) => {
-
-                            expect(err).to.not.exist();
-                            expect(payload).to.equal('hello');
-                            expect(statusCode).to.equal(200);
-
-                            client.disconnect();
-                            server.stop(done);
-                        });
-                    });
-                });
-            });
-        });
-
-        it('limits number of connections per user', (done) => {
-
-            const server = new Hapi.Server();
-            server.connection();
+            const server = Hapi.server();
 
             server.auth.scheme('custom', internals.implementation);
-            server.auth.strategy('default', 'custom', true);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
 
-            server.register({ register: Nes, options: { auth: { index: true, maxConnectionsPerUser: 1 } } }, (err) => {
+            await server.register(Nes);
 
-                expect(err).to.not.exist();
-
-                server.route({
-                    method: 'GET',
-                    path: '/',
-                    handler: function (request, reply) {
-
-                        return reply('hello');
-                    }
-                });
-
-                server.start((err) => {
-
-                    expect(err).to.not.exist();
-                    const client = new Nes.Client('http://localhost:' + server.info.port);
-                    client.connect({ auth: { headers: { authorization: 'Custom john' } } }, (err) => {
-
-                        expect(err).to.not.exist();
-                        const client2 = new Nes.Client('http://localhost:' + server.info.port);
-                        client2.connect({ auth: { headers: { authorization: 'Custom john' } } }, (err) => {
-
-                            expect(err).to.be.an.error('Too many connections for the authenticated user');
-
-                            client.disconnect();
-                            client2.disconnect();
-                            server.stop(done);
-                        });
-                    });
-                });
+            server.route({
+                method: 'GET',
+                path: '/',
+                handler: () => 'hello'
             });
+
+            await server.start();
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            await client.connect({ auth: { headers: { authorization: 'Custom john' } } });
+            const { payload, statusCode } = await client.request('/');
+            expect(payload).to.equal('hello');
+            expect(statusCode).to.equal(200);
+
+            client.disconnect();
+            await server.stop();
         });
 
-        it('protects an endpoint with prefix', (done) => {
+        it('limits number of connections per user', async () => {
 
-            const server = new Hapi.Server();
-            server.connection();
+            const server = Hapi.server();
 
             server.auth.scheme('custom', internals.implementation);
-            server.auth.strategy('default', 'custom', true);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
 
-            server.register(Nes, { routes: { prefix: '/foo' } }, (err) => {
+            await server.register({ plugin: Nes, options: { auth: { index: true, maxConnectionsPerUser: 1 } } });
 
-                expect(err).to.not.exist();
-
-                server.route({
-                    method: 'GET',
-                    path: '/',
-                    handler: function (request, reply) {
-
-                        return reply('hello');
-                    }
-                });
-
-                server.start((err) => {
-
-                    expect(err).to.not.exist();
-                    const client = new Nes.Client('http://localhost:' + server.info.port);
-                    client.connect({ auth: { headers: { authorization: 'Custom john' } } }, (err) => {
-
-                        expect(err).to.not.exist();
-                        client.request('/', (err, payload, statusCode, headers) => {
-
-                            expect(err).to.not.exist();
-                            expect(payload).to.equal('hello');
-                            expect(statusCode).to.equal(200);
-
-                            client.disconnect();
-                            server.stop(done);
-                        });
-                    });
-                });
+            server.route({
+                method: 'GET',
+                path: '/',
+                handler: () => 'hello'
             });
+
+            await server.start();
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            await client.connect({ auth: { headers: { authorization: 'Custom john' } } });
+
+            const client2 = new Nes.Client('http://localhost:' + server.info.port);
+            await expect(client2.connect({ auth: { headers: { authorization: 'Custom john' } } })).to.reject('Too many connections for the authenticated user');
+
+            client.disconnect();
+            client2.disconnect();
+            await server.stop();
         });
 
-        it('reconnects automatically', (done) => {
+        it('protects an endpoint with prefix', async () => {
 
-            const server = new Hapi.Server();
-            server.connection();
+            const server = Hapi.server();
 
             server.auth.scheme('custom', internals.implementation);
-            server.auth.strategy('default', 'custom', true);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
 
-            server.register({ register: Nes, options: { auth: { type: 'direct', password } } }, (err) => {
+            await server.register(Nes, { routes: { prefix: '/foo' } });
 
-                expect(err).to.not.exist();
-
-                server.route({
-                    method: 'GET',
-                    path: '/',
-                    handler: function (request, reply) {
-
-                        return reply('hello');
-                    }
-                });
-
-                server.start((err) => {
-
-                    expect(err).to.not.exist();
-                    const client = new Nes.Client('http://localhost:' + server.info.port);
-
-                    let e = 0;
-                    client.onError = function (err) {
-
-                        expect(err).to.exist();
-                        ++e;
-                    };
-
-                    let c = 0;
-                    client.onConnect = function () {
-
-                        ++c;
-                    };
-
-                    expect(c).to.equal(0);
-                    expect(e).to.equal(0);
-                    client.connect({ delay: 10, auth: { headers: { authorization: 'Custom john' } } }, () => {
-
-                        expect(c).to.equal(1);
-                        expect(e).to.equal(0);
-
-                        client._ws.close();
-                        setTimeout(() => {
-
-                            expect(c).to.equal(2);
-                            expect(e).to.equal(0);
-
-                            client.request('/', (err, payload, statusCode, headers) => {
-
-                                expect(err).to.not.exist();
-                                expect(payload).to.equal('hello');
-                                expect(statusCode).to.equal(200);
-
-                                client.disconnect();
-                                server.stop(done);
-                            });
-                        }, 40);
-                    });
-                });
+            server.route({
+                method: 'GET',
+                path: '/',
+                handler: () => 'hello'
             });
+
+            await server.start();
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            await client.connect({ auth: { headers: { authorization: 'Custom john' } } });
+
+            const { payload, statusCode } = await client.request('/');
+            expect(payload).to.equal('hello');
+            expect(statusCode).to.equal(200);
+
+            client.disconnect();
+            await server.stop();
         });
 
-        it('does not reconnect when auth fails', (done) => {
+        it('reconnects automatically', async () => {
 
-            const server = new Hapi.Server();
-            server.connection();
+            const server = Hapi.server();
 
             server.auth.scheme('custom', internals.implementation);
-            server.auth.strategy('default', 'custom', true);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
 
-            server.register({ register: Nes, options: { auth: { type: 'direct', password } } }, (err) => {
+            await server.register({ plugin: Nes, options: { auth: { type: 'direct', password } } });
 
-                expect(err).to.not.exist();
-                server.start((err) => {
-
-                    expect(err).to.not.exist();
-                    const client = new Nes.Client('http://localhost:' + server.info.port);
-
-                    let c = 0;
-                    client.onConnect = function () {
-
-                        ++c;
-                    };
-
-                    expect(c).to.equal(0);
-                    client.connect({ delay: 10, auth: { headers: { authorization: 'Custom steve' } } }, (err) => {
-
-                        expect(err).to.exist();
-                        expect(c).to.equal(0);
-
-                        setTimeout(() => {
-
-                            expect(c).to.equal(0);
-
-                            client.disconnect();
-                            server.stop(done);
-                        }, 20);
-                    });
-                });
+            server.route({
+                method: 'GET',
+                path: '/',
+                handler: () => 'hello'
             });
+
+            await server.start();
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+
+            let e = 0;
+            client.onError = (err) => {
+
+                expect(err).to.exist();
+                ++e;
+            };
+
+            let c = 0;
+            client.onConnect = () => ++c;
+
+            expect(c).to.equal(0);
+            expect(e).to.equal(0);
+            await client.connect({ delay: 10, auth: { headers: { authorization: 'Custom john' } } });
+
+            expect(c).to.equal(1);
+            expect(e).to.equal(0);
+
+            client._ws.close();
+            await Hoek.wait(40);
+
+            expect(c).to.equal(2);
+            expect(e).to.equal(0);
+
+            const { payload, statusCode } = await client.request('/');
+            expect(payload).to.equal('hello');
+            expect(statusCode).to.equal(200);
+
+            client.disconnect();
+            await server.stop();
         });
 
-        it('fails authentication', (done) => {
+        it('does not reconnect when auth fails', async () => {
 
-            const server = new Hapi.Server();
-            server.connection();
+            const server = Hapi.server();
 
             server.auth.scheme('custom', internals.implementation);
-            server.auth.strategy('default', 'custom', true);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
 
-            server.register({ register: Nes, options: { auth: { type: 'direct', password } } }, (err) => {
+            await server.register({ plugin: Nes, options: { auth: { type: 'direct', password } } });
+            await server.start();
+            const client = new Nes.Client('http://localhost:' + server.info.port);
 
-                expect(err).to.not.exist();
+            let c = 0;
+            client.onConnect = () => ++c;
 
-                server.start((err) => {
+            expect(c).to.equal(0);
+            await expect(client.connect({ delay: 10, auth: { headers: { authorization: 'Custom steve' } } })).to.reject();
+            expect(c).to.equal(0);
 
-                    expect(err).to.not.exist();
-                    const client = new Nes.Client('http://localhost:' + server.info.port);
-                    client.connect({ auth: { headers: { authorization: 'Custom steve' } } }, (err) => {
+            await Hoek.wait(20);
+            expect(c).to.equal(0);
 
-                        expect(err).to.exist();
-                        expect(err.message).to.equal('Unknown user');
-                        client.disconnect();
-                        server.stop(done);
-                    });
-                });
-            });
+            client.disconnect();
+            await server.stop();
         });
 
-        it('fails authentication', (done) => {
+        it('fails authentication', async () => {
 
-            const server = new Hapi.Server();
-            server.connection();
+            const server = Hapi.server();
 
             server.auth.scheme('custom', internals.implementation);
-            server.auth.strategy('default', 'custom', true);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
 
-            server.register({ register: Nes, options: { auth: { type: 'direct', password } } }, (err) => {
+            await server.register({ plugin: Nes, options: { auth: { type: 'direct', password } } });
 
-                expect(err).to.not.exist();
-
-                server.start((err) => {
-
-                    expect(err).to.not.exist();
-                    const client = new Nes.Client('http://localhost:' + server.info.port);
-                    client.connect({ auth: '' }, (err) => {
-
-                        expect(err).to.exist();
-                        expect(err.message).to.equal('Connection requires authentication');
-                        client.disconnect();
-                        server.stop(done);
-                    });
-                });
-            });
+            await server.start();
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            await expect(client.connect({ auth: { headers: { authorization: 'Custom steve' } } })).to.reject('Unknown user');
+            client.disconnect();
+            await server.stop();
         });
 
-        it('subscribes to a path', (done) => {
+        it('fails authentication', async () => {
 
-            const server = new Hapi.Server();
-            server.connection();
+            const server = Hapi.server();
 
             server.auth.scheme('custom', internals.implementation);
-            server.auth.strategy('default', 'custom', true);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
 
-            server.register({ register: Nes, options: { auth: { type: 'direct', password } } }, (err) => {
+            await server.register({ plugin: Nes, options: { auth: { type: 'direct', password } } });
 
-                expect(err).to.not.exist();
-
-                server.subscription('/');
-
-                server.start((err) => {
-
-                    expect(err).to.not.exist();
-                    const client = new Nes.Client('http://localhost:' + server.info.port);
-                    client.connect({ auth: { headers: { authorization: 'Custom john' } } }, (err) => {
-
-                        expect(err).to.not.exist();
-                        const handler = (update) => {
-
-                            expect(client.subscriptions()).to.equal(['/']);
-                            expect(update).to.equal('heya');
-                            client.disconnect();
-                            server.stop(done);
-                        };
-
-                        client.subscribe('/', handler, (err) => {
-
-                            expect(err).to.not.exist();
-                            server.publish('/', 'heya');
-                        });
-                    });
-                });
-            });
+            await server.start();
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            await expect(client.connect({ auth: '' })).to.reject('Connection requires authentication');
+            client.disconnect();
+            await server.stop();
         });
 
-        it('subscribes to a path with filter', (done) => {
+        it('subscribes to a path', async () => {
 
-            const server = new Hapi.Server();
-            server.connection();
+            const server = Hapi.server();
 
             server.auth.scheme('custom', internals.implementation);
-            server.auth.strategy('default', 'custom', true);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
 
-            server.register({ register: Nes, options: { auth: { type: 'direct', password } } }, (err) => {
+            await server.register({ plugin: Nes, options: { auth: { type: 'direct', password } } });
 
-                expect(err).to.not.exist();
+            server.subscription('/');
 
-                const filter = function (path, update, options, next) {
+            await server.start();
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            await client.connect({ auth: { headers: { authorization: 'Custom john' } } });
 
-                    return next(options.credentials.user === update);
-                };
+            const team = new Teamwork();
+            const handler = (update) => {
 
-                server.subscription('/', { filter });
+                expect(client.subscriptions()).to.equal(['/']);
+                expect(update).to.equal('heya');
+                team.attend();
+            };
 
-                server.start((err) => {
+            await client.subscribe('/', handler);
+            server.publish('/', 'heya');
 
-                    expect(err).to.not.exist();
-                    const client = new Nes.Client('http://localhost:' + server.info.port);
-                    client.connect({ auth: { headers: { authorization: 'Custom john' } } }, (err) => {
-
-                        expect(err).to.not.exist();
-                        const handler = (update) => {
-
-                            expect(update).to.equal('john');
-                            client.disconnect();
-                            server.stop(done);
-                        };
-
-                        client.subscribe('/', handler, (err) => {
-
-                            expect(err).to.not.exist();
-
-                            server.publish('/', 'steve');
-                            server.publish('/', 'john');
-                        });
-                    });
-                });
-            });
+            await team.work;
+            client.disconnect();
+            await server.stop();
         });
 
-        it('errors on missing auth to subscribe (config)', (done) => {
+        it('subscribes to a path with filter', async () => {
 
-            const server = new Hapi.Server();
-            server.connection();
+            const server = Hapi.server();
+
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
+
+            await server.register({ plugin: Nes, options: { auth: { type: 'direct', password } } });
+
+            const filter = (path, update, options) => {
+
+                return (options.credentials.user === update);
+            };
+
+            server.subscription('/', { filter });
+
+            await server.start();
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            await client.connect({ auth: { headers: { authorization: 'Custom john' } } });
+
+            const team = new Teamwork();
+            const handler = (update) => {
+
+                expect(update).to.equal('john');
+                team.attend();
+            };
+
+            await client.subscribe('/', handler);
+            server.publish('/', 'steve');
+            server.publish('/', 'john');
+
+            await team.work;
+            client.disconnect();
+            await server.stop();
+        });
+
+        it('errors on missing auth to subscribe (config)', async () => {
+
+            const server = Hapi.server();
 
             server.auth.scheme('custom', internals.implementation);
             server.auth.strategy('default', 'custom');
 
-            server.register({ register: Nes, options: { auth: { type: 'direct', password } } }, (err) => {
+            await server.register({ plugin: Nes, options: { auth: { type: 'direct', password } } });
 
-                expect(err).to.not.exist();
+            server.subscription('/', { auth: { mode: 'required' } });
 
-                server.subscription('/', { auth: { mode: 'required' } });
+            await server.start();
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            await client.connect();
 
-                server.start((err) => {
+            await expect(client.subscribe('/', Hoek.ignore)).to.reject('Authentication required to subscribe');
+            expect(client.subscriptions()).to.equal([]);
 
-                    expect(err).to.not.exist();
-                    const client = new Nes.Client('http://localhost:' + server.info.port);
-                    client.connect((err) => {
-
-                        expect(err).to.not.exist();
-
-                        client.subscribe('/', Hoek.ignore, (err) => {
-
-                            expect(err).to.exist();
-                            expect(err.message).to.equal('Authentication required to subscribe');
-                            expect(client.subscriptions()).to.equal([]);
-
-                            client.disconnect();
-                            server.stop(done);
-                        });
-                    });
-                });
-            });
+            client.disconnect();
+            await server.stop();
         });
 
-        it('does not require auth to subscribe without a default', (done) => {
+        it('does not require auth to subscribe without a default', async () => {
 
-            const server = new Hapi.Server();
-            server.connection();
+            const server = Hapi.server();
 
             server.auth.scheme('custom', internals.implementation);
             server.auth.strategy('default', 'custom');
 
-            server.register({ register: Nes, options: { auth: { type: 'direct', password } } }, (err) => {
+            await server.register({ plugin: Nes, options: { auth: { type: 'direct', password } } });
 
-                expect(err).to.not.exist();
+            server.subscription('/');
 
-                server.subscription('/');
+            await server.start();
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            await client.connect();
 
-                server.start((err) => {
+            const team = new Teamwork();
+            const handler = (update) => {
 
-                    expect(err).to.not.exist();
-                    const client = new Nes.Client('http://localhost:' + server.info.port);
-                    client.connect((err) => {
+                expect(update).to.equal('heya');
+                expect(client.subscriptions()).to.equal(['/']);
 
-                        expect(err).to.not.exist();
-                        const handler = (update) => {
+                team.attend();
+            };
 
-                            expect(update).to.equal('heya');
-                            expect(client.subscriptions()).to.equal(['/']);
+            await client.subscribe('/', handler);
+            server.publish('/', 'heya');
 
-                            client.disconnect();
-                            server.stop(done);
-                        };
-
-                        client.subscribe('/', handler, (err) => {
-
-                            expect(err).to.not.exist();
-                            server.publish('/', 'heya');
-                        });
-                    });
-                });
-            });
+            await team.work;
+            client.disconnect();
+            await server.stop();
         });
 
-        it('does not require auth to subscribe with optional auth', (done) => {
+        it('does not require auth to subscribe with optional auth', async () => {
 
-            const server = new Hapi.Server();
-            server.connection();
+            const server = Hapi.server();
 
             server.auth.scheme('custom', internals.implementation);
-            server.auth.strategy('default', 'custom', 'optional');
+            server.auth.strategy('default', 'custom');
+            server.auth.default({ strategy: 'default', mode: 'optional' });
 
-            server.register({ register: Nes, options: { auth: { type: 'direct', password } } }, (err) => {
+            await server.register({ plugin: Nes, options: { auth: { type: 'direct', password } } });
 
-                expect(err).to.not.exist();
+            server.subscription('/');
 
-                server.subscription('/');
+            await server.start();
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            await client.connect();
 
-                server.start((err) => {
+            const team = new Teamwork();
+            const handler = (update) => {
 
-                    expect(err).to.not.exist();
-                    const client = new Nes.Client('http://localhost:' + server.info.port);
-                    client.connect((err) => {
+                expect(update).to.equal('heya');
+                expect(client.subscriptions()).to.equal(['/']);
 
-                        expect(err).to.not.exist();
-                        const handler = (update) => {
+                team.attend();
+            };
 
-                            expect(update).to.equal('heya');
-                            expect(client.subscriptions()).to.equal(['/']);
+            await client.subscribe('/', handler);
+            server.publish('/', 'heya');
 
-                            client.disconnect();
-                            server.stop(done);
-                        };
-
-                        client.subscribe('/', handler, (err) => {
-
-                            expect(err).to.not.exist();
-                            server.publish('/', 'heya');
-                        });
-                    });
-                });
-            });
+            await team.work;
+            client.disconnect();
+            await server.stop();
         });
 
-        it('matches entity (user)', (done) => {
+        it('matches entity (user)', async () => {
 
-            const server = new Hapi.Server();
-            server.connection();
+            const server = Hapi.server();
 
             server.auth.scheme('custom', internals.implementation);
-            server.auth.strategy('default', 'custom', true);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
 
-            server.register({ register: Nes, options: { auth: { type: 'direct', password, index: true } } }, (err) => {
+            await server.register({ plugin: Nes, options: { auth: { type: 'direct', password, index: true } } });
 
-                expect(err).to.not.exist();
+            server.subscription('/', { auth: { entity: 'user' } });
 
-                server.subscription('/', { auth: { entity: 'user' } });
+            await server.start();
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            await client.connect({ auth: { headers: { authorization: 'Custom john' } } });
 
-                server.start((err) => {
+            const team = new Teamwork();
+            const handler = (update) => {
 
-                    expect(err).to.not.exist();
-                    const client = new Nes.Client('http://localhost:' + server.info.port);
-                    client.connect({ auth: { headers: { authorization: 'Custom john' } } }, (err) => {
+                expect(update).to.equal('heya');
+                expect(client.subscriptions()).to.equal(['/']);
 
-                        expect(err).to.not.exist();
-                        const handler = (update) => {
+                team.attend();
+            };
 
-                            expect(update).to.equal('heya');
-                            expect(client.subscriptions()).to.equal(['/']);
+            await client.subscribe('/', handler);
+            server.publish('/', 'heya');
 
-                            client.disconnect();
-                            server.stop(done);
-                        };
-
-                        client.subscribe('/', handler, (err) => {
-
-                            expect(err).to.not.exist();
-                            server.publish('/', 'heya');
-                        });
-                    });
-                });
-            });
+            await team.work;
+            client.disconnect();
+            await server.stop();
         });
 
-        it('matches entity (app)', (done) => {
+        it('matches entity (app)', async () => {
 
-            const server = new Hapi.Server();
-            server.connection();
+            const server = Hapi.server();
 
             server.auth.scheme('custom', internals.implementation);
-            server.auth.strategy('default', 'custom', true);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
 
-            server.register({ register: Nes, options: { auth: { type: 'direct', password, index: true } } }, (err) => {
+            await server.register({ plugin: Nes, options: { auth: { type: 'direct', password, index: true } } });
 
-                expect(err).to.not.exist();
+            server.subscription('/', { auth: { entity: 'app' } });
 
-                server.subscription('/', { auth: { entity: 'app' } });
+            await server.start();
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            await client.connect({ auth: { headers: { authorization: 'Custom app' } } });
 
-                server.start((err) => {
+            const team = new Teamwork();
+            const handler = (update) => {
 
-                    expect(err).to.not.exist();
-                    const client = new Nes.Client('http://localhost:' + server.info.port);
-                    client.connect({ auth: { headers: { authorization: 'Custom app' } } }, (err) => {
+                expect(update).to.equal('heya');
+                expect(client.subscriptions()).to.equal(['/']);
 
-                        expect(err).to.not.exist();
-                        const handler = (update) => {
+                team.attend();
+            };
 
-                            expect(update).to.equal('heya');
-                            expect(client.subscriptions()).to.equal(['/']);
+            await client.subscribe('/', handler);
+            server.publish('/', 'heya');
 
-                            client.disconnect();
-                            server.stop(done);
-                        };
-
-                        client.subscribe('/', handler, (err) => {
-
-                            expect(err).to.not.exist();
-                            server.publish('/', 'heya');
-                        });
-                    });
-                });
-            });
+            await team.work;
+            client.disconnect();
+            await server.stop();
         });
 
-        it('errors on wrong entity (user)', (done) => {
+        it('errors on wrong entity (user)', async () => {
 
-            const server = new Hapi.Server();
-            server.connection();
+            const server = Hapi.server();
 
             server.auth.scheme('custom', internals.implementation);
-            server.auth.strategy('default', 'custom', true);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
 
-            server.register({ register: Nes, options: { auth: { type: 'direct', password } } }, (err) => {
+            await server.register({ plugin: Nes, options: { auth: { type: 'direct', password } } });
 
-                expect(err).to.not.exist();
+            server.subscription('/', { auth: { entity: 'app' } });
 
-                server.subscription('/', { auth: { entity: 'app' } });
+            await server.start();
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            await client.connect({ auth: { headers: { authorization: 'Custom john' } } });
 
-                server.start((err) => {
+            await expect(client.subscribe('/', Hoek.ignore)).to.reject('User credentials cannot be used on an application subscription');
+            expect(client.subscriptions()).to.equal([]);
 
-                    expect(err).to.not.exist();
-                    const client = new Nes.Client('http://localhost:' + server.info.port);
-                    client.connect({ auth: { headers: { authorization: 'Custom john' } } }, (err) => {
-
-                        expect(err).to.not.exist();
-
-                        client.subscribe('/', Hoek.ignore, (err) => {
-
-                            expect(err).to.exist();
-                            expect(err.message).to.equal('User credentials cannot be used on an application subscription');
-                            expect(client.subscriptions()).to.equal([]);
-
-                            client.disconnect();
-                            server.stop(done);
-                        });
-                    });
-                });
-            });
+            client.disconnect();
+            await server.stop();
         });
 
-        it('errors on wrong entity (app)', (done) => {
+        it('errors on wrong entity (app)', async () => {
 
-            const server = new Hapi.Server();
-            server.connection();
+            const server = Hapi.server();
 
             server.auth.scheme('custom', internals.implementation);
-            server.auth.strategy('default', 'custom', true);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
 
-            server.register({ register: Nes, options: { auth: { type: 'direct', password } } }, (err) => {
+            await server.register({ plugin: Nes, options: { auth: { type: 'direct', password } } });
 
-                expect(err).to.not.exist();
+            server.subscription('/', { auth: { entity: 'user' } });
 
-                server.subscription('/', { auth: { entity: 'user' } });
+            await server.start();
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            await client.connect({ auth: { headers: { authorization: 'Custom app' } } });
 
-                server.start((err) => {
+            await expect(client.subscribe('/', Hoek.ignore)).to.reject('Application credentials cannot be used on a user subscription');
+            expect(client.subscriptions()).to.equal([]);
 
-                    expect(err).to.not.exist();
-                    const client = new Nes.Client('http://localhost:' + server.info.port);
-                    client.connect({ auth: { headers: { authorization: 'Custom app' } } }, (err) => {
-
-                        expect(err).to.not.exist();
-
-                        client.subscribe('/', Hoek.ignore, (err) => {
-
-                            expect(err).to.exist();
-                            expect(err.message).to.equal('Application credentials cannot be used on a user subscription');
-                            expect(client.subscriptions()).to.equal([]);
-
-                            client.disconnect();
-                            server.stop(done);
-                        });
-                    });
-                });
-            });
+            client.disconnect();
+            await server.stop();
         });
 
-        it('matches scope (string/string)', (done) => {
+        it('matches scope (string/string)', async () => {
 
-            const server = new Hapi.Server();
-            server.connection();
+            const server = Hapi.server();
 
             server.auth.scheme('custom', internals.implementation);
-            server.auth.strategy('default', 'custom', true);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
 
-            server.register({ register: Nes, options: { auth: { type: 'direct', password } } }, (err) => {
+            await server.register({ plugin: Nes, options: { auth: { type: 'direct', password } } });
 
-                expect(err).to.not.exist();
+            server.subscription('/', { auth: { scope: 'a' } });
 
-                server.subscription('/', { auth: { scope: 'a' } });
+            await server.start();
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            await client.connect({ auth: { headers: { authorization: 'Custom john' } } });
 
-                server.start((err) => {
+            const team = new Teamwork();
+            const handler = (update) => {
 
-                    expect(err).to.not.exist();
-                    const client = new Nes.Client('http://localhost:' + server.info.port);
-                    client.connect({ auth: { headers: { authorization: 'Custom john' } } }, (err) => {
+                expect(update).to.equal('heya');
+                expect(client.subscriptions()).to.equal(['/']);
 
-                        expect(err).to.not.exist();
-                        const handler = (update) => {
+                team.attend();
+            };
 
-                            expect(update).to.equal('heya');
-                            expect(client.subscriptions()).to.equal(['/']);
+            await client.subscribe('/', handler);
+            server.publish('/', 'heya');
 
-                            client.disconnect();
-                            server.stop(done);
-                        };
-
-                        client.subscribe('/', handler, (err) => {
-
-                            expect(err).to.not.exist();
-                            server.publish('/', 'heya');
-                        });
-                    });
-                });
-            });
+            await team.work;
+            client.disconnect();
+            await server.stop();
         });
 
-        it('matches scope (array/string)', (done) => {
+        it('matches scope (array/string)', async () => {
 
-            const server = new Hapi.Server();
-            server.connection();
+            const server = Hapi.server();
 
             server.auth.scheme('custom', internals.implementation);
-            server.auth.strategy('default', 'custom', true);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
 
-            server.register({ register: Nes, options: { auth: { type: 'direct', password } } }, (err) => {
+            await server.register({ plugin: Nes, options: { auth: { type: 'direct', password } } });
 
-                expect(err).to.not.exist();
+            server.subscription('/', { auth: { scope: ['x', 'a'] } });
 
-                server.subscription('/', { auth: { scope: ['x', 'a'] } });
+            await server.start();
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            await client.connect({ auth: { headers: { authorization: 'Custom john' } } });
 
-                server.start((err) => {
+            const team = new Teamwork();
+            const handler = (update) => {
 
-                    expect(err).to.not.exist();
-                    const client = new Nes.Client('http://localhost:' + server.info.port);
-                    client.connect({ auth: { headers: { authorization: 'Custom john' } } }, (err) => {
+                expect(update).to.equal('heya');
+                expect(client.subscriptions()).to.equal(['/']);
 
-                        expect(err).to.not.exist();
-                        const handler = (update) => {
+                team.attend();
+            };
 
-                            expect(update).to.equal('heya');
-                            expect(client.subscriptions()).to.equal(['/']);
+            await client.subscribe('/', handler);
+            server.publish('/', 'heya');
 
-                            client.disconnect();
-                            server.stop(done);
-                        };
-
-                        client.subscribe('/', handler, (err) => {
-
-                            expect(err).to.not.exist();
-                            server.publish('/', 'heya');
-                        });
-                    });
-                });
-            });
+            await team.work;
+            client.disconnect();
+            await server.stop();
         });
 
-        it('matches scope (string/array)', (done) => {
+        it('matches scope (string/array)', async () => {
 
-            const server = new Hapi.Server();
-            server.connection();
+            const server = Hapi.server();
 
             server.auth.scheme('custom', internals.implementation);
-            server.auth.strategy('default', 'custom', true);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
 
-            server.register({ register: Nes, options: { auth: { type: 'direct', password } } }, (err) => {
+            await server.register({ plugin: Nes, options: { auth: { type: 'direct', password } } });
 
-                expect(err).to.not.exist();
+            server.subscription('/', { auth: { scope: 'a' } });
 
-                server.subscription('/', { auth: { scope: 'a' } });
+            await server.start();
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            await client.connect({ auth: { headers: { authorization: 'Custom ed' } } });
 
-                server.start((err) => {
+            const team = new Teamwork();
+            const handler = (update) => {
 
-                    expect(err).to.not.exist();
-                    const client = new Nes.Client('http://localhost:' + server.info.port);
-                    client.connect({ auth: { headers: { authorization: 'Custom ed' } } }, (err) => {
+                expect(update).to.equal('heya');
+                expect(client.subscriptions()).to.equal(['/']);
 
-                        expect(err).to.not.exist();
-                        const handler = (update) => {
+                team.attend();
+            };
 
-                            expect(update).to.equal('heya');
-                            expect(client.subscriptions()).to.equal(['/']);
+            await client.subscribe('/', handler);
+            server.publish('/', 'heya');
 
-                            client.disconnect();
-                            server.stop(done);
-                        };
-
-                        client.subscribe('/', handler, (err) => {
-
-                            expect(err).to.not.exist();
-                            server.publish('/', 'heya');
-                        });
-                    });
-                });
-            });
+            await team.work;
+            client.disconnect();
+            await server.stop();
         });
 
-        it('matches scope (array/array)', (done) => {
+        it('matches scope (array/array)', async () => {
 
-            const server = new Hapi.Server();
-            server.connection();
+            const server = Hapi.server();
 
             server.auth.scheme('custom', internals.implementation);
-            server.auth.strategy('default', 'custom', true);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
 
-            server.register({ register: Nes, options: { auth: { type: 'direct', password } } }, (err) => {
+            await server.register({ plugin: Nes, options: { auth: { type: 'direct', password } } });
 
-                expect(err).to.not.exist();
+            server.subscription('/', { auth: { scope: ['b', 'a'] } });
 
-                server.subscription('/', { auth: { scope: ['b', 'a'] } });
+            await server.start();
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            await client.connect({ auth: { headers: { authorization: 'Custom ed' } } });
 
-                server.start((err) => {
+            const team = new Teamwork();
+            const handler = (update) => {
 
-                    expect(err).to.not.exist();
-                    const client = new Nes.Client('http://localhost:' + server.info.port);
-                    client.connect({ auth: { headers: { authorization: 'Custom ed' } } }, (err) => {
+                expect(update).to.equal('heya');
+                expect(client.subscriptions()).to.equal(['/']);
 
-                        expect(err).to.not.exist();
-                        const handler = (update) => {
+                team.attend();
+            };
 
-                            expect(update).to.equal('heya');
-                            expect(client.subscriptions()).to.equal(['/']);
+            await client.subscribe('/', handler);
+            server.publish('/', 'heya');
 
-                            client.disconnect();
-                            server.stop(done);
-                        };
-
-                        client.subscribe('/', handler, (err) => {
-
-                            expect(err).to.not.exist();
-                            server.publish('/', 'heya');
-                        });
-                    });
-                });
-            });
+            await team.work;
+            client.disconnect();
+            await server.stop();
         });
 
-        it('matches scope (dynamic)', (done) => {
+        it('matches scope (dynamic)', async () => {
 
-            const server = new Hapi.Server();
-            server.connection();
+            const server = Hapi.server();
 
             server.auth.scheme('custom', internals.implementation);
-            server.auth.strategy('default', 'custom', true);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
 
-            server.register({ register: Nes, options: { auth: { type: 'direct', password } } }, (err) => {
+            await server.register({ plugin: Nes, options: { auth: { type: 'direct', password } } });
 
-                expect(err).to.not.exist();
+            server.subscription('/{id}', { auth: { scope: ['{params.id}'] } });
 
-                server.subscription('/{id}', { auth: { scope: ['{params.id}'] } });
+            await server.start();
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            await client.connect({ auth: { headers: { authorization: 'Custom ed' } } });
 
-                server.start((err) => {
+            const team = new Teamwork();
+            const handler = (update) => {
 
-                    expect(err).to.not.exist();
-                    const client = new Nes.Client('http://localhost:' + server.info.port);
-                    client.connect({ auth: { headers: { authorization: 'Custom ed' } } }, (err) => {
+                expect(update).to.equal('heya');
+                expect(client.subscriptions()).to.equal(['/5']);
 
-                        expect(err).to.not.exist();
-                        const handler = (update) => {
+                team.attend();
+            };
 
-                            expect(update).to.equal('heya');
-                            expect(client.subscriptions()).to.equal(['/5']);
+            await client.subscribe('/5', handler);
+            server.publish('/5', 'heya');
 
-                            client.disconnect();
-                            server.stop(done);
-                        };
-
-                        client.subscribe('/5', handler, (err) => {
-
-                            expect(err).to.not.exist();
-                            server.publish('/5', 'heya');
-                        });
-                    });
-                });
-            });
+            await team.work;
+            client.disconnect();
+            await server.stop();
         });
 
-        it('errors on wrong scope (string/string)', (done) => {
+        it('errors on wrong scope (string/string)', async () => {
 
-            const server = new Hapi.Server();
-            server.connection();
+            const server = Hapi.server();
 
             server.auth.scheme('custom', internals.implementation);
-            server.auth.strategy('default', 'custom', true);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
 
-            server.register({ register: Nes, options: { auth: { type: 'direct', password } } }, (err) => {
+            await server.register({ plugin: Nes, options: { auth: { type: 'direct', password } } });
 
-                expect(err).to.not.exist();
+            server.subscription('/', { auth: { scope: 'b' } });
 
-                server.subscription('/', { auth: { scope: 'b' } });
+            await server.start();
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            await client.connect({ auth: { headers: { authorization: 'Custom john' } } });
 
-                server.start((err) => {
+            await expect(client.subscribe('/', Hoek.ignore)).to.reject('Insufficient scope to subscribe, expected any of: b');
+            expect(client.subscriptions()).to.equal([]);
 
-                    expect(err).to.not.exist();
-                    const client = new Nes.Client('http://localhost:' + server.info.port);
-                    client.connect({ auth: { headers: { authorization: 'Custom john' } } }, (err) => {
-
-                        expect(err).to.not.exist();
-                        client.subscribe('/', Hoek.ignore, (err) => {
-
-                            expect(err).to.exist();
-                            expect(err.message).to.equal('Insufficient scope to subscribe, expected any of: b');
-                            expect(client.subscriptions()).to.equal([]);
-
-                            client.disconnect();
-                            server.stop(done);
-                        });
-                    });
-                });
-            });
+            client.disconnect();
+            await server.stop();
         });
 
-        it('errors on wrong scope (string/array)', (done) => {
+        it('errors on wrong scope (string/array)', async () => {
 
-            const server = new Hapi.Server();
-            server.connection();
+            const server = Hapi.server();
 
             server.auth.scheme('custom', internals.implementation);
-            server.auth.strategy('default', 'custom', true);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
 
-            server.register({ register: Nes, options: { auth: { type: 'direct', password } } }, (err) => {
+            await server.register({ plugin: Nes, options: { auth: { type: 'direct', password } } });
 
-                expect(err).to.not.exist();
+            server.subscription('/', { auth: { scope: 'x' } });
 
-                server.subscription('/', { auth: { scope: 'x' } });
+            await server.start();
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            await client.connect({ auth: { headers: { authorization: 'Custom ed' } } });
 
-                server.start((err) => {
+            await expect(client.subscribe('/', Hoek.ignore)).to.reject('Insufficient scope to subscribe, expected any of: x');
+            expect(client.subscriptions()).to.equal([]);
 
-                    expect(err).to.not.exist();
-                    const client = new Nes.Client('http://localhost:' + server.info.port);
-                    client.connect({ auth: { headers: { authorization: 'Custom ed' } } }, (err) => {
-
-                        expect(err).to.not.exist();
-                        client.subscribe('/', Hoek.ignore, (err) => {
-
-                            expect(err).to.exist();
-                            expect(err.message).to.equal('Insufficient scope to subscribe, expected any of: x');
-                            expect(client.subscriptions()).to.equal([]);
-
-                            client.disconnect();
-                            server.stop(done);
-                        });
-                    });
-                });
-            });
+            client.disconnect();
+            await server.stop();
         });
 
-        it('errors on wrong scope (string/none)', (done) => {
+        it('errors on wrong scope (string/none)', async () => {
 
-            const server = new Hapi.Server();
-            server.connection();
+            const server = Hapi.server();
 
             server.auth.scheme('custom', internals.implementation);
-            server.auth.strategy('default', 'custom', true);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
 
-            server.register({ register: Nes, options: { auth: { type: 'direct', password } } }, (err) => {
+            await server.register({ plugin: Nes, options: { auth: { type: 'direct', password } } });
 
-                expect(err).to.not.exist();
+            server.subscription('/', { auth: { scope: 'x' } });
 
-                server.subscription('/', { auth: { scope: 'x' } });
+            await server.start();
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            await client.connect({ auth: { headers: { authorization: 'Custom app' } } });
 
-                server.start((err) => {
+            await expect(client.subscribe('/', Hoek.ignore)).to.reject('Insufficient scope to subscribe, expected any of: x');
+            expect(client.subscriptions()).to.equal([]);
 
-                    expect(err).to.not.exist();
-                    const client = new Nes.Client('http://localhost:' + server.info.port);
-                    client.connect({ auth: { headers: { authorization: 'Custom app' } } }, (err) => {
-
-                        expect(err).to.not.exist();
-                        client.subscribe('/', Hoek.ignore, (err) => {
-
-                            expect(err).to.exist();
-                            expect(err.message).to.equal('Insufficient scope to subscribe, expected any of: x');
-                            expect(client.subscriptions()).to.equal([]);
-
-                            client.disconnect();
-                            server.stop(done);
-                        });
-                    });
-                });
-            });
+            client.disconnect();
+            await server.stop();
         });
     });
 });
@@ -1658,20 +1195,20 @@ internals.implementation = function (server, options) {
     };
 
     const scheme = {
-        authenticate: function (request, reply) {
+        authenticate: (request, h) => {
 
             const authorization = request.headers.authorization;
             if (!authorization) {
-                return reply(Boom.unauthorized(null, 'Custom'));
+                throw Boom.unauthorized(null, 'Custom');
             }
 
             const parts = authorization.split(/\s+/);
             const user = users[parts[1]];
             if (!user) {
-                return reply(Boom.unauthorized('Unknown user', 'Custom'));
+                throw Boom.unauthorized('Unknown user', 'Custom');
             }
 
-            return reply.continue({ credentials: user });
+            return h.authenticated({ credentials: user });
         }
     };
 
