@@ -444,6 +444,33 @@ describe('Listener', () => {
             client.disconnect();
             await server.stop();
         });
+
+        it('errors on subscription onUnsubscribe callback error', async () => {
+
+            const server = Hapi.server();
+            const log = server.events.once('log');
+
+            const onUnsubscribe = (socket, path, params) => {
+
+                socket.a.b.c.d();
+            };
+
+            await server.register({ plugin: Nes, options: { auth: false } });
+
+            server.subscription('/', { onUnsubscribe });
+
+            await server.start();
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            await client.connect();
+
+            client.subscribe('/', Hoek.ignore);
+            await client.disconnect();
+
+            const [event] = await log;
+            expect(event.tags).to.equal(['nes', 'onUnsubscribe', 'error']);
+
+            await server.stop();
+        });
     });
 
     describe('publish()', () => {
@@ -574,6 +601,30 @@ describe('Listener', () => {
             server.publish('/updates', { a: 1 });
 
             await team.work;
+            client.disconnect();
+            await server.stop();
+        });
+
+        it('throws on filter system errors', async () => {
+
+            const server = Hapi.server();
+
+            await server.register({ plugin: Nes, options: { auth: false } });
+
+            const filter = (path, update, options) => {
+
+                return (update.a.x.y === 1);
+            };
+
+            server.subscription('/updates', { filter });
+
+            await server.start();
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            await client.connect();
+
+            await client.subscribe('/updates', Hoek.ignore);
+            await expect(server.publish('/updates', { a: 2 })).to.reject();
+
             client.disconnect();
             await server.stop();
         });
@@ -717,12 +768,7 @@ describe('Listener', () => {
             server.subscription('/', { auth: { mode: 'optional', entity: 'user', index: false } });
 
             await server.start();
-
-            expect(() => {
-
-                server.publish('/', 'heya', { user: 'steve' });
-            }).to.throw('Subscription auth indexing is disabled');
-
+            await expect(server.publish('/', 'heya', { user: 'steve' })).to.reject('Subscription auth indexing is disabled');
             await server.stop();
         });
 
@@ -731,13 +777,9 @@ describe('Listener', () => {
             const server = Hapi.server();
             await server.register({ plugin: Nes, options: { auth: false } });
             server.subscription('/');
+
             await server.start();
-
-            expect(() => {
-
-                server.publish('/', 'heya', { user: 'steve' });
-            }).to.throw('Subscription auth indexing is disabled');
-
+            await expect(server.publish('/', 'heya', { user: 'steve' })).to.reject('Subscription auth indexing is disabled');
             await server.stop();
         });
     });
