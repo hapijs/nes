@@ -325,9 +325,9 @@ describe('Client', () => {
                     const client = new Nes.Client('http://localhost:' + server.info.port);
 
                     const orig = client._connect;
-                    client._connect = (...args) => {
+                    client._connect = (options, initial, callback) => {
 
-                        orig.apply(client, args);
+                        orig.call(client, options, initial, callback);
                         client._ws.onerror = client._ws.onclose;
                     };
 
