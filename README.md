@@ -40,10 +40,9 @@ var Hapi = require('hapi');
 var Nes = require('nes');
 
 var server = new Hapi.Server();
-server.connection();
 
-server.register(Nes, function (err) {
-
+const start = async () => {
+    await server.register(Nes);
     server.route({
         method: 'GET',
         path: '/h',
@@ -55,9 +54,9 @@ server.register(Nes, function (err) {
             }
         }
     });
-
-    server.start(function (err) { /* ... */ });
-});
+    await server.start();
+};
+start();
 ```
 
 #### Client
@@ -66,10 +65,8 @@ server.register(Nes, function (err) {
 var Nes = require('nes');
 
 var client = new Nes.Client('ws://localhost');
-client.connect(function (err) {
-
+client.connect().then(() => {
     client.request('hello', function (err, payload) {   // Can also request '/h'
-
         // payload -> 'world!'
     });
 });
@@ -84,14 +81,11 @@ var Hapi = require('hapi');
 var Nes = require('nes');
 
 var server = new Hapi.Server();
-server.connection();
 
-server.register(Nes, function (err) {
-
+server.register(Nes).then(() => {
     server.subscription('/item/{id}');
 
     server.start(function (err) {
-
         server.publish('/item/5', { id: 5, status: 'complete' });
         server.publish('/item/6', { id: 6, status: 'initial' });
     });
@@ -104,8 +98,7 @@ server.register(Nes, function (err) {
 var Nes = require('nes');
 
 var client = new Nes.Client('ws://localhost');
-client.connect(function (err) {
-
+client.connect().then(() => {
     var handler = function (update, flags) {
 
         // update -> { id: 5, status: 'complete' }
@@ -125,12 +118,9 @@ var Hapi = require('hapi');
 var Nes = require('nes');
 
 var server = new Hapi.Server();
-server.connection();
 
-server.register(Nes, function (err) {
-
+server.register(Nes).then(() => {
     server.start(function (err) {
-
         server.broadcast('welcome!');
     });
 });
@@ -142,10 +132,8 @@ server.register(Nes, function (err) {
 var Nes = require('nes');
 
 var client = new Nes.Client('ws://localhost');
-client.connect(function (err) {
-
+client.connect().then(() => {
     client.onUpdate = function (update) {
-
         // update -> 'welcome!'
     };
 });
@@ -162,9 +150,8 @@ var Bcrypt = require('bcrypt');
 var Nes = require('nes');
 
 var server = new Hapi.Server();
-server.connection();
 
-server.register([Basic, Nes], function (err) {
+server.register([Basic, Nes]).then(async () => {
 
     // Set up HTTP Basic authentication
 
@@ -206,7 +193,7 @@ server.register([Basic, Nes], function (err) {
         }
     });
 
-    server.start(function (err) { /* ... */ });
+    await server.start();
 });
 ```
 
@@ -216,10 +203,8 @@ server.register([Basic, Nes], function (err) {
 var Nes = require('nes');
 
 var client = new Nes.Client('ws://localhost');
-client.connect({ auth: { headers: { authorization: 'Basic am9objpzZWNyZXQ=' } } }, function (err) {
-
+client.connect({ auth: { headers: { authorization: 'Basic am9objpzZWNyZXQ=' } } }).then(() => {
     client.request('hello', function (err, payload) {   // Can also request '/h'
-
         // payload -> 'Hello John Doe'
     });
 });
@@ -236,9 +221,8 @@ var Bcrypt = require('bcrypt');
 var Nes = require('nes');
 
 var server = new Hapi.Server();
-server.connection();
 
-server.register([Basic, Nes], function (err) {
+server.register([Basic, Nes]).then(async () => {
 
     // Set up HTTP Basic authentication
 
@@ -275,11 +259,9 @@ server.register([Basic, Nes], function (err) {
         }
     });
 
-    server.start(function (err) {
-
-        server.publish('/items', { id: 5, status: 'complete', updater: 'john' });
-        server.publish('/items', { id: 6, status: 'initial', updater: 'steve' });
-    });
+    await server.start();
+    server.publish('/items', { id: 5, status: 'complete', updater: 'john' });
+    server.publish('/items', { id: 6, status: 'initial', updater: 'steve' });
 });
 ```
 
@@ -292,7 +274,7 @@ var client = new Nes.Client('ws://localhost');
 
 // Authenticate as 'john'
 
-client.connect({ auth: { headers: { authorization: 'Basic am9objpzZWNyZXQ=' } } }, function (err) {
+client.connect({ auth: { headers: { authorization: 'Basic am9objpzZWNyZXQ=' } } }).then(() => {
 
     var handler = function (err, update) {
 
@@ -300,7 +282,7 @@ client.connect({ auth: { headers: { authorization: 'Basic am9objpzZWNyZXQ=' } } 
         // update -> { id: 6, status: 'initial', updater: 'steve' }
     };
 
-    client.subscribe('/items', handler, function (err) { });
+    client.subscribe('/items', handler);
 });
 ```
 

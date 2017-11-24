@@ -1,4 +1,4 @@
-# 6.4.x API Reference
+# 7.0.x API Reference
 
 - [Registration](#registration)
 - [Server](#server)
@@ -13,9 +13,9 @@
     - [`socket.server`](#socketserver)
     - [`socket.connection`](#socketconnection)
     - [`socket.disconnect()`](#socketdisconnect)
-    - [`socket.send(message, [callback])`](#socketsendmessage-callback)
-    - [`socket.publish(path, message, [callback])`](#socketpublishpath-message-callback)
-    - [`socket.revoke(path, message, [callback])`](#socketrevokepath-message-callback)
+    - [`await socket.send(message)`](#socketsendmessage-callback)
+    - [`await socket.publish(path, message)`](#socketpublishpath-message-callback)
+    - [`await socket.revoke(path, message)`](#socketrevokepath-message-callback)
 - [Request](#request)
     - [`request.socket`](#requestsocket)
 - [Client](#client)
@@ -24,13 +24,13 @@
     - [`client.onConnect`](#clientonconnect)
     - [`client.onDisconnect`](#clientondisconnect)
     - [`client.onUpdate`](#clientonupdate)
-    - [`client.connect([options], callback)`](#clientconnectoptions-callback)
-    - [`client.disconnect([callback])`](#clientdisconnectcallback)
+    - [`await client.connect([options])`](#clientconnectoptions-callback)
+    - [`await client.disconnect()`](#clientdisconnectcallback)
     - [`client.id`](#clientid)
-    - [`client.request(options, callback)`](#clientrequestoptions-callback)
-    - [`client.message(message, callback)`](#clientmessagemessage-callback)
-    - [`client.subscribe(path, handler, callback)`](#clientsubscribepath-handler-callback)
-    - [`client.unsubscribe(path, handler, callback)`](#clientunsubscribepath-handler-callback)
+    - [`await client.request(options)`](#clientrequestoptions-callback)
+    - [`await client.message(message)`](#clientmessagemessage-callback)
+    - [`await client.subscribe(path, handler)`](#clientsubscribepath-handler-callback)
+    - [`await client.unsubscribe(path, handler)`](#clientunsubscribepath-handler-callback)
     - [`client.subscriptions()`](#clientsubscriptions)
     - [`client.overrideReconnectionAuth(auth)`](#clientoverriderecinnectionauthauth)
     - [Errors](#errors)
@@ -265,31 +265,25 @@ The socket's server reference.
 
 The socket's connection reference.
 
-### `socket.disconnect([callback])`
+### `socket.disconnect()`
 
-Closes a client connection where:
-- `callback` - optional callback for when the connection is fully closed using the signature
-  `function()`.
+Closes a client connection.
 
-### `socket.send(message, [callback])`
+### `await socket.send(message)`
 
 Sends a custom message to the client where:
 - `message` - the message sent to the client. Can be any type which can be safely converted to
   string using `JSON.stringify()`.
-- `callback` - optional callback method using signature `function(err)` where:
-    - `err` - an error condition.
 
-### `socket.publish(path, message, [callback])`
+### `await socket.publish(path, message)`
 
 Sends a subscription update to a specific client where:
 - `path` - the subscription string. Note that if the client did not subscribe to the provided `path`,
   the client will ignore the update silently.
 - `message` - the message sent to the client. Can be any type which can be safely converted to
   string using `JSON.stringify()`.
-- `callback` - optional callback method using signature `function(err)` where:
-    - `err` - an error condition.
 
-### `socket.revoke(path, message, [callback])`
+### `await socket.revoke(path, message)`
 
 Revokes a subscription and optionally includes a last update where:
 - `path` - the subscription string. Note that if the client is not subscribe to the provided `path`,
@@ -297,8 +291,6 @@ Revokes a subscription and optionally includes a last update where:
 - `message` - an optional last subscription update sent to the client. Can be any type which can be
   safely converted to string using `JSON.stringify()`. Pass `null` to revoke the subscription without
   sending a last update.
-- `callback` - optional callback method using signature `function(err)` where:
-    - `err` - an error condition.
 
 ## Request
 
@@ -349,7 +341,7 @@ where:
 A property used to set a custom message handler with the signature `function(message)`. Invoked whenever
 the server calls `server.broadcast()` or `socket.send()`.
 
-### `client.connect([options], callback)`
+### `await client.connect([options])`
 
 Connects the client to the server where:
 - `options` - an optional configuration object with the following options:
@@ -367,10 +359,8 @@ Connects the client to the server where:
     - `retries` - number of reconnection attempts. Defaults to `Infinity` (unlimited).
     - `timeout` - socket connection timeout in milliseconds. Defaults to the WebSocket
       implementation timeout default.
-- `callback` - the server response callback using the signature `function(err)` where:
-    - `err` - an error response.
 
-### `client.disconnect()`
+### `await client.disconnect()`
 
 Disconnects the client from the server and stops future reconnects.
 
@@ -379,7 +369,7 @@ Disconnects the client from the server and stops future reconnects.
 The unique socket identifier assigned by the server. The value is set after the connection is
 established.
 
-### `client.request(options, callback)`
+### `client.request(options)`
 
 Sends an endpoint request to the server where:
 - `options` - value can be one of:
@@ -391,7 +381,6 @@ Sends an endpoint request to the server where:
         - `headers` - an object where each key is a request header and the value the header
           content. Cannot include an Authorization header. Defaults to no headers.
         - `payload` - the request payload sent to the server.
-- `callback` - the callback method using the signature `function(err, payload, statusCode, headers)`
   where:
     - `err` - the `Error` condition if the request failed.
     - `payload` - the server response object.
@@ -399,16 +388,13 @@ Sends an endpoint request to the server where:
     - `headers` - an object containing the HTTP response headers returned by the server (based on
       the server configuration).
 
-### `client.message(message, callback)`
+### `await client.message(message)`
 
 Sends a custom message to the server which is received by the server `onMessage` handler where:
 - `message` - the message sent to the server. Can be any type which can be safely converted to
   string using `JSON.stringify()`.
-- `callback` - the server response callback using the signature `function(err, message)` where:
-    - `err` - an error response.
-    - `message` - the server response if no error occurred.
 
-### `client.subscribe(path, handler, callback)`
+### `await client.subscribe(path, handler)`
 
 Subscribes to a server subscription where:
 - `path` - the requested subscription path. Paths are just like HTTP request paths (e.g.
@@ -419,22 +405,16 @@ Subscribes to a server subscription where:
     - `flags` - an object with the following optional flags:
         - `revoked` - set to `true` when the message is the last update from the server due to
           a subscription revocation.
-- `callback` - the callback function called when the subscription request was received by the server
-  or failed to transmit using the signature `function(err)` where:
-    - `err` - if present, indicates the subscription request has failed.
 
 Note that when `subscribe()` is called before the client connects, any server errors will be
 received via the `connect()` callback.
 
-### `client.unsubscribe(path, handler, callback)`
+### `await client.unsubscribe(path, handler)`
 
 Cancels a subscription where:
 - `path` - the subscription path used to subscribe.
 - `handler` - remove a specific handler from a subscription or `null` to remove all handlers for
   the given path.
-- `callback` - the callback function called when the subscription request was received by the server
-  or failed to transmit using the signature `function(err)` where:
-    - `err` - if present, indicates the request has failed.
 
 ### `client.subscriptions()`
 
