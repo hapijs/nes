@@ -48,9 +48,9 @@ const start = async () => {
         path: '/h',
         config: {
             id: 'hello',
-            handler: function (request, reply) {
+            handler: function (request, h) {
 
-                return reply('world!');
+                return h.response('world!');
             }
         }
     });
@@ -172,7 +172,6 @@ server.register([Basic, Nes]).then(async () => {
         }
 
         Bcrypt.compare(password, user.password, function (err, isValid) {
-
             callback(err, isValid, { id: user.id, name: user.name });
         });
     };
@@ -186,9 +185,8 @@ server.register([Basic, Nes]).then(async () => {
         path: '/h',
         config: {
             id: 'hello',
-            handler: function (request, reply) {
-
-                return reply('Hello ' + request.auth.credentials.name);
+            handler: function (request, h) {
+                return h.response('Hello ' + request.auth.credentials.name);
             }
         }
     });
