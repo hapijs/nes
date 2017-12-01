@@ -42,6 +42,7 @@ const Nes = require('nes');
 const server = new Hapi.Server();
 
 const start = async () => {
+
     await server.register(Nes);
     server.route({
         method: 'GET',
@@ -49,12 +50,15 @@ const start = async () => {
         config: {
             id: 'hello',
             handler: (request, h) => {
+
                 return 'world!';
             }
         }
     });
+
     await server.start();
 };
+
 start();
 ```
 
@@ -64,11 +68,14 @@ start();
 const Nes = require('nes');
 
 var client = new Nes.Client('ws://localhost');
+
 const start = async () => {
+
     await client.connect();
     const payload = await client.request('hello');  // Can also request '/h'
     // payload -> 'world!'
 };
+
 start();
 ```
 
@@ -83,12 +90,14 @@ const Nes = require('nes');
 const server = new Hapi.Server();
 
 const start = async () => {
+
     await server.register(Nes);
     server.subscription('/item/{id}');
     await server.start();
     server.publish('/item/5', { id: 5, status: 'complete' });
     server.publish('/item/6', { id: 6, status: 'initial' });
 };
+
 start();
 ```
 
@@ -99,14 +108,17 @@ const Nes = require('nes');
 
 const client = new Nes.Client('ws://localhost');
 const start = async () => {
+
     await client.connect();
     const handler = (update, flags) => {
+
         // update -> { id: 5, status: 'complete' }
         // Second publish is not received (doesn't match)
     };
 
     client.subscribe('/item/5', handler);
 };
+
 start();
 ```
 
@@ -121,10 +133,12 @@ const Nes = require('nes');
 const server = new Hapi.Server();
 
 const start = async () => {
+
     await server.register(Nes);
     await server.start();
     server.broadcast('welcome!');
 };
+
 start();
 ```
 
@@ -135,11 +149,14 @@ const Nes = require('nes');
 
 const client = new Nes.Client('ws://localhost');
 const start = async () => {
+
     await client.connect();
     client.onUpdate = (update) => {
+
         // update -> 'welcome!'
     };
 };
+
 start();
 ```
 
@@ -156,7 +173,9 @@ const Nes = require('nes');
 const server = new Hapi.Server();
 
 const start = async () => {
+
     await server.register([Basic, Nes]);
+
     // Set up HTTP Basic authentication
 
     const users = {
@@ -168,19 +187,19 @@ const start = async () => {
         }
     };
 
-    const validate = (request, username, password, callback) => {
+    const validate = async (request, username, password) => {
 
         const user = users[username];
         if (!user) {
-            return callback(null, false);
+            return { isValid: false };
         }
 
-        Bcrypt.compare(password, user.password, (err, isValid) => {
-            callback(err, isValid, { id: user.id, name: user.name });
-        });
+        const isValid = await Bcrypt.compare(password, user.password);
+        const  credentials = { id: user.id, name: user.name };
+        return { isValid, credentials };
     };
 
-    server.auth.strategy('simple', 'basic', 'required', { validateFunc: validate });
+    server.auth.strategy('simple', 'basic', 'required', { validate });
 
     // Configure route with authentication
 
@@ -190,12 +209,15 @@ const start = async () => {
         config: {
             id: 'hello',
             handler: (request, h) => {
+
                 return `Hello ${request.auth.credentials.name}`;
             }
         }
     });
+
     await server.start();
 };
+
 start();
 ```
 
@@ -206,10 +228,12 @@ const Nes = require('nes');
 
 const client = new Nes.Client('ws://localhost');
 const start = async () => {
+
     await client.connect({ auth: { headers: { authorization: 'Basic am9objpzZWNyZXQ=' } } });
     const payload = await client.request('hello')  // Can also request '/h'
     // payload -> 'Hello John Doe'
 };
+
 start();
 ```
 
@@ -226,6 +250,7 @@ const Nes = require('nes');
 const server = new Hapi.Server();
 
 const start = async () => {
+
     await server.register([Basic, Nes]);
 
     // Set up HTTP Basic authentication
@@ -239,25 +264,26 @@ const start = async () => {
         }
     };
 
-    const validate = (request, username, password, callback) => {
+    const validate = async (request, username, password) => {
 
         const user = users[username];
         if (!user) {
-            return callback(null, false);
+            return { isValid: false };
         }
 
-        Bcrypt.compare(password, user.password, (err, isValid) => {
-            callback(err, isValid, { id: user.id, name: user.name, username: user.username });
-        });
+        const isValid = await Bcrypt.compare(password, user.password);
+        const  credentials = { id: user.id, name: user.name };
+        return { isValid, credentials };
     };
 
-    server.auth.strategy('simple', 'basic', 'required', { validateFunc: validate });
+    server.auth.strategy('simple', 'basic', 'required', { validate });
 
     // Set up subscription
 
     server.subscription('/items', {
-        filter: (path, message, options, next) => {
-            return next(message.updater !== options.credentials.username);
+        filter: (path, message, options) => {
+
+            return (message.updater !== options.credentials.username);
         }
     });
 
@@ -265,6 +291,7 @@ const start = async () => {
     server.publish('/items', { id: 5, status: 'complete', updater: 'john' });
     server.publish('/items', { id: 6, status: 'initial', updater: 'steve' });
 };
+
 start();
 ```
 
@@ -278,17 +305,22 @@ const client = new Nes.Client('ws://localhost');
 // Authenticate as 'john'
 
 const start = async () => {
+
     await client.connect({ auth: { headers: { authorization: 'Basic am9objpzZWNyZXQ=' } } });
     const handler = (err, update) => {
+
         // First publish is not received (filtered due to updater key)
         // update -> { id: 6, status: 'initial', updater: 'steve' }
     };
 
     client.subscribe('/items', handler);
 };
+
 start();
 ```
 
 ### Browser Client
 
-When you `require('nes')` it loads the full module and adds a lot of extra code that is not needed for the browser. The browser will only need the **nes** client. If you are using CommonJS you can load the client with `require('nes/client')`.
+When you `require('nes')` it loads the full module and adds a lot of extra code that is not needed
+for the browser. The browser will only need the **nes** client. If you are using CommonJS you can
+load the client with `require('nes/client')`.

@@ -13,9 +13,9 @@
     - [`socket.server`](#socketserver)
     - [`socket.connection`](#socketconnection)
     - [`socket.disconnect()`](#socketdisconnect)
-    - [`await socket.send(message)`](#socketsendmessage-callback)
-    - [`await socket.publish(path, message)`](#socketpublishpath-message-callback)
-    - [`await socket.revoke(path, message)`](#socketrevokepath-message-callback)
+    - [`await socket.send(message)`](#socketsendmessage)
+    - [`await socket.publish(path, message)`](#socketpublishpath-message)
+    - [`await socket.revoke(path, message)`](#socketrevokepath-message)
 - [Request](#request)
     - [`request.socket`](#requestsocket)
 - [Client](#client)
@@ -24,13 +24,13 @@
     - [`client.onConnect`](#clientonconnect)
     - [`client.onDisconnect`](#clientondisconnect)
     - [`client.onUpdate`](#clientonupdate)
-    - [`await client.connect([options])`](#clientconnectoptions-callback)
+    - [`await client.connect([options])`](#clientconnectoptions)
     - [`await client.disconnect()`](#clientdisconnectcallback)
     - [`client.id`](#clientid)
-    - [`await client.request(options)`](#clientrequestoptions-callback)
-    - [`await client.message(message)`](#clientmessagemessage-callback)
-    - [`await client.subscribe(path, handler)`](#clientsubscribepath-handler-callback)
-    - [`await client.unsubscribe(path, handler)`](#clientunsubscribepath-handler-callback)
+    - [`await client.request(options)`](#clientrequestoptions)
+    - [`await client.message(message)`](#clientmessagemessage)
+    - [`await client.subscribe(path, handler)`](#clientsubscribepath-handler)
+    - [`await client.unsubscribe(path, handler)`](#clientunsubscribepath-handler)
     - [`client.subscriptions()`](#clientsubscriptions)
     - [`client.overrideReconnectionAuth(auth)`](#clientoverriderecinnectionauthauth)
     - [Errors](#errors)
@@ -45,13 +45,11 @@ method. The plugin accepts the following optional registration options:
 - `onDisconnection` - a function with the signature `function(socket)` invoked for each incoming client
   connection on disconnect where:
     - `socket` - the [`Socket`](#socket) object of the connection.
-- `onMessage` - a function with the signature `function(socket, message, next)` used to receive custom
-  client messages (when the client calls [`client.message()`](#clientmessagedata-callback)) where:
+- `onMessage` - a function with the signature `async function(socket, message)` used to receive custom
+  client messages (when the client calls [`client.message()`](#clientmessagedata)) where:
     - `socket` - the [`Socket`](#socket) object of the message source.
     - `message` - the message sent by the client.
-    - `next` - the required callback function used to return a response to the client using
-      signature `function(data)` where:
-          - `data` - the message sent back to the client.
+    - the function may return a response to the client.
 - `auth` - optional plugin authentication options with the following supported values:
     - `false` - no client authentication supported.
     - an object with the following optional keys:
@@ -59,7 +57,7 @@ method. The plugin accepts the following optional registration options:
           security profile. The following types are supported:
             - `'direct'` - the plugin configures an internal authentication endpoint which is only called
               internally by the plugin when the client provides its authentication credentials (or by
-              passing an `auth` option to [`client.connect()](#clientconnectoptions-callback)). The
+              passing an `auth` option to [`client.connect()](#clientconnectoptions)). The
               endpoint returns a copy of the credentials object (along with any artifacts) to the plugin
               which is then used for all subsequent client requests and subscriptions. This type requires
               exposing the underlying credentials to the application. Note that if the authentication scheme
@@ -67,17 +65,17 @@ method. The plugin accepts the following optional registration options:
               [oz](https://github.com/hueniverse/oz)) you need to use `'auth'` as the value (and
               not `'GET'`). This is the default value.
             - `'cookie'` - the plugin configures a public authentication endpoint which must be called
-              by the client application manually before it calls [`client.connect()](#clientconnectoptions-callback).
+              by the client application manually before it calls [`client.connect()](#clientconnectoptions).
               When the endpoint is called with valid credentials, it sets a cookie with the provided
               `name` which the browser then transmits back to the server when the WebSocket connection
               is made. This type removes the need to expose the authentication credentials to the
               JavaScript layer but requires an additional round trip before establishing a client
               connection.
             - `'token'` - the plugin configures a public authentication endpoint which must be called
-              by the client application manually before it calls [`client.connect()](#clientconnectoptions-callback).
+              by the client application manually before it calls [`client.connect()](#clientconnectoptions).
               When the endpoint is called with valid credentials, it returns an encrypted authentication
               token which the client can use to authenticate the connection by passing an `auth` option
-              to [`client.connect()](#clientconnectoptions-callback) with the token. This type is useful
+              to [`client.connect()](#clientconnectoptions) with the token. This type is useful
               when the client-side application needs to manage its credentials differently than relying
               on cookies (e.g. non-browser clients).
         - `endpoint` - the HTTP path of the authentication endpoint. Note that even though the `'direct'`
@@ -157,7 +155,7 @@ Declares a subscription path client can subscribe to where:
 - `options` - an optional object where:
     - `filter` - a publishing filter function for making per-client connection decisions about which
       matching publication update should be sent to which client. The function uses the signature
-      `function(path, message, options, next)` where:
+      `async function(path, message, options)` where:
         - `path` - the path of the published update. The path is provided in case the subscription
           contains path parameters.
         - `message` - the message being published.
@@ -167,12 +165,12 @@ Declares a subscription path client can subscribe to where:
             - `params` - the parameters parsed from the publish message path if the subscription
               path contains parameters.
             - `internal` - the `internal` options data passed to the publish call, if defined.
-        - `next` - the continuation method using signature `function(isMatch, [override])` where:
-            - `isMatch` - a boolean to indicate if the published message should be sent to the
-              current client where `true` means the message will be sent.
-            - `override` - an optional `message` to send to this `socket` instead of the published
-              one. Note that if you want to modify `message`, you must clone it first or the changes
-              will apply to all other sockets.
+        - the function must return one of:
+            - `true` - to proceed sending the message.
+            - `false` - to skip sending the message.
+            - `{ override }` - an override `message` to send to this `socket` instead of the
+              published one. Note that if you want to modify `message`, you must clone it first or
+              the changes will apply to all other sockets.
     - `auth` - the subscription authentication options with the following supported values:
         - `false` - no authentication required to subscribe.
         - a configuration object with the following optional keys:
@@ -190,23 +188,17 @@ Declares a subscription path client can subscribe to where:
               mapped for usage in [`server.publish()`](#serverpublishpath-message-options) calls.
               Defaults to `false`.
     - `onSubscribe` - a method called when a client subscribes to this subscription endpoint using
-      the signature `function(socket, path, params, next)` where:
+      the signature `async function(socket, path, params)` where:
         - `socket` - the [`Socket`](#socket) object of the incoming connection.
         - `path` - the path the client subscribed to
         - `params` - the parameters parsed from the subscription request path if the subscription
           path definition contains parameters.
-        - `next` - the continuation method required to complete the subscription request using the
-          signature `function(err)` where:
-            - `err` - if present, indicates the subscription request failed and the error will be
-              passed back to the client.
-    - `onUnsubscribe` - Callback called when a client unsubscribes from this subscription endpoint
-      using the signature `function(socket, path, params, next)` where:
+    - `onUnsubscribe` - a method called when a client unsubscribes from this subscription endpoint
+      using the signature `async function(socket, path, params)` where:
         - `socket` - the [`Socket`](#socket) object of the incoming connection.
         - `path` - Path of the unsubscribed route.
         - `params` - the parameters parsed from the subscription request path if the subscription
           path definition contains parameters.
-        - `next` - the continuation method required to complete the unsubscribe request using the
-          signature `function()`.
 
 ### `server.publish(path, message, [options])`
 
@@ -229,7 +221,7 @@ Sends a message to all the subscribed clients where:
 
 Iterates over all connected sockets, optionally filtering on those that have subscribed to
 a given subscription. This operation is synchronous.
-- `each` - Iteration callback in the form `function(socket)`.
+- `each` - Iteration method in the form `function(socket)`.
 - `options` - Optional options object
     - `subscription` - When set to a string path, limits the results to sockets that are 
       subscribed to that path.
@@ -317,7 +309,7 @@ Creates a new client object where:
 ### `client.onError`
 
 A property used to set an error handler with the signature `function(err)`. Invoked whenever an
-error happens that cannot be associated with a pending request with a callback.
+error happens that cannot be associated with a pending request.
 
 ### `client.onConnect`
 
@@ -407,7 +399,7 @@ Subscribes to a server subscription where:
           a subscription revocation.
 
 Note that when `subscribe()` is called before the client connects, any server errors will be
-received via the `connect()` callback.
+throw by `connect()`.
 
 ### `await client.unsubscribe(path, handler)`
 
@@ -424,13 +416,13 @@ Returns an array of the current subscription paths.
 
 Sets or overrides the authentication credentials used to reconnect the client on disconnect when
 the client is configured to automatically reconnect, where:
-- `auth` - same as the `auth` option passed to [`client.connect()`](#clientconnectoptions-callback).
+- `auth` - same as the `auth` option passed to [`client.connect()`](#clientconnectoptions).
 
 Returns `true` if reconnection is enabled, otherwise `false` (in which case the method was ignored).
 
 ### Errors
 
-When a client callback or handler returns an error, the error is decorated with:
+When a client method returns or throws an error, the error is decorated with:
 - `type` - a string indicating the source of the error where:
     - `'disconnect'` - the socket disconnected before the request completed.
     - `'protocol'` - the client received an invalid message from the server violating the protocol.
