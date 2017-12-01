@@ -36,10 +36,10 @@ The **nes** protocol is described in the [Protocol documentation](https://github
 #### Server
 
 ```js
-var Hapi = require('hapi');
-var Nes = require('nes');
+const Hapi = require('hapi');
+const Nes = require('nes');
 
-var server = new Hapi.Server();
+const server = new Hapi.Server();
 
 const start = async () => {
     await server.register(Nes);
@@ -48,9 +48,8 @@ const start = async () => {
         path: '/h',
         config: {
             id: 'hello',
-            handler: function (request, reply) {
-
-                return reply('world!');
+            handler: (request, h) => {
+                return 'world!';
             }
         }
     });
@@ -62,14 +61,15 @@ start();
 #### Client
 
 ```js
-var Nes = require('nes');
+const Nes = require('nes');
 
 var client = new Nes.Client('ws://localhost');
-client.connect().then(() => {
-    client.request('hello', function (err, payload) {   // Can also request '/h'
-        // payload -> 'world!'
-    });
-});
+const start = async () => {
+    await client.connect();
+    const payload = await client.request('hello');  // Can also request '/h'
+    // payload -> 'world!'
+};
+start();
 ```
 
 ### Subscriptions
@@ -77,36 +77,37 @@ client.connect().then(() => {
 #### Server
 
 ```js
-var Hapi = require('hapi');
-var Nes = require('nes');
+const Hapi = require('hapi');
+const Nes = require('nes');
 
-var server = new Hapi.Server();
+const server = new Hapi.Server();
 
-server.register(Nes).then(() => {
+const start = async () => {
+    await server.register(Nes);
     server.subscription('/item/{id}');
-
-    server.start(function (err) {
-        server.publish('/item/5', { id: 5, status: 'complete' });
-        server.publish('/item/6', { id: 6, status: 'initial' });
-    });
-});
+    await server.start();
+    server.publish('/item/5', { id: 5, status: 'complete' });
+    server.publish('/item/6', { id: 6, status: 'initial' });
+};
+start();
 ```
 
 #### Client
 
 ```js
-var Nes = require('nes');
+const Nes = require('nes');
 
-var client = new Nes.Client('ws://localhost');
-client.connect().then(() => {
-    var handler = function (update, flags) {
-
+const client = new Nes.Client('ws://localhost');
+const start = async () => {
+    await client.connect();
+    const handler = (update, flags) => {
         // update -> { id: 5, status: 'complete' }
         // Second publish is not received (doesn't match)
     };
 
-    client.subscribe('/item/5', handler, function (err) { });
-});
+    client.subscribe('/item/5', handler);
+};
+start();
 ```
 
 ### Broadcast
@@ -114,29 +115,32 @@ client.connect().then(() => {
 #### Server
 
 ```js
-var Hapi = require('hapi');
-var Nes = require('nes');
+const Hapi = require('hapi');
+const Nes = require('nes');
 
-var server = new Hapi.Server();
+const server = new Hapi.Server();
 
-server.register(Nes).then(() => {
-    server.start(function (err) {
-        server.broadcast('welcome!');
-    });
-});
+const start = async () => {
+    await server.register(Nes);
+    await server.start();
+    server.broadcast('welcome!');
+};
+start();
 ```
 
 #### Client
 
 ```js
-var Nes = require('nes');
+const Nes = require('nes');
 
-var client = new Nes.Client('ws://localhost');
-client.connect().then(() => {
-    client.onUpdate = function (update) {
+const client = new Nes.Client('ws://localhost');
+const start = async () => {
+    await client.connect();
+    client.onUpdate = (update) => {
         // update -> 'welcome!'
     };
-});
+};
+start();
 ```
 
 ### Route authentication
@@ -144,18 +148,18 @@ client.connect().then(() => {
 #### Server
 
 ```js
-var Hapi = require('hapi');
-var Basic = require('hapi-auth-basic');
-var Bcrypt = require('bcrypt');
-var Nes = require('nes');
+const Hapi = require('hapi');
+const Basic = require('hapi-auth-basic');
+const Bcrypt = require('bcrypt');
+const Nes = require('nes');
 
-var server = new Hapi.Server();
+const server = new Hapi.Server();
 
-server.register([Basic, Nes]).then(async () => {
-
+const start = async () => {
+    await server.register([Basic, Nes]);
     // Set up HTTP Basic authentication
 
-    var users = {
+    const users = {
         john: {
             username: 'john',
             password: '$2a$10$iqJSHD.BGr0E2IxQwYgJmeP3NvhPrXAeLSaGCj6IR/XU5QtjVu5Tm',   // 'secret'
@@ -164,15 +168,14 @@ server.register([Basic, Nes]).then(async () => {
         }
     };
 
-    var validate = function (request, username, password, callback) {
+    const validate = (request, username, password, callback) => {
 
-        var user = users[username];
+        const user = users[username];
         if (!user) {
             return callback(null, false);
         }
 
-        Bcrypt.compare(password, user.password, function (err, isValid) {
-
+        Bcrypt.compare(password, user.password, (err, isValid) => {
             callback(err, isValid, { id: user.id, name: user.name });
         });
     };
@@ -186,28 +189,28 @@ server.register([Basic, Nes]).then(async () => {
         path: '/h',
         config: {
             id: 'hello',
-            handler: function (request, reply) {
-
-                return reply('Hello ' + request.auth.credentials.name);
+            handler: (request, h) => {
+                return `Hello ${request.auth.credentials.name}`;
             }
         }
     });
-
     await server.start();
-});
+};
+start();
 ```
 
 #### Client
 
 ```js
-var Nes = require('nes');
+const Nes = require('nes');
 
-var client = new Nes.Client('ws://localhost');
-client.connect({ auth: { headers: { authorization: 'Basic am9objpzZWNyZXQ=' } } }).then(() => {
-    client.request('hello', function (err, payload) {   // Can also request '/h'
-        // payload -> 'Hello John Doe'
-    });
-});
+const client = new Nes.Client('ws://localhost');
+const start = async () => {
+    await client.connect({ auth: { headers: { authorization: 'Basic am9objpzZWNyZXQ=' } } });
+    const payload = await client.request('hello')  // Can also request '/h'
+    // payload -> 'Hello John Doe'
+};
+start();
 ```
 
 ### Subscription filter
@@ -215,18 +218,19 @@ client.connect({ auth: { headers: { authorization: 'Basic am9objpzZWNyZXQ=' } } 
 #### Server
 
 ```js
-var Hapi = require('hapi');
-var Basic = require('hapi-auth-basic');
-var Bcrypt = require('bcrypt');
-var Nes = require('nes');
+const Hapi = require('hapi');
+const Basic = require('hapi-auth-basic');
+const Bcrypt = require('bcrypt');
+const Nes = require('nes');
 
-var server = new Hapi.Server();
+const server = new Hapi.Server();
 
-server.register([Basic, Nes]).then(async () => {
+const start = async () => {
+    await server.register([Basic, Nes]);
 
     // Set up HTTP Basic authentication
 
-    var users = {
+    const users = {
         john: {
             username: 'john',
             password: '$2a$10$iqJSHD.BGr0E2IxQwYgJmeP3NvhPrXAeLSaGCj6IR/XU5QtjVu5Tm',   // 'secret'
@@ -235,15 +239,14 @@ server.register([Basic, Nes]).then(async () => {
         }
     };
 
-    var validate = function (request, username, password, callback) {
+    const validate = (request, username, password, callback) => {
 
-        var user = users[username];
+        const user = users[username];
         if (!user) {
             return callback(null, false);
         }
 
-        Bcrypt.compare(password, user.password, function (err, isValid) {
-
+        Bcrypt.compare(password, user.password, (err, isValid) => {
             callback(err, isValid, { id: user.id, name: user.name, username: user.username });
         });
     };
@@ -253,8 +256,7 @@ server.register([Basic, Nes]).then(async () => {
     // Set up subscription
 
     server.subscription('/items', {
-        filter: function (path, message, options, next) {
-
+        filter: (path, message, options, next) => {
             return next(message.updater !== options.credentials.username);
         }
     });
@@ -262,28 +264,29 @@ server.register([Basic, Nes]).then(async () => {
     await server.start();
     server.publish('/items', { id: 5, status: 'complete', updater: 'john' });
     server.publish('/items', { id: 6, status: 'initial', updater: 'steve' });
-});
+};
+start();
 ```
 
 #### Client
 
 ```js
-var Nes = require('nes');
+const Nes = require('nes');
 
-var client = new Nes.Client('ws://localhost');
+const client = new Nes.Client('ws://localhost');
 
 // Authenticate as 'john'
 
-client.connect({ auth: { headers: { authorization: 'Basic am9objpzZWNyZXQ=' } } }).then(() => {
-
-    var handler = function (err, update) {
-
+const start = async () => {
+    await client.connect({ auth: { headers: { authorization: 'Basic am9objpzZWNyZXQ=' } } });
+    const handler = (err, update) => {
         // First publish is not received (filtered due to updater key)
         // update -> { id: 6, status: 'initial', updater: 'steve' }
     };
 
     client.subscribe('/items', handler);
-});
+};
+start();
 ```
 
 ### Browser Client
