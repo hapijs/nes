@@ -113,6 +113,24 @@ describe('Listener', () => {
         await server.stop();
     });
 
+    it('handles socket errors', async () => {
+
+        const server = Hapi.server();
+
+        const onConnection = (socket) => {
+
+            socket._ws.emit('error', new Error());
+        };
+
+        await server.register({ plugin: Nes, options: { auth: false, onConnection } });
+
+        await server.start();
+        const client = new Nes.Client('http://localhost:' + server.info.port, { ws: { origin: 'http://localhost:12345' } });
+        client.onError = Hoek.ignore;
+        await client.connect();
+        await server.stop();
+    });
+
     describe('_beat()', () => {
 
         it('disconnects client after timeout', async () => {

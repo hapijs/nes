@@ -344,7 +344,7 @@ describe('Socket', () => {
             const client = new Nes.Client('http://localhost:' + server.info.port);
             client.onError = Hoek.ignore;
 
-            await expect(client.connect({ timeout: 10 })).to.reject('Request failed - server disconnected');
+            await expect(client.connect({ timeout: 100 })).to.reject('Request failed - server disconnected');
 
             client.disconnect();
             await server.stop();
