@@ -586,6 +586,70 @@ describe('Listener', () => {
             await server.stop();
         });
 
+        it('does not affect other sockets when given a filter override', async () => {
+
+            const server = Hapi.server();
+
+            const implementation = (srv, options) => {
+
+                return {
+                    authenticate: (request, h) => {
+
+                        return h.authenticated({ credentials: { user: request.headers.authorization } });
+                    }
+                };
+            };
+
+            server.auth.scheme('custom', implementation);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
+
+            await server.register({ plugin: Nes, options: { auth: { type: 'direct' } } });
+            await server.start();
+
+            const filter = (path, update, options) => {
+
+                if (options.credentials.user === 'jane') {
+                    return { override: { message: 'hello, jane' } };
+                }
+
+                return true;
+            };
+
+            server.subscription('/updates', { filter });
+
+            const team = new Teamwork({ meetings: 2 });
+
+            const client1 = new Nes.Client('http://localhost:' + server.info.port);
+            await client1.connect({ auth: { headers: { authorization: 'jane' } } });
+
+            const handler1 = (update) => {
+
+                expect(update).to.equal({ message: 'hello, jane' });
+                team.attend();
+            };
+
+            await client1.subscribe('/updates', handler1);
+
+            const client2 = new Nes.Client('http://localhost:' + server.info.port);
+            await client2.connect({ auth: { headers: { authorization: 'john' } } });
+
+            const handler2 = (update) => {
+
+                expect(update).to.equal({ message: 'hello, world' });   // original message
+                team.attend();
+            };
+
+            await client2.subscribe('/updates', handler2);
+
+            server.publish('/updates', { message: 'hello, world' });
+
+            await team.work;
+            client1.disconnect();
+            client2.disconnect();
+            await server.stop();
+        });
+
         it('publishes with filter (socket)', async () => {
 
             const server = Hapi.server();
@@ -896,7 +960,7 @@ describe('Listener', () => {
             const handler2 = async (update2) => {
 
                 expect(called).to.be.true();
-                client.disconnect();
+                await client.disconnect();
 
                 await Hoek.wait(10);
                 await server.stop();
