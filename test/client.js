@@ -88,6 +88,40 @@ describe('Client', () => {
             client.disconnect();
             await server.stop();
         });
+
+        it('ignores socket errors after open and calls onDisconnection', async () => {
+
+            const server = Hapi.server();
+
+            const team = new Teamwork();
+
+            const onDisconnection = () => {
+
+                team.attend();
+            };
+
+            const orig = console.error;
+            console.error = (err) => {
+
+                throw err;  // should not be called
+            };
+
+            await server.register({ plugin: Nes, options: { auth: false, onDisconnection } });
+            await server.start();
+
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+
+            await client.connect({ reconnect: false });
+
+            const err = new Error('Socket error');
+            err.errno = 'ECONNRESET';
+            client._ws.finalize(err);
+
+            await server.stop();
+            await team.work;
+
+            console.error = orig;
+        });
     });
 
     describe('_connect()', () => {
