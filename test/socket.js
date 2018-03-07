@@ -479,6 +479,7 @@ describe('Socket', () => {
 
             await server.start();
             const client = new Ws('http://localhost:' + server.info.port);
+            client.onerror = Hoek.ignore;
 
             const team = new Teamwork();
             client.on('message', (data) => {
@@ -535,6 +536,7 @@ describe('Socket', () => {
 
             await server.start();
             const client = new Ws('http://localhost:' + server.info.port);
+            client.onerror = Hoek.ignore;
 
             const team = new Teamwork();
             client.on('message', (data) => {
@@ -571,6 +573,7 @@ describe('Socket', () => {
 
             await server.start();
             const client = new Ws('http://localhost:' + server.info.port);
+            client.onerror = Hoek.ignore;
 
             const team = new Teamwork();
             client.on('message', (data) => {
@@ -601,6 +604,7 @@ describe('Socket', () => {
 
             await server.start();
             const client = new Ws('http://localhost:' + server.info.port);
+            client.onerror = Hoek.ignore;
 
             const team = new Teamwork();
             client.on('message', (data) => {
@@ -642,6 +646,7 @@ describe('Socket', () => {
 
             await server.start();
             const client = new Ws('http://localhost:' + server.info.port);
+            client.onerror = Hoek.ignore;
 
             const team = new Teamwork();
             client.on('message', (data) => {
@@ -683,6 +688,7 @@ describe('Socket', () => {
 
             await server.start();
             const client = new Ws('http://localhost:' + server.info.port);
+            client.onerror = Hoek.ignore;
 
             const team = new Teamwork();
             client.on('message', (data) => {
@@ -718,6 +724,7 @@ describe('Socket', () => {
 
             await server.start();
             const client = new Ws('http://localhost:' + server.info.port);
+            client.onerror = Hoek.ignore;
 
             const team = new Teamwork();
             client.on('message', (data) => {
@@ -747,6 +754,7 @@ describe('Socket', () => {
 
             await server.start();
             const client = new Ws('http://localhost:' + server.info.port);
+            client.onerror = Hoek.ignore;
 
             const team = new Teamwork();
             client.on('message', (data) => {
@@ -776,6 +784,7 @@ describe('Socket', () => {
 
             await server.start();
             const client = new Ws('http://localhost:' + server.info.port);
+            client.onerror = Hoek.ignore;
 
             const team = new Teamwork();
             client.on('message', (data) => {
