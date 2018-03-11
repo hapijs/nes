@@ -58,6 +58,30 @@ describe('Socket', () => {
         await server.stop();
     });
 
+    it('includes socket info', async () => {
+
+        const team = new Teamwork();
+        const server = Hapi.server();
+
+        const onConnection = (socket) => {
+
+            expect(socket.info.remoteAddress).to.equal('127.0.0.1');
+            expect(socket.info.remotePort).to.be.a.number();
+
+            team.attend();
+        };
+
+        await server.register({ plugin: Nes, options: { onConnection, auth: false } });
+
+        await server.start();
+        const client = new Nes.Client('http://localhost:' + server.info.port);
+        await client.connect();
+
+        client.disconnect();
+        await team.work;
+        await server.stop();
+    });
+
     describe('disconnect()', () => {
 
         it('closes connection', async () => {
