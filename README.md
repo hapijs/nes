@@ -9,7 +9,7 @@ Protocol version: 2.2.x (different from module version)
 
 [![Build Status](https://secure.travis-ci.org/hapijs/nes.svg)](http://travis-ci.org/hapijs/nes)
 
-Lead Maintainer - [Eran Hammer](https://github.com/hueniverse)
+Lead Maintainer - [Matt Harrison](https://github.com/mtharrison)
 
 - [API](#api)
 - [Protocol](#protocol)
