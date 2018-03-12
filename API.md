@@ -57,7 +57,7 @@ method. The plugin accepts the following optional registration options:
           security profile. The following types are supported:
             - `'direct'` - the plugin configures an internal authentication endpoint which is only called
               internally by the plugin when the client provides its authentication credentials (or by
-              passing an `auth` option to [`client.connect()](#clientconnectoptions)). The
+              passing an `auth` option to [`client.connect()`](#clientconnectoptions)). The
               endpoint returns a copy of the credentials object (along with any artifacts) to the plugin
               which is then used for all subsequent client requests and subscriptions. This type requires
               exposing the underlying credentials to the application. Note that if the authentication scheme
@@ -65,17 +65,17 @@ method. The plugin accepts the following optional registration options:
               [oz](https://github.com/hueniverse/oz)) you need to use `'auth'` as the value (and
               not `'GET'`). This is the default value.
             - `'cookie'` - the plugin configures a public authentication endpoint which must be called
-              by the client application manually before it calls [`client.connect()](#clientconnectoptions).
+              by the client application manually before it calls [`client.connect()`](#clientconnectoptions).
               When the endpoint is called with valid credentials, it sets a cookie with the provided
               `name` which the browser then transmits back to the server when the WebSocket connection
               is made. This type removes the need to expose the authentication credentials to the
               JavaScript layer but requires an additional round trip before establishing a client
               connection.
             - `'token'` - the plugin configures a public authentication endpoint which must be called
-              by the client application manually before it calls [`client.connect()](#clientconnectoptions).
+              by the client application manually before it calls [`client.connect()`](#clientconnectoptions).
               When the endpoint is called with valid credentials, it returns an encrypted authentication
               token which the client can use to authenticate the connection by passing an `auth` option
-              to [`client.connect()](#clientconnectoptions) with the token. This type is useful
+              to [`client.connect()`](#clientconnectoptions) with the token. This type is useful
               when the client-side application needs to manage its credentials differently than relying
               on cookies (e.g. non-browser clients).
         - `endpoint` - the HTTP path of the authentication endpoint. Note that even though the `'direct'`
