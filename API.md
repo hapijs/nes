@@ -13,9 +13,9 @@
     - [`socket.server`](#socketserver)
     - [`socket.connection`](#socketconnection)
     - [`socket.disconnect()`](#socketdisconnect)
-    - [`await socket.send(message)`](#socketsendmessage)
-    - [`await socket.publish(path, message)`](#socketpublishpath-message)
-    - [`await socket.revoke(path, message)`](#socketrevokepath-message)
+    - [`await socket.send(message)`](#await-socketsendmessage)
+    - [`await socket.publish(path, message)`](#await-socketpublishpath-message)
+    - [`await socket.revoke(path, message)`](#await-socketrevokepath-message)
 - [Request](#request)
     - [`request.socket`](#requestsocket)
 - [Client](#client)
@@ -25,12 +25,12 @@
     - [`client.onDisconnect`](#clientondisconnect)
     - [`client.onUpdate`](#clientonupdate)
     - [`await client.connect([options])`](#await-clientconnectoptions)
-    - [`await client.disconnect()`](#clientdisconnectcallback)
+    - [`await client.disconnect()`](#await-clientdisconnect)
     - [`client.id`](#clientid)
-    - [`await client.request(options)`](#clientrequestoptions)
-    - [`await client.message(message)`](#clientmessagemessage)
-    - [`await client.subscribe(path, handler)`](#clientsubscribepath-handler)
-    - [`await client.unsubscribe(path, handler)`](#clientunsubscribepath-handler)
+    - [`await client.request(options)`](#await-clientrequestoptions)
+    - [`await client.message(message)`](#await-clientmessagemessage)
+    - [`await client.subscribe(path, handler)`](#await-clientsubscribepath-handler)
+    - [`await client.unsubscribe(path, handler)`](#await-clientunsubscribepath-handler)
     - [`client.subscriptions()`](#clientsubscriptions)
     - [`client.overrideReconnectionAuth(auth)`](#clientoverriderecinnectionauthauth)
     - [Errors](#errors)
@@ -185,7 +185,7 @@ Declares a subscription path client can subscribe to where:
                 - `'app'`
                 - `'any'`
             - `index` - if `true`, authenticated socket with `user` property in `credentials` are
-              mapped for usage in [`server.publish()`](#serverpublishpath-message-options) calls.
+              mapped for usage in [`server.publish()`](#await-socketpublishpath-message) calls.
               Defaults to `false`.
     - `onSubscribe` - a method called when a client subscribes to this subscription endpoint using
       the signature `async function(socket, path, params)` where:
@@ -361,7 +361,7 @@ Disconnects the client from the server and stops future reconnects.
 The unique socket identifier assigned by the server. The value is set after the connection is
 established.
 
-### `client.request(options)`
+### `await client.request(options)`
 
 Sends an endpoint request to the server where:
 - `options` - value can be one of:
