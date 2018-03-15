@@ -58,6 +58,7 @@ describe('Client', () => {
 
             const err = await expect(client.connect()).to.reject('Socket error');
             expect(err.type).to.equal('ws');
+            expect(err.isNes).to.equal(true);
             client.disconnect();
         });
 
@@ -565,6 +566,7 @@ describe('Client', () => {
                 expect(err).to.exist();
                 expect(err.message).to.equal('Socket error');
                 expect(err.type).to.equal('ws');
+                expect(err.isNes).to.equal(true);
 
                 ++e;
                 client._url = 'http://localhost:' + server.info.port;
@@ -631,6 +633,7 @@ describe('Client', () => {
 
             const err = await expect(request).to.reject('Request failed - server disconnected');
             expect(err.type).to.equal('disconnect');
+            expect(err.isNes).to.equal(true);
             await server.stop();
         });
 
@@ -659,6 +662,7 @@ describe('Client', () => {
                 expect(err).to.exist();
                 expect(err.message).to.equal('Connection timed out');
                 expect(err.type).to.equal('timeout');
+                expect(err.isNes).to.equal(true);
 
                 if (e < 4) {
                     return;
@@ -767,6 +771,7 @@ describe('Client', () => {
 
             const err = await expect(client.request('/')).to.reject('Failed to send message - server disconnected');
             expect(err.type).to.equal('disconnect');
+            expect(err.isNes).to.equal(true);
         });
 
         it('errors on invalid payload', async () => {
@@ -789,6 +794,7 @@ describe('Client', () => {
 
             const err = await expect(client.request({ method: 'POST', path: '/', payload: a })).to.reject('Converting circular structure to JSON');
             expect(err.type).to.equal('user');
+            expect(err.isNes).to.equal(true);
             client.disconnect();
             await server.stop();
         });
@@ -815,6 +821,7 @@ describe('Client', () => {
 
             const err = await expect(client.request({ method: 'POST', path: '/', payload: 'a' })).to.reject('boom');
             expect(err.type).to.equal('ws');
+            expect(err.isNes).to.equal(true);
             client.disconnect();
             await server.stop();
         });
@@ -839,6 +846,7 @@ describe('Client', () => {
 
             const err = await expect(client.message('winning')).to.reject('Request timed out');
             expect(err.type).to.equal('timeout');
+            expect(err.isNes).to.equal(true);
 
             await Hoek.wait(50);
 
@@ -865,6 +873,7 @@ describe('Client', () => {
 
             const err = await expect(client._send({}, false)).to.reject('failed');
             expect(err.type).to.equal('ws');
+            expect(err.isNes).to.equal(true);
 
             client.disconnect();
             await server.stop();
@@ -907,6 +916,7 @@ describe('Client', () => {
             await client.request('/');
             expect(logged.message).to.match(/Unexpected end of(?: JSON)? input/);
             expect(logged.type).to.equal('protocol');
+            expect(logged.isNes).to.equal(true);
 
             client.disconnect();
             await server.stop();
@@ -946,6 +956,7 @@ describe('Client', () => {
             await client.request('/');
             expect(logged.message).to.equal('Received an incomplete message');
             expect(logged.type).to.equal('protocol');
+            expect(logged.isNes).to.equal(true);
 
             client.disconnect();
             await server.stop();
@@ -985,6 +996,7 @@ describe('Client', () => {
             await client.request('/');
             expect(logged.message).to.equal('Received response for unknown request');
             expect(logged.type).to.equal('protocol');
+            expect(logged.isNes).to.equal(true);
 
             client.disconnect();
             await server.stop();
@@ -1028,9 +1040,11 @@ describe('Client', () => {
 
             expect(logged[0].message).to.equal('Received unknown response type: unknown');
             expect(logged[0].type).to.equal('protocol');
+            expect(logged[0].isNes).to.equal(true);
 
             expect(logged[1].message).to.equal('Received response for unknown request');
             expect(logged[1].type).to.equal('protocol');
+            expect(logged[1].isNes).to.equal(true);
 
             client.disconnect();
             await server.stop();
@@ -1116,6 +1130,7 @@ describe('Client', () => {
 
             const err = await expect(client.connect()).to.reject('Subscription not found');
             expect(err.type).to.equal('server');
+            expect(err.isNes).to.equal(true);
             expect(err.statusCode).to.equal(404);
             expect(client.subscriptions()).to.be.empty();
 
@@ -1228,6 +1243,7 @@ describe('Client', () => {
 
             const err = await expect(client.subscribe('/', Hoek.ignore)).to.reject('Subscription not found');
             expect(err.type).to.equal('server');
+            expect(err.isNes).to.equal(true);
             client.disconnect();
             await server.stop();
         });
@@ -1248,6 +1264,7 @@ describe('Client', () => {
 
             const err = await expect(client.subscribe('/', handler)).to.reject('Subscription not found');
             expect(err.type).to.equal('server');
+            expect(err.isNes).to.equal(true);
 
             await client.unsubscribe('/', null);
             client.disconnect();
@@ -1270,6 +1287,7 @@ describe('Client', () => {
 
             const err = await expect(client.subscribe('/', handler)).to.reject('Subscription not found');
             expect(err.type).to.equal('server');
+            expect(err.isNes).to.equal(true);
 
             await client.unsubscribe('/', handler);
             client.disconnect();
@@ -1332,6 +1350,7 @@ describe('Client', () => {
 
             const err = await expect(client.subscribe('/', Hoek.ignore)).to.reject('failed');
             expect(err.type).to.equal('ws');
+            expect(err.isNes).to.equal(true);
 
             client.disconnect();
             await server.stop();
@@ -1343,6 +1362,7 @@ describe('Client', () => {
 
             const err = await expect(client.subscribe(null, Hoek.ignore)).to.reject('Invalid path');
             expect(err.type).to.equal('user');
+            expect(err.isNes).to.equal(true);
         });
 
         it('errors on invalid path', async () => {
@@ -1351,6 +1371,7 @@ describe('Client', () => {
 
             const err = await expect(client.subscribe('asd', Hoek.ignore)).to.reject('Invalid path');
             expect(err.type).to.equal('user');
+            expect(err.isNes).to.equal(true);
         });
 
         it('subscribes, unsubscribes, then subscribes again to a path', async () => {
@@ -1491,6 +1512,7 @@ describe('Client', () => {
 
             const err = await expect(client.unsubscribe('', null)).to.reject('Invalid path');
             expect(err.type).to.equal('user');
+            expect(err.isNes).to.equal(true);
         });
 
         it('errors on invalid path', async () => {
@@ -1499,6 +1521,7 @@ describe('Client', () => {
 
             const err = await expect(client.unsubscribe('asd', null)).to.reject('Invalid path');
             expect(err.type).to.equal('user');
+            expect(err.isNes).to.equal(true);
         });
     });
 
