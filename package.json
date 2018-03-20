@@ -22,7 +22,7 @@
     "iron": "5.x.x",
     "joi": "13.x.x",
     "teamwork": "3.x.x",
-    "ws": "3.x.x"
+    "ws": "5.x.x"
   },
   "peerDependencies": {
     "hapi": "17.x.x"
