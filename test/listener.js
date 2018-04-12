@@ -650,6 +650,40 @@ describe('Listener', () => {
             await server.stop();
         });
 
+        it('ignores removed sockets', async () => {
+
+            const server = Hapi.server();
+
+            let filtered = 0;
+
+            await server.register({ plugin: Nes, options: { auth: false } });
+
+            const filter = async (path, update, options) => {
+
+                await client2.unsubscribe('/updates');
+                filtered++;
+            };
+
+            server.subscription('/updates', { filter });
+
+            await server.start();
+
+            const client1 = new Nes.Client('http://localhost:' + server.info.port);
+            await client1.connect();
+            await client1.subscribe('/updates', Hoek.ignore);
+
+            const client2 = new Nes.Client('http://localhost:' + server.info.port);
+            await client2.connect();
+            await client2.subscribe('/updates', Hoek.ignore);
+
+            server.publish('/updates', 42);
+
+            await client1.disconnect();
+            await server.stop();
+
+            expect(filtered).to.equal(1);
+        });
+
         it('publishes with filter (socket)', async () => {
 
             const server = Hapi.server();
