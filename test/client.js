@@ -791,6 +791,60 @@ describe('Client', () => {
             client.disconnect();
             await server.stop();
         });
+
+        describe('empty response handling', () => {
+
+            [
+                {
+                    testName: 'handles empty string, no content-type',
+                    handler: () => '',
+                    expectedPayload: ''
+                },
+                {
+                    testName: 'handles null, no content-type',
+                    handler: () => null,
+                    expectedPayload: null
+                },
+                {
+                    testName: 'handles null, application/json',
+                    handler: (request, h) => h.response(null).type('application/json'),
+                    expectedPayload: null
+                },
+                {
+                    testName: 'handles empty string, text/plain',
+                    handler: (request, h) => h.response('').type('text/plain'),
+                    expectedPayload: ''
+                },
+                {
+                    testName: 'handles null, text/plain',
+                    handler: (request, h) => h.response(null).type('text/plain'),
+                    expectedPayload: null
+                }
+            ].forEach(({ testName, handler, expectedPayload }) => {
+
+                it(testName, async () => {
+
+                    const server = Hapi.server();
+                    await server.register({ plugin: Nes, options: { auth: false, headers: '*' } });
+
+                    server.route({
+                        method: 'GET',
+                        path: '/',
+                        handler
+                    });
+
+                    await server.start();
+                    const client = new Nes.Client('http://localhost:' + server.info.port);
+                    await client.connect();
+
+                    const { payload } = await client.request({ path: '/' });
+                    expect(payload).to.equal(expectedPayload);
+
+                    client.disconnect();
+                    await server.stop();
+                });
+            });
+        });
     });
 
     describe('message()', () => {
