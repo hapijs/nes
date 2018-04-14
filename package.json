@@ -33,7 +33,8 @@
     "babel-preset-minify": "^0.2.0",
     "code": "5.x.x",
     "hapi": "17.x.x",
-    "lab": "15.x.x"
+    "lab": "15.x.x",
+    "mkdirp": "^0.5.1"
   },
   "babel": {
     "presets": [
@@ -41,7 +42,7 @@
     ]
   },
   "scripts": {
-    "build-client": "mkdir -p dist; babel lib/client.js --out-file dist/client.js",
+    "build-client": "mkdirp dist && babel lib/client.js --out-file dist/client.js",
     "test": "npm run-script build-client && node node_modules/lab/bin/lab -a code -t 100 -L",
     "prepare": "npm run-script build-client",
     "test-cov-html": "node node_modules/lab/bin/lab -a code -r html -o coverage.html"
