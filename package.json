@@ -34,7 +34,7 @@
     "code": "5.x.x",
     "hapi": "17.x.x",
     "lab": "15.x.x",
-    "mkdirp": "^0.5.1"
+    "mkdirp": "0.5.1"
   },
   "babel": {
     "presets": [
