@@ -481,7 +481,7 @@ describe('Listener', () => {
             const client = new Nes.Client('http://localhost:' + server.info.port);
             await client.connect();
 
-            client.subscribe('/', Hoek.ignore);
+            await client.subscribe('/', Hoek.ignore);
             await client.disconnect();
 
             const [event] = await log;
