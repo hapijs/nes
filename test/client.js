@@ -1516,6 +1516,30 @@ describe('Client', () => {
             await server.stop();
         });
 
+        it('calls onDisconnect() immediately after timeout without waiting for close event', async () => {
+
+            const server = Hapi.server();
+            await server.register({ plugin: Nes, options: { auth: false, heartbeat: { interval: 20, timeout: 10 } } });
+
+            await server.start();
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            client.onError = Hoek.ignore;
+
+            const team = new Teamwork();
+            client.onDisconnect = (willReconnect, log) => {
+
+                team.attend();
+            };
+
+            await client.connect();
+            client._ws.onclose = Hoek.ignore;
+            clearTimeout(server.plugins.nes._listener._heartbeat);
+
+            await team.work;
+            client.disconnect();
+            await server.stop();
+        });
+
         it('disconnects when server fails to ping (after a few pings)', async () => {
 
             const server = Hapi.server();
