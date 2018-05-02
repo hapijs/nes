@@ -23,6 +23,7 @@
     - [`client.onError`](#clientonerror)
     - [`client.onConnect`](#clientonconnect)
     - [`client.onDisconnect`](#clientondisconnect)
+    - [`client.onHeartbeatTimeout`](#clientonheartbeattimeout)
     - [`client.onUpdate`](#clientonupdate)
     - [`await client.connect([options])`](#await-clientconnectoptions)
     - [`await client.disconnect()`](#await-clientdisconnect)
@@ -223,7 +224,7 @@ Iterates over all connected sockets, optionally filtering on those that have sub
 a given subscription. This operation is synchronous.
 - `each` - Iteration method in the form `function(socket)`.
 - `options` - Optional options object
-    - `subscription` - When set to a string path, limits the results to sockets that are 
+    - `subscription` - When set to a string path, limits the results to sockets that are
       subscribed to that path.
     - `user` - optional user filter. When provided, the `each` method will be invoked with
       authenticated sockets with `credentials.user` equal to  `user`. Requires the subscription
@@ -327,6 +328,14 @@ where:
       `code`.
     - `reason` - a human-readable text explaining the reason for closing.
     - `wasClean` - if `false`, the socket was closed abnormally.
+
+### `client.onHeartbeatTimeout`
+
+A property used to set a handler for heartbeat timeout events with the signature `function(willReconnect)`
+where:
+- `willReconnect` - a boolean indicating if the client will automatically attempt to reconnect.
+
+Upon heartbeat timeout, the client will disconnect the websocket. However, the `client.onDisconnect()` property will only be called (if set) once the server has completed the closing handshake. Users may use this property to be notified immediately and take action (e.g. display a message in the browser).
 
 ### `client.onUpdate`
 
