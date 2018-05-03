@@ -1502,9 +1502,17 @@ describe('Client', () => {
             const client = new Nes.Client('http://localhost:' + server.info.port);
             client.onError = Hoek.ignore;
 
-            const team = new Teamwork();
+            const team = new Teamwork({ meetings: 2 });
+
+            client.onHeartbeatTimeout = (willReconnect) => {
+
+                expect(willReconnect).to.equal(true);
+                team.attend();
+            };
+
             client.onDisconnect = (willReconnect, log) => {
 
+                expect(willReconnect).to.equal(true);
                 team.attend();
             };
 
