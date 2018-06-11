@@ -342,7 +342,7 @@ describe('authentication', () => {
             server.route({
                 method: 'GET',
                 path: '/',
-                handler: () => 'hello'
+                handler: (request) => request.auth
             });
 
             await server.start();
@@ -353,7 +353,13 @@ describe('authentication', () => {
             const client = new Nes.Client('http://localhost:' + server.info.port);
             await client.connect({ auth: res.result.token });
             const { payload, statusCode } = await client.request('/');
-            expect(payload).to.equal('hello');
+
+            expect(payload).to.include({
+                isAuthenticated: true,
+                credentials: { user: 'john', scope: 'a' },
+                artifacts: 'abc'
+            });
+
             expect(statusCode).to.equal(200);
 
             client.disconnect();
@@ -1194,6 +1200,10 @@ internals.implementation = function (server, options) {
         }
     };
 
+    const artifacts = {
+        john: 'abc'
+    };
+
     const scheme = {
         authenticate: (request, h) => {
 
@@ -1203,12 +1213,13 @@ internals.implementation = function (server, options) {
             }
 
             const parts = authorization.split(/\s+/);
-            const user = users[parts[1]];
+            const username = parts[1];
+            const user = users[username];
             if (!user) {
                 throw Boom.unauthorized('Unknown user', 'Custom');
             }
 
-            return h.authenticated({ credentials: user });
+            return h.authenticated({ credentials: user, artifacts: artifacts[username] });
         }
     };
 
