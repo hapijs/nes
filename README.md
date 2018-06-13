@@ -199,7 +199,7 @@ const start = async () => {
         return { isValid, credentials };
     };
 
-    server.auth.strategy('simple', 'basic', 'required', { validate });
+    server.auth.strategy('simple', 'basic', { validate });
 
     // Configure route with authentication
 
