@@ -44,7 +44,7 @@ describe('Client', () => {
                 team.attend();
             };
 
-            await client.connect();
+            await client.connect({ reconnect: false });
             client._ws.emit('error', new Error('test'));
             await team.work;
         });
@@ -56,7 +56,7 @@ describe('Client', () => {
 
             const client = new Nes.Client('http://0');
 
-            const err = await expect(client.connect()).to.reject('Socket error');
+            const err = await expect(client.connect()).to.reject('Connection terminated while waiting to connect');
             expect(err.type).to.equal('ws');
             expect(err.isNes).to.equal(true);
             client.disconnect();
@@ -530,7 +530,7 @@ describe('Client', () => {
             client.onError = (err) => {
 
                 expect(err).to.exist();
-                expect(err.message).to.equal('Socket error');
+                expect(err.message).to.equal('Connection terminated while waiting to connect');
                 expect(err.type).to.equal('ws');
                 expect(err.isNes).to.equal(true);
 
@@ -562,7 +562,7 @@ describe('Client', () => {
                 }
 
                 expect(e).to.equal(1);
-                expect(r).to.equal('tttt');
+                expect(r).to.equal('ttttt');
 
                 team.attend();
             };
