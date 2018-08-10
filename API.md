@@ -382,12 +382,14 @@ Sends an endpoint request to the server where:
         - `headers` - an object where each key is a request header and the value the header
           content. Cannot include an Authorization header. Defaults to no headers.
         - `payload` - the request payload sent to the server.
-  where:
-    - `err` - the `Error` condition if the request failed.
-    - `payload` - the server response object.
-    - `statusCode` - the HTTP response status code.
-    - `headers` - an object containing the HTTP response headers returned by the server (based on
-      the server configuration).
+
+Rejects with `Error` if the request failed.
+
+Resolves with object containing:
+- `payload` - the server response object.
+- `statusCode` - the HTTP response status code.
+- `headers` - an object containing the HTTP response headers returned by the server (based on
+  the server configuration).
 
 ### `await client.message(message)`
 
