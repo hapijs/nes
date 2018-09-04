@@ -352,6 +352,7 @@ Connects the client to the server where:
       configured for `'direct'` type authentication, the value is the credentials expected
       by the server for the specified authentication strategy used which typically means an
       object with headers (e.g. `{ headers: { authorization: 'Basic am9objpzZWNyZXQ=' } }`).
+    - `reconnect` - a boolean that indicates whether the client should try to reconnect. Defaults to `true`.
     - `delay` - time in milliseconds to wait between each reconnection attempt. The delay time
       is cumulative, meaning that if the value is set to `1000` (1 second), the first wait will
       be 1 seconds, then 2 seconds, 3 seconds, until the `maxDelay` value is reached and then
