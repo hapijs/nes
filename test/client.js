@@ -1,7 +1,5 @@
 'use strict';
 
-// Load modules
-
 const Boom = require('boom');
 const Code = require('code');
 const Hapi = require('hapi');
@@ -11,12 +9,8 @@ const Nes = require('../');
 const Teamwork = require('teamwork');
 
 
-// Declare internals
-
 const internals = {};
 
-
-// Test shortcuts
 
 const { describe, it } = exports.lab = Lab.script();
 const expect = Code.expect;

@@ -1,7 +1,5 @@
 'use strict';
 
-// Load modules
-
 const Boom = require('boom');
 const Code = require('code');
 const Hapi = require('hapi');
@@ -12,12 +10,8 @@ const Nes = require('../');
 const Teamwork = require('teamwork');
 
 
-// Declare internals
-
 const internals = {};
 
-
-// Test shortcuts
 
 const { describe, it } = exports.lab = Lab.script();
 const expect = Code.expect;
@@ -455,7 +449,7 @@ describe('authentication', () => {
             server.auth.strategy('default', 'custom');
             server.auth.default('default');
 
-            await server.register({ plugin: Nes, options: { auth: { type: 'token', password: new Buffer('') } } });
+            await server.register({ plugin: Nes, options: { auth: { type: 'token', password: Buffer.from('') } } });
             const res = await server.inject({ url: '/nes/auth', headers: { authorization: 'Custom john' } });
             expect(res.statusCode).to.equal(500);
         });

@@ -10,9 +10,6 @@
     "plugin",
     "websocket"
   ],
-  "engines": {
-    "node": ">=8.9.0"
-  },
   "dependencies": {
     "boom": "7.x.x",
     "bounce": "1.x.x",
@@ -24,16 +21,13 @@
     "teamwork": "3.x.x",
     "ws": "5.x.x"
   },
-  "peerDependencies": {
-    "hapi": "17.x.x"
-  },
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-preset-env": "^1.6.1",
     "babel-preset-minify": "^0.2.0",
     "code": "5.x.x",
     "hapi": "17.x.x",
-    "lab": "15.x.x",
+    "lab": "17.x.x",
     "mkdirp": "0.5.1"
   },
   "babel": {
