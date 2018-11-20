@@ -111,6 +111,15 @@ method. The plugin accepts the following optional registration options:
           Defaults to `5000` (5 seconds).
         - `maxConnectionsPerUser` - if specified, limits authenticated users to a maximum number of
           client connections. Requires the `index` option enabled. Defaults to `false`.
+        - `expiresAt` - a function with a signature `async function(auth)`, where `auth` is the
+          [`socket.auth`](#socketauth) authentication state. The function should resolve with a timestamp 
+          for the expiry of the current credentials. When there is no `expiresAt` function or it 
+          resolves with `undefined` the credentials are considered to be valid indefinitely. Once the 
+          credentials expire, the server will automatically close the socket. The client may update the
+          credentials and their expiry time by calling 
+          [`client.reauthenticate()`](#await-clientreauthenticateauth). Note: the timestamp should be in
+          miliseconds (i.e. as returned by Javascript's `new Date().valueOf()`) - some auth schemes 
+          (e.g. JWT) keep their expiry time in seconds.
 - `headers` - an optional array of header field names to include in server responses to the client.
   If set to `'*'` (without an array), allows all headers. Defaults to `null` (no headers).
 - `payload` - optional message payload settings where:
@@ -447,8 +456,9 @@ Rejects with `Error` if the request failed.
 
 Resolves with `true` if the request succeeds.
 
-Note: when authentication has a limited lifetime, `reauthenticate()` should be called early enough to avoid 
-the server dropping the connection.
+Note: when authentication has a limited lifetime (i.e. `expiresAt` auth option is present and returns 
+a timestamp), `reauthenticate()` should be called early enough to avoid the server dropping
+the connection.
 
 ### Errors
 

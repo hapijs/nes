@@ -1175,6 +1175,82 @@ describe('authentication', () => {
             await server.stop();
         });
 
+        it('disconnects the client after authentication expires', async () => {
+
+            const server = Hapi.server();
+
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
+
+
+            const authLifetime = 100;
+            const expiresAt = () => Date.now() + authLifetime;
+            await server.register({ plugin: Nes, options: { auth: { expiresAt } } });
+            await server.start();
+
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            await client.connect({ reconnect: false, auth: { headers: { authorization: 'Custom john' } } });
+
+            const team = new Teamwork();
+            client.onDisconnect = () => {
+
+                team.attend();
+            };
+
+            await Hoek.wait(authLifetime + 1);
+
+            await team.work;
+
+            await server.stop();
+        });
+
+        it('extends authentication expiry', async () => {
+
+            const server = Hapi.server();
+
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
+
+            server.route({
+                method: 'GET',
+                path: '/',
+                handler: (request) => request.auth.artifacts
+            });
+
+            const authLifetime = 100;
+            let request = 0;
+            const expiresAt = () => {
+
+                ++request;
+
+                if (request === 1) {
+                    return Date.now() + authLifetime;
+                }
+
+                // only expire the first request - never expire again
+                return undefined;
+            };
+
+            await server.register({ plugin: Nes, options: { auth: { expiresAt } } });
+            await server.start();
+
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            await client.connect({ reconnect: false, auth: { headers: { authorization: 'Custom john' } } });
+
+            await Hoek.wait(authLifetime / 2);
+
+            await client.reauthenticate({ headers: { authorization: 'Custom ed' } });
+
+            await Hoek.wait(authLifetime + 1);
+
+            const res2 = await client.request('/');
+            expect(res2.statusCode).to.equal(200);
+
+            await server.stop();
+        });
+
         it('updates authentication information', async () => {
 
             const server = Hapi.server();
