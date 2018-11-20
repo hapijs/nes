@@ -5,7 +5,7 @@ servers. Instead of treating the WebSocket connections as a separate platform wi
 and application context, **nes** builds on top of the existing **hapi** architecture to provide a
 flexible and organic extension.
 
-Protocol version: 2.3.x (different from module version)
+Protocol version: 2.4.x (different from module version)
 
 [![Build Status](https://secure.travis-ci.org/hapijs/nes.svg)](http://travis-ci.org/hapijs/nes)
 

@@ -1174,6 +1174,66 @@ describe('authentication', () => {
             client.disconnect();
             await server.stop();
         });
+
+        it('updates authentication information', async () => {
+
+            const server = Hapi.server();
+
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
+
+            server.route({
+                method: 'GET',
+                path: '/',
+                handler: (request) => request.auth.artifacts
+            });
+
+            await server.register(Nes);
+            await server.start();
+
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            await client.connect({ reconnect: false, auth: { headers: { authorization: 'Custom john' } } });
+
+            const res1 = await client.request('/');
+            expect(res1.payload).to.equal('abc');
+            expect(res1.statusCode).to.equal(200);
+
+            await client.reauthenticate({ headers: { authorization: 'Custom ed' } });
+
+            const res2 = await client.request('/');
+            expect(res2.payload).to.equal('xyz'); // updated artifacts
+            expect(res2.statusCode).to.equal(200);
+
+            await server.stop();
+        });
+
+        it('disconnects the client when reauthentication fails', async () => {
+
+            const server = Hapi.server();
+
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
+
+            await server.register(Nes);
+            await server.start();
+
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            await client.connect({ reconnect: false, auth: { headers: { authorization: 'Custom john' } } });
+
+            const team = new Teamwork();
+            client.onDisconnect = () => {
+
+                team.attend();
+            };
+
+            await expect(client.reauthenticate({ headers: { authorization: 'Custom no-such-user' } })).to.reject();
+
+            await team.work;
+
+            await server.stop();
+        });
     });
 });
 
@@ -1195,7 +1255,8 @@ internals.implementation = function (server, options) {
     };
 
     const artifacts = {
-        john: 'abc'
+        john: 'abc',
+        ed: 'xyz'
     };
 
     const scheme = {
