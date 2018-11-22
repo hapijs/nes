@@ -1,4 +1,4 @@
-# 7.0.x API Reference
+# 9.0.x API Reference
 
 - [Registration](#registration)
 - [Server](#server)
@@ -33,7 +33,8 @@
     - [`await client.subscribe(path, handler)`](#await-clientsubscribepath-handler)
     - [`await client.unsubscribe(path, handler)`](#await-clientunsubscribepath-handler)
     - [`client.subscriptions()`](#clientsubscriptions)
-    - [`client.overrideReconnectionAuth(auth)`](#clientoverriderecinnectionauthauth)
+    - [`client.overrideReconnectionAuth(auth)`](#clientoverridereconnectionauthauth)
+    - [`await client.reauthenticate(auth)`](#await-clientreauthenticateauth)
     - [Errors](#errors)
 
 ## Registration
@@ -431,6 +432,23 @@ the client is configured to automatically reconnect, where:
 - `auth` - same as the `auth` option passed to [`client.connect()`](#await-clientconnectoptions).
 
 Returns `true` if reconnection is enabled, otherwise `false` (in which case the method was ignored).
+
+Note: this will not update the credentials on the server - 
+use [`client.reauthenticate()`](#await-clientreauthenticateauth).
+
+### `await client.reauthenticate(auth)`
+
+Will issue the `reauth` message to the server with updated `auth` details and also 
+[override the reconnection information](#clientoverridereconnectionauthauth), if reconnection is enabled. 
+The server will respond with an error and drop the connection in case the new `auth` credentials are 
+invalid.
+
+Rejects with `Error` if the request failed.
+
+Resolves with `true` if the request succeeds.
+
+Note: when authentication has a limited lifetime, `reauthenticate()` should be called early enough to avoid 
+the server dropping the connection.
 
 ### Errors
 

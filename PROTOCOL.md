@@ -1,4 +1,4 @@
-# nes Protocol v2.3.x
+# nes Protocol v2.4.x
 
 ## Message
 
@@ -8,6 +8,7 @@ Each incoming request from the client to the server contains:
 - `type` - the message type:
     - `'ping'` - heartbeat response.
     - `'hello'` - connection initialization and authentication.
+    - `'reauth'` - authentication refresh.
     - `'request'` - endpoint request.
     - `'sub'` - subscribe to a path.
     - `'unsub'` - unsubscribe from a path.
@@ -19,6 +20,7 @@ Each outgoing request from the server to the client contains:
 - `type` - the message type:
     - `'ping'` - heartbeat request.
     - `'hello'` - connection initialization and authentication.
+    - `'reauth'` - authentication refresh.
     - `'request'` - endpoint request.
     - `'sub'` - subscribe to a path.
     - `'unsub'` - unsubscribe from a path.
@@ -114,7 +116,7 @@ For example:
 }
 ```
 
-The server respond by sending a message back with the following:
+The server responds by sending a message back with the following:
 - `type` - set to `'hello'`.
 - `id` - the same `id` received from the client.
 - `heartbeat` - the server heartbeat configuration which can be:
@@ -171,6 +173,59 @@ For example:
     statusCode: 403,
     payload: {
         error: 'Subscription not found'
+    }
+}
+```
+
+
+## Reauthenticate
+
+Flow: `client` -> `server` -> `client`
+
+When the authentication credentials have an expiry, the client may want to update the authentication information for the connection: 
+- `type` - set to `'reauth'`.
+- `id` - a unique per-client request id (number or string).
+- `auth` - authentication credentials. Can be any value understood by the server.
+
+For example:
+
+```js
+{
+    type: 'reauth',
+    id: 1,
+    auth: {
+        headers: {
+            authorization: 'Basic am9objpzZWNyZXQ='
+        }
+    }
+}
+```
+
+The server responds by sending a message back with the following:
+- `type` - set to `'reauth'`.
+- `id` - the same `id` received from the client.
+
+For example:
+
+```js
+{
+    type: 'reauth',
+    id: 1
+}
+```
+
+If the request failed, the server includes the [standard error fields](#errors).
+
+For example:
+
+```js
+{
+    type: 'reauth',
+    id: 1,
+    statusCode: 401,
+    payload: {
+        error: 'Unauthorized',
+        message: 'Unknown username or incorrect password'
     }
 }
 ```

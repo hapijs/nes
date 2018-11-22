@@ -193,6 +193,142 @@ describe('Client', () => {
         });
     });
 
+    describe('reauthenticate()', () => {
+
+        it('uses updated auth information for reconnection', async () => {
+
+            const server = Hapi.server();
+
+            server.auth.scheme('custom', (srv, options) => {
+
+                return {
+                    authenticate: (request, h) => {
+
+                        const authorization = request.headers.authorization;
+                        if (!authorization) {
+                            throw Boom.unauthorized(null, 'Custom');
+                        }
+
+                        const parts = authorization.split(/\s+/);
+                        return h.authenticated({ credentials: { user: parts[1] } });
+                    }
+                };
+            });
+
+            server.auth.strategy('default', 'custom');
+            server.auth.default({ strategy: 'default', mode: 'optional' });
+
+            server.route({
+                method: 'GET',
+                path: '/',
+                config: {
+                    auth: {
+                        mode: 'optional'
+                    },
+                    handler: (request) => {
+
+                        if (request.auth.isAuthenticated) {
+                            return request.auth.credentials.user;
+                        }
+
+                        return 'nope';
+                    }
+                }
+            });
+
+            await server.register(Nes);
+            await server.start();
+
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            client.onError = Hoek.ignore;
+
+            const team = new Teamwork();
+            let c = 0;
+            client.onConnect = async () => {
+
+                ++c;
+                if (c === 2) {
+                    const { payload } = await client.request('/');
+                    expect(payload).to.equal('john');
+
+                    team.attend();
+                }
+            };
+
+            await client.connect({ delay: 10 });
+
+            const { payload } = await client.request('/');
+            expect(payload).to.equal('nope');
+
+            const reauthResult = await client.reauthenticate({ headers: { authorization: 'Custom john' } });
+            expect(reauthResult).to.equal(true);
+
+            client._ws.close();
+            await team.work;
+            await server.stop();
+        });
+
+        it('rejects when authentication fails', async () => {
+
+            const server = Hapi.server();
+
+            server.auth.scheme('custom', (srv, options) => {
+
+                return {
+                    authenticate: (request, h) => {
+
+                        const authorization = request.headers.authorization;
+                        if (!authorization) {
+                            throw Boom.unauthorized(null, 'Custom');
+                        }
+
+                        const parts = authorization.split(/\s+/);
+                        const user = parts[1];
+
+                        if (user !== 'john') {
+                            throw Boom.unauthorized('No such user');
+                        }
+
+                        return h.authenticated({ credentials: { user } });
+                    }
+                };
+            });
+
+            server.auth.strategy('default', 'custom');
+            server.auth.default({ strategy: 'default', mode: 'optional' });
+
+            server.route({
+                method: 'GET',
+                path: '/',
+                config: {
+                    auth: {
+                        mode: 'optional'
+                    },
+                    handler: (request) => {
+
+                        if (request.auth.isAuthenticated) {
+                            return request.auth.credentials.user;
+                        }
+
+                        return 'nope';
+                    }
+                }
+            });
+
+            await server.register(Nes);
+            await server.start();
+
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            client.onError = Hoek.ignore;
+
+            await client.connect({ delay: 10 });
+
+            await expect(client.reauthenticate({ headers: { authorization: 'Custom steve' } })).to.reject('No such user');
+
+            await server.stop();
+        });
+    });
+
     describe('disconnect()', () => {
 
         it('ignores when client not connected', () => {
