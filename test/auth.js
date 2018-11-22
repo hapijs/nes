@@ -350,8 +350,14 @@ describe('authentication', () => {
 
             expect(payload).to.include({
                 isAuthenticated: true,
-                credentials: { user: 'john', scope: 'a' },
-                artifacts: 'abc'
+                credentials: {
+                    user: 'john',
+                    scope: 'a'
+                },
+                artifacts: {
+                    userArtifact: 'abc',
+                    expires: payload.artifacts.expires
+                }
             });
 
             expect(statusCode).to.equal(200);
@@ -1196,13 +1202,13 @@ describe('authentication', () => {
             await client.connect({ reconnect: false, auth: { headers: { authorization: 'Custom john' } } });
 
             const res1 = await client.request('/');
-            expect(res1.payload).to.equal('abc');
+            expect(res1.payload.userArtifact).to.equal('abc');
             expect(res1.statusCode).to.equal(200);
 
             await client.reauthenticate({ headers: { authorization: 'Custom ed' } });
 
             const res2 = await client.request('/');
-            expect(res2.payload).to.equal('xyz'); // updated artifacts
+            expect(res2.payload.userArtifact).to.equal('xyz'); // updated artifacts
             expect(res2.statusCode).to.equal(200);
 
             await server.stop();
@@ -1234,8 +1240,96 @@ describe('authentication', () => {
 
             await server.stop();
         });
+
+        it('disconnects the client after authentication expires', async () => {
+
+            const server = Hapi.server();
+
+            const scheme = internals.implementation();
+            server.auth.scheme('custom', () => scheme);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
+
+            await server.register({ plugin: Nes, options: { auth: { verify: 100 }, heartbeat: { interval: 50, timeout: 30 } } });
+            await server.start();
+
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            await client.connect({ reconnect: false, auth: { headers: { authorization: 'Custom john' } } });
+
+            const team = new Teamwork();
+            client.onDisconnect = () => {
+
+                team.attend();
+            };
+
+            await team.work;
+
+            expect(scheme.verified).to.equal(['abc', 'abc', 'abc']);
+
+            await server.stop();
+        });
+
+        it('uses updated authentication information when verifying', async () => {
+
+            const server = Hapi.server();
+
+            const scheme = internals.implementation();
+            server.auth.scheme('custom', () => scheme);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
+
+            await server.register({ plugin: Nes, options: { auth: { verify: 100 }, heartbeat: { interval: 50, timeout: 30 } } });
+            await server.start();
+
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            await client.connect({ reconnect: false, auth: { headers: { authorization: 'Custom john' } } });
+
+            const team = new Teamwork();
+            client.onDisconnect = () => {
+
+                team.attend();
+            };
+
+            await Hoek.wait(internals.authExpiry / 2);
+
+            await client.reauthenticate({ headers: { authorization: 'Custom ed' } });
+
+            await team.work;
+
+            expect(scheme.verified).to.equal(['abc', 'xyz', 'xyz', 'xyz']);
+
+            await server.stop();
+        });
+
+        it('handles auth schemes without a verification method', async () => {
+
+            const server = Hapi.server();
+
+            const scheme = internals.implementation();
+            delete scheme.verify;
+
+            server.auth.scheme('custom', () => scheme);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
+
+            await server.register({ plugin: Nes, options: { auth: { verify: 100 }, heartbeat: { interval: 50, timeout: 30 } } });
+            await server.start();
+
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            await client.connect({ reconnect: false, auth: { headers: { authorization: 'Custom john' } } });
+
+            await Hoek.wait(200);
+
+            expect(scheme.verified).to.equal([]);
+
+            await server.stop();
+        });
+
     });
 });
+
+
+internals.authExpiry = 300;
 
 
 internals.implementation = function (server, options) {
@@ -1254,7 +1348,7 @@ internals.implementation = function (server, options) {
         }
     };
 
-    const artifacts = {
+    const artifactsByUser = {
         john: 'abc',
         ed: 'xyz'
     };
@@ -1274,7 +1368,14 @@ internals.implementation = function (server, options) {
                 throw Boom.unauthorized('Unknown user', 'Custom');
             }
 
-            return h.authenticated({ credentials: user, artifacts: artifacts[username] });
+            return h.authenticated({ credentials: user, artifacts: { userArtifact: artifactsByUser[username], expires: Date.now() + internals.authExpiry } });
+        },
+
+        verified: [],
+        verify: (credentials, artifacts) => {
+
+            scheme.verified.push(artifacts.userArtifact);
+            return Date.now() < artifacts.expires;
         }
     };
 
