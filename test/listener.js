@@ -663,10 +663,12 @@ describe('Listener', () => {
             await server.start();
 
             const client1 = new Nes.Client('http://localhost:' + server.info.port);
+            client1.onError = Hoek.ignore;
             await client1.connect();
             await client1.subscribe('/updates', Hoek.ignore);
 
             const client2 = new Nes.Client('http://localhost:' + server.info.port);
+            client2.onError = Hoek.ignore;
             await client2.connect();
             await client2.subscribe('/updates', Hoek.ignore);
 

@@ -1250,7 +1250,7 @@ describe('authentication', () => {
             server.auth.strategy('default', 'custom');
             server.auth.default('default');
 
-            await server.register({ plugin: Nes, options: { auth: { verify: 100 }, heartbeat: { interval: 50, timeout: 30 } } });
+            await server.register({ plugin: Nes, options: { auth: { minAuthVerifyInterval: 100 }, heartbeat: { interval: 50, timeout: 30 } } });
             await server.start();
 
             const client = new Nes.Client('http://localhost:' + server.info.port);
@@ -1278,7 +1278,7 @@ describe('authentication', () => {
             server.auth.strategy('default', 'custom');
             server.auth.default('default');
 
-            await server.register({ plugin: Nes, options: { auth: { verify: 100 }, heartbeat: { interval: 50, timeout: 30 } } });
+            await server.register({ plugin: Nes, options: { auth: { minAuthVerifyInterval: 100 }, heartbeat: { interval: 50, timeout: 30 } } });
             await server.start();
 
             const client = new Nes.Client('http://localhost:' + server.info.port);
@@ -1312,7 +1312,7 @@ describe('authentication', () => {
             server.auth.strategy('default', 'custom');
             server.auth.default('default');
 
-            await server.register({ plugin: Nes, options: { auth: { verify: 100 }, heartbeat: { interval: 50, timeout: 30 } } });
+            await server.register({ plugin: Nes, options: { auth: { minAuthVerifyInterval: 100 }, heartbeat: { interval: 50, timeout: 30 } } });
             await server.start();
 
             const client = new Nes.Client('http://localhost:' + server.info.port);
@@ -1372,10 +1372,12 @@ internals.implementation = function (server, options) {
         },
 
         verified: [],
-        verify: (credentials, artifacts) => {
+        verify: (auth) => {
 
-            scheme.verified.push(artifacts.userArtifact);
-            return Date.now() < artifacts.expires;
+            scheme.verified.push(auth.artifacts.userArtifact);
+            if (Date.now() >= auth.artifacts.expires) {
+                throw Boom.unauthorized('Expired');
+            }
         }
     };
 
