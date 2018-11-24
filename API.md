@@ -1,4 +1,4 @@
-# 9.0.x API Reference
+# 9.1.x API Reference
 
 - [Registration](#registration)
 - [Server](#server)
@@ -111,6 +111,10 @@ method. The plugin accepts the following optional registration options:
           Defaults to `5000` (5 seconds).
         - `maxConnectionsPerUser` - if specified, limits authenticated users to a maximum number of
           client connections. Requires the `index` option enabled. Defaults to `false`.
+        - `minAuthVerifyInterval` - if specified, waits at least the specificed number of milliseconds
+          between calls to [`await server.auth.verify()`](https://hapijs.com/api#-await-serverauthverifyrequest) 
+          to check if credentials are still valid. Cannot be shorter than `heartbeat.interval`. 
+          Defaults to `heartbeat.interval`.
 - `headers` - an optional array of header field names to include in server responses to the client.
   If set to `'*'` (without an array), allows all headers. Defaults to `null` (no headers).
 - `payload` - optional message payload settings where:

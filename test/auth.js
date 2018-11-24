@@ -1269,6 +1269,74 @@ describe('authentication', () => {
             await server.stop();
         });
 
+        it('disconnects the client after authentication expires (sets default check interval)', async () => {
+
+            const server = Hapi.server();
+
+            const scheme = internals.implementation();
+            server.auth.scheme('custom', () => scheme);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
+
+            await server.register({ plugin: Nes, options: { heartbeat: { interval: 100, timeout: 30 } } });
+            await server.start();
+
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            await client.connect({ reconnect: false, auth: { headers: { authorization: 'Custom john' } } });
+
+            const team = new Teamwork();
+            client.onDisconnect = () => {
+
+                team.attend();
+            };
+
+            await team.work;
+
+            // there's 4 ping events, but only 3 verify checks - the first one is skipped, as it very close to 'hello'
+            expect(scheme.verified.length).to.be.lessThan(4);
+
+            await server.stop();
+        });
+
+        it('disconnects the client on request when authentication expires when heartbeat disabled', async () => {
+
+            const server = Hapi.server();
+
+            const scheme = internals.implementation();
+            server.auth.scheme('custom', () => scheme);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
+
+            server.route({
+                method: 'GET',
+                path: '/',
+                handler: () => 'hello'
+            });
+
+            await server.register({ plugin: Nes, options: { heartbeat: false } });
+            await server.start();
+
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            await client.connect({ reconnect: false, auth: { headers: { authorization: 'Custom john' } } });
+
+            await Hoek.wait(internals.authExpiry + 1);
+
+            const team = new Teamwork();
+            client.onDisconnect = () => {
+
+                team.attend();
+            };
+
+            await expect(client.request('/')).to.reject('Credential verification failed');
+
+            await team.work;
+
+            // only one message exachange between server/client, therefore a single verification
+            expect(scheme.verified).to.equal(['abc']);
+
+            await server.stop();
+        });
+
         it('uses updated authentication information when verifying', async () => {
 
             const server = Hapi.server();
