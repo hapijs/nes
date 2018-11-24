@@ -1214,7 +1214,7 @@ describe('authentication', () => {
             await server.stop();
         });
 
-        it('disconnects the client when reauthentication fails', async () => {
+        it('disconnects the client when re-authentication fails', async () => {
 
             const server = Hapi.server();
 
@@ -1313,7 +1313,7 @@ describe('authentication', () => {
                 handler: () => 'hello'
             });
 
-            await server.register({ plugin: Nes, options: { heartbeat: false } });
+            await server.register({ plugin: Nes, options: { heartbeat: false, auth: { minAuthVerifyInterval: 100 } } });
             await server.start();
 
             const client = new Nes.Client('http://localhost:' + server.info.port);
@@ -1331,10 +1331,23 @@ describe('authentication', () => {
 
             await team.work;
 
-            // only one message exachange between server/client, therefore a single verification
+            // only one message exchange between server/client, therefore a single verification
             expect(scheme.verified).to.equal(['abc']);
 
             await server.stop();
+        });
+
+        it('defaults minAuthVerifyInterval to hearbeat interval default when heartbeat disabled', async () => {
+
+            const server = Hapi.server();
+
+            const scheme = internals.implementation();
+            server.auth.scheme('custom', () => scheme);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
+
+            await server.register({ plugin: Nes, options: { heartbeat: false } });
+            expect(server.plugins.nes._listener._settings.auth.minAuthVerifyInterval).to.equal(15000);
         });
 
         it('uses updated authentication information when verifying', async () => {

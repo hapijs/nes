@@ -114,7 +114,7 @@ method. The plugin accepts the following optional registration options:
         - `minAuthVerifyInterval` - if specified, waits at least the specificed number of milliseconds
           between calls to [`await server.auth.verify()`](https://hapijs.com/api#-await-serverauthverifyrequest) 
           to check if credentials are still valid. Cannot be shorter than `heartbeat.interval`. 
-          Defaults to `heartbeat.interval`.
+          Defaults to `heartbeat.interval` or `15000` if `heartbeat` is disabled.
 - `headers` - an optional array of header field names to include in server responses to the client.
   If set to `'*'` (without an array), allows all headers. Defaults to `null` (no headers).
 - `payload` - optional message payload settings where:
