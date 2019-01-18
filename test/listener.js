@@ -829,6 +829,56 @@ describe('Listener', () => {
             await server.stop();
         });
 
+        it('publishes to selected user (ignores non-user credentials)', async () => {
+
+            const server = Hapi.server();
+
+            const implementation = (srv, options) => {
+
+                let count = 0;
+                return {
+                    authenticate: (request, h) => {
+
+                        return h.authenticated({ credentials: { user: count++ ? 'steve' : null } });
+                    }
+                };
+            };
+
+            server.auth.scheme('custom', implementation);
+            server.auth.strategy('default', 'custom');
+            server.auth.default({ strategy: 'default', mode: 'optional' });
+
+            const password = 'some_not_random_password_that_is_also_long_enough';
+            await server.register({ plugin: Nes, options: { auth: { type: 'direct', password } } });
+
+            const onUnsubscribe = Hoek.ignore;
+            server.subscription('/', { onUnsubscribe, auth: { mode: 'optional', index: true } });
+
+            await server.start();
+            const client1 = new Nes.Client('http://localhost:' + server.info.port);
+            await client1.connect({ auth: { headers: { authorization: 'Custom steve' } } });
+
+            const updates = [];
+            const handler = (update) => updates.push(update);
+
+            await client1.subscribe('/', handler);
+            const client2 = new Nes.Client('http://localhost:' + server.info.port);
+            await client2.connect({ auth: { headers: { authorization: 'Custom steve' } } });
+            await client2.subscribe('/', handler);
+
+            server.publish('/', 'heya', { user: 'steve' });
+
+            await Hoek.wait(50);
+
+            await client1.unsubscribe('/', null);
+            await client2.unsubscribe('/', null);
+            client1.disconnect();
+            client2.disconnect();
+
+            expect(updates).to.equal(['heya']);
+            await server.stop();
+        });
+
         it('ignores unknown path', async () => {
 
             const server = Hapi.server();

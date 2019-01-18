@@ -1028,6 +1028,21 @@ describe('Client', () => {
             client.disconnect();
             await server.stop();
         });
+
+        it('errors on premature send', async () => {
+
+            const server = Hapi.server();
+            await server.register({ plugin: Nes, options: { auth: false } });
+
+            await server.start();
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const connecting = client.connect();
+            await expect(client.message('x')).to.reject();
+
+            await connecting;
+            client.disconnect();
+            await server.stop();
+        });
     });
 
     describe('_onMessage', () => {
@@ -1623,6 +1638,22 @@ describe('Client', () => {
             });
 
             await team.work;
+            client.disconnect();
+            await server.stop();
+        });
+
+        it('queues on premature send', async () => {
+
+            const server = Hapi.server();
+            await server.register({ plugin: Nes, options: { auth: false } });
+            server.subscription('/', {});
+
+            await server.start();
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const connecting = client.connect();
+            await expect(client.subscribe('/', Hoek.ignore)).to.not.reject();
+
+            await connecting;
             client.disconnect();
             await server.stop();
         });

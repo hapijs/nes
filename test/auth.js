@@ -114,7 +114,7 @@ describe('authentication', () => {
             await server.stop();
         });
 
-        it('limits connections per user', async () => {
+        it('limits connections per user (single)', async () => {
 
             const server = Hapi.server();
 
@@ -145,6 +145,44 @@ describe('authentication', () => {
 
             client.disconnect();
             client2.disconnect();
+            await server.stop();
+        });
+
+        it('limits connections per user', async () => {
+
+            const server = Hapi.server();
+
+            await server.register({ plugin: Nes, options: { auth: { type: 'cookie', maxConnectionsPerUser: 2, index: true } } });
+
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
+
+            server.route({
+                method: 'GET',
+                path: '/',
+                handler: () => 'hello'
+            });
+
+            await server.start();
+            const res = await server.inject({ url: '/nes/auth', headers: { authorization: 'Custom john' } });
+            expect(res.result.status).to.equal('authenticated');
+
+            const header = res.headers['set-cookie'][0];
+            const cookie = header.match(/(?:[^\x00-\x20\(\)<>@\,;\:\\"\/\[\]\?\=\{\}\x7F]+)\s*=\s*(?:([^\x00-\x20\"\,\;\\\x7F]*))/);
+
+            const client = new Nes.Client('http://localhost:' + server.info.port, { ws: { headers: { cookie: 'nes=' + cookie[1] } } });
+            await client.connect();
+
+            const client2 = new Nes.Client('http://localhost:' + server.info.port, { ws: { headers: { cookie: 'nes=' + cookie[1] } } });
+            await client2.connect();
+
+            const client3 = new Nes.Client('http://localhost:' + server.info.port, { ws: { headers: { cookie: 'nes=' + cookie[1] } } });
+            await expect(client3.connect()).to.reject('Too many connections for the authenticated user');
+
+            client.disconnect();
+            client2.disconnect();
+            client3.disconnect();
             await server.stop();
         });
 

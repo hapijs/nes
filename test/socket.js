@@ -347,6 +347,30 @@ describe('Socket', () => {
             await server.stop();
         });
 
+        it('leaves message small enough to fit into single packets', async () => {
+
+            const server = Hapi.server();
+            await server.register({ plugin: Nes, options: { auth: false, payload: { maxChunkChars: 100 } } });
+
+            await server.start();
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const text = 'this is a message shorter than 100 bytes';
+
+            const team = new Teamwork();
+            client.onUpdate = (message) => {
+
+                expect(message).to.equal(text);
+                team.attend();
+            };
+
+            await client.connect();
+            server.broadcast(text);
+
+            await team.work;
+            client.disconnect();
+            await server.stop();
+        });
+
         it('errors on socket send error', async () => {
 
             const server = Hapi.server();
