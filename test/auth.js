@@ -78,6 +78,79 @@ describe('authentication', () => {
         await connecting;
     });
 
+    it('works with additional connect headers', async () => {
+
+        const server = Hapi.server();
+
+        server.auth.scheme('custom', internals.implementation);
+        server.auth.strategy('default', 'custom');
+        server.auth.default('default');
+
+        await server.register({ plugin: Nes, options: { auth: { route: { mode: 'optional' } } } });
+
+        server.route({
+            method: 'GET',
+            path: '/protected',
+            handler: () => 'hello'
+        });
+
+        server.route({
+            method: 'GET',
+            path: '/unprotected',
+            handler: () => 'hello',
+            options: {
+                auth: false
+            }
+        });
+
+        await server.start();
+
+        const client = new Nes.Client('http://localhost:' + server.info.port);
+        await client.connect({ auth: { headers: { irrelevant: 'foobar' } } });
+
+        const unauthenticatedRequest = await client.request('/unprotected');
+        expect(unauthenticatedRequest.payload).to.equal('hello');
+        expect(unauthenticatedRequest.statusCode).to.equal(200);
+
+        const deniedRequest = await expect(client.request('/protected')).to.reject('Missing authentication');
+        expect(deniedRequest.statusCode).to.equal(401);
+
+        await client.reauthenticate();
+
+        const secondUnauthenticatedRequest = await client.request('/unprotected');
+        expect(secondUnauthenticatedRequest.payload).to.equal('hello');
+        expect(secondUnauthenticatedRequest.statusCode).to.equal(200);
+
+        const secondDeniedRequest = await expect(client.request('/protected')).to.reject('Missing authentication');
+        expect(secondDeniedRequest.statusCode).to.equal(401);
+
+        await client.disconnect();
+
+        await client.connect({ auth: { headers: { authorization: 'Custom john', irrelevant: 'foobar' } } });
+
+        const unprotectedRequest = await client.request('/unprotected');
+        expect(unprotectedRequest.payload).to.equal('hello');
+        expect(unprotectedRequest.statusCode).to.equal(200);
+
+        const protectedRequest = await client.request('/protected');
+        expect(protectedRequest.payload).to.equal('hello');
+        expect(protectedRequest.statusCode).to.equal(200);
+
+        await client.reauthenticate();
+
+        const secondUnprotectedRequest = await client.request('/unprotected');
+        expect(secondUnprotectedRequest.payload).to.equal('hello');
+        expect(secondUnprotectedRequest.statusCode).to.equal(200);
+
+        const secondProtectedRequest = await client.request('/protected');
+        expect(secondProtectedRequest.payload).to.equal('hello');
+        expect(secondProtectedRequest.statusCode).to.equal(200);
+
+        await client.disconnect();
+
+        await server.stop();
+    });
+
     describe('cookie', () => {
 
         it('protects an endpoint', async () => {
