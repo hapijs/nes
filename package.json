@@ -15,11 +15,11 @@
     "bounce": "1.x.x",
     "call": "5.x.x",
     "cryptiles": "4.x.x",
-    "hoek": "5.x.x",
+    "hoek": "6.x.x",
     "iron": "5.x.x",
-    "joi": "13.x.x",
+    "joi": "14.x.x",
     "teamwork": "3.x.x",
-    "ws": "5.x.x"
+    "ws": "6.x.x"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",

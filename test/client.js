@@ -18,6 +18,18 @@ const expect = Code.expect;
 
 describe('Client', () => {
 
+    it('defaults options.ws.maxPayload to zero', () => {
+
+        const client = new Nes.Client('http://localhost');
+        expect(client._settings.ws).to.equal({ maxPayload: 0 });
+    });
+
+    it('allows setting options.ws.maxPayload', () => {
+
+        const client = new Nes.Client('http://localhost', { ws: { maxPayload: 100 } });
+        expect(client._settings.ws).to.equal({ maxPayload: 100 });
+    });
+
     describe('onError', () => {
 
         it('logs error to console by default', async () => {

@@ -1460,7 +1460,7 @@ internals.implementation = function (server, options) {
         },
         ed: {
             user: 'ed',
-            scope: ['a', 'b', 5]
+            scope: ['a', 'b', '5']
         },
         app: {
             app: 'app'
