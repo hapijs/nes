@@ -18,16 +18,47 @@ const expect = Code.expect;
 
 describe('Client', () => {
 
-    it('defaults options.ws.maxPayload to zero', () => {
+    it('defaults options.ws.maxPayload to zero (node)', () => {
 
         const client = new Nes.Client('http://localhost');
         expect(client._settings.ws).to.equal({ maxPayload: 0 });
     });
 
-    it('allows setting options.ws.maxPayload', () => {
+    it('allows setting options.ws.maxPayload (node)', () => {
 
         const client = new Nes.Client('http://localhost', { ws: { maxPayload: 100 } });
         expect(client._settings.ws).to.equal({ maxPayload: 100 });
+    });
+
+    it('ignores options.ws in browser', async (flags) => {
+
+        const orig = global.WebSocket;
+        global.WebSocket = Hoek.ignore;
+
+        const Ws = Nes.Client.WebSocket;
+        let length;
+        Nes.Client.WebSocket = function (...args) {
+
+            length = args.length;
+            return new Ws(...args);
+        };
+
+        flags.onCleanup = () => {
+
+            if (orig) {
+                global.WebSocket = orig;
+            }
+            else {
+                delete global.WebSocket;
+            }
+
+            Nes.Client.WebSocket = Ws;
+        };
+
+        const client = new Nes.Client('http://localhost', { ws: { maxPayload: 1000 } });
+        client.onError = Hoek.ignore;
+        await expect(client.connect()).to.reject();
+        expect(length).to.equal(1);
     });
 
     describe('onError', () => {
