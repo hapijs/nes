@@ -1,11 +1,11 @@
-# 9.1.x API Reference
+# 11.0.x API Reference
 
 - [Registration](#registration)
 - [Server](#server)
-    - [`server.broadcast(message, [options])`](#serverbroadcastmessage-options)
+    - [`await server.broadcast(message, [options])`](#await-serverbroadcastmessage-options)
     - [`server.subscription(path, [options])`](#serversubscriptionpath-options)
-    - [`server.publish(path, message, [options])`](#serverpublishpath-message-options)
-    - [`server.eachSocket(each, [options])`](#servereachsocketeach-options)
+    - [`await server.publish(path, message, [options])`](#await-serverpublishpath-message-options)
+    - [`await server.eachSocket(each, [options])`](#await-servereachsocketeach-options)
 - [Socket](#socket)
     - [`socket.id`](#socketid)
     - [`socket.app`](#socketapp)
@@ -140,7 +140,7 @@ method. The plugin accepts the following optional registration options:
 The plugin decorates the server with a few new methods for interacting with the incoming WebSocket
 connections.
 
-### `server.broadcast(message, [options])`
+### `await server.broadcast(message, [options])`
 
 Sends a message to all connected clients where:
 - `message` - the message sent to the clients. Can be any type which can be safely converted to
@@ -171,7 +171,7 @@ Declares a subscription path client can subscribe to where:
             - `params` - the parameters parsed from the publish message path if the subscription
               path contains parameters.
             - `internal` - the `internal` options data passed to the publish call, if defined.
-        - the function must return one of:
+        - the function must return a value of (or a promise that resolves into):
             - `true` - to proceed sending the message.
             - `false` - to skip sending the message.
             - `{ override }` - an override `message` to send to this `socket` instead of the
@@ -206,7 +206,7 @@ Declares a subscription path client can subscribe to where:
         - `params` - the parameters parsed from the subscription request path if the subscription
           path definition contains parameters.
 
-### `server.publish(path, message, [options])`
+### `await server.publish(path, message, [options])`
 
 Sends a message to all the subscribed clients where:
 - `path` - the subscription path. The path is matched first against the available subscriptions
@@ -223,11 +223,11 @@ Sends a message to all the subscribed clients where:
       sockets with `credentials.user` equal to  `user`. Requires the subscription `auth.index`
       options to be configured to `true`.
 
-### `server.eachSocket(each, [options])`
+### `await server.eachSocket(each, [options])`
 
 Iterates over all connected sockets, optionally filtering on those that have subscribed to
 a given subscription. This operation is synchronous.
-- `each` - Iteration method in the form `function(socket)`.
+- `each` - Iteration method in the form `async function(socket)`.
 - `options` - Optional options object
     - `subscription` - When set to a string path, limits the results to sockets that are
       subscribed to that path.

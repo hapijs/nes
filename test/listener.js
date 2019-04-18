@@ -1101,14 +1101,15 @@ describe('Listener', () => {
 
         describe('eachSocket()', () => {
 
-            const countSockets = (server, options) => {
+            const countSockets = async (server, options) => {
 
                 let seen = 0;
-                server.eachSocket((socket) => {
+                await server.eachSocket((socket) => {
 
                     expect(socket).to.exist();
                     seen++;
                 }, options);
+
                 return seen;
             };
 
@@ -1121,7 +1122,7 @@ describe('Listener', () => {
                 await server.start();
                 const client = new Nes.Client('http://localhost:' + server.info.port);
                 await client.connect();
-                expect(countSockets(server)).to.equal(1);
+                expect(await countSockets(server)).to.equal(1);
 
                 client.disconnect();
                 await server.stop();
@@ -1140,20 +1141,20 @@ describe('Listener', () => {
                 const client = new Nes.Client('http://localhost:' + server.info.port);
                 await client.connect();
 
-                client.subscribe('/b', Hoek.ignore);
+                await client.subscribe('/b', Hoek.ignore);
 
                 const client2 = new Nes.Client('http://localhost:' + server.info.port);
                 await client2.connect();
 
                 await client2.subscribe('/a/b', Hoek.ignore);
 
-                expect(countSockets(server)).to.equal(2);
-                expect(countSockets(server, { subscription: '/a/a' })).to.equal(0);
-                expect(countSockets(server, { subscription: '/a/b' })).to.equal(1);
+                expect(await countSockets(server)).to.equal(2);
+                expect(await countSockets(server, { subscription: '/a/a' })).to.equal(0);
+                expect(await countSockets(server, { subscription: '/a/b' })).to.equal(1);
 
-                expect(countSockets(server, { subscription: '/b' })).to.equal(1);
+                expect(await countSockets(server, { subscription: '/b' })).to.equal(1);
 
-                expect(countSockets(server, { subscription: '/foo' })).to.equal(0);
+                expect(await countSockets(server, { subscription: '/foo' })).to.equal(0);
 
                 client.disconnect();
                 client2.disconnect();
