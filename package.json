@@ -4,12 +4,7 @@
   "version": "10.1.0",
   "repository": "git://github.com/hapijs/nes",
   "main": "lib/index.js",
-  "browser": "dist/client.js",
-  "keywords": [
-    "hapi",
-    "plugin",
-    "websocket"
-  ],
+  "keywords": ["hapi", "plugin", "websocket"],
   "dependencies": {
     "@hapi/boom": "7.x.x",
     "@hapi/bounce": "1.x.x",
@@ -25,20 +20,10 @@
     "@hapi/code": "5.x.x",
     "@hapi/hapi": "18.x.x",
     "@hapi/lab": "18.x.x",
-    "babel-cli": "^6.26.0",
-    "babel-preset-env": "^1.6.1",
-    "babel-preset-minify": "^0.2.0",
     "mkdirp": "0.5.1"
   },
-  "babel": {
-    "presets": [
-      "es2015"
-    ]
-  },
   "scripts": {
-    "build-client": "mkdirp dist && babel lib/client.js --out-file dist/client.js",
-    "test": "npm run-script build-client && lab -a @hapi/code -t 100 -L",
-    "prepare": "npm run-script build-client",
+    "test": "lab -a @hapi/code -t 100 -L",
     "test-cov-html": "lab -a @hapi/code -r html -o coverage.html"
   },
   "license": "BSD-3-Clause"
