@@ -1,4 +1,6 @@
-<img src="https://raw.github.com/hapijs/nes/master/images/nes.png" />
+<a href="http://hapijs.com"><img src="https://github.com/hapijs/assets/blob/master/images/family.svg" width="180px" align="right" /></a>
+
+# nes
 
 **nes** adds native WebSocket support to [**hapi**](https://github.com/hapijs/hapi)-based application
 servers. Instead of treating the WebSocket connections as a separate platform with its own security
@@ -7,9 +9,7 @@ flexible and organic extension.
 
 Protocol version: 2.4.x (different from module version)
 
-[![Build Status](https://secure.travis-ci.org/hapijs/nes.svg)](http://travis-ci.org/hapijs/nes)
-
-Lead Maintainer - [Matt Harrison](https://github.com/mtharrison)
+[![Build Status](https://secure.travis-ci.org/hapijs/nes.svg?branch=master)](http://travis-ci.org/hapijs/nes)
 
 - [API](#api)
 - [Protocol](#protocol)
@@ -36,8 +36,8 @@ The **nes** protocol is described in the [Protocol documentation](https://github
 #### Server
 
 ```js
-const Hapi = require('hapi');
-const Nes = require('nes');
+const Hapi = require('@hapi/hapi');
+const Nes = require('@hapi/nes');
 
 const server = new Hapi.Server();
 
@@ -65,7 +65,7 @@ start();
 #### Client
 
 ```js
-const Nes = require('nes');
+const Nes = require('@hapi/nes');
 
 var client = new Nes.Client('ws://localhost');
 
@@ -84,8 +84,8 @@ start();
 #### Server
 
 ```js
-const Hapi = require('hapi');
-const Nes = require('nes');
+const Hapi = require('@hapi/hapi');
+const Nes = require('@hapi/nes');
 
 const server = new Hapi.Server();
 
@@ -104,7 +104,7 @@ start();
 #### Client
 
 ```js
-const Nes = require('nes');
+const Nes = require('@hapi/nes');
 
 const client = new Nes.Client('ws://localhost');
 const start = async () => {
@@ -127,8 +127,8 @@ start();
 #### Server
 
 ```js
-const Hapi = require('hapi');
-const Nes = require('nes');
+const Hapi = require('@hapi/hapi');
+const Nes = require('@hapi/nes');
 
 const server = new Hapi.Server();
 
@@ -145,7 +145,7 @@ start();
 #### Client
 
 ```js
-const Nes = require('nes');
+const Nes = require('@hapi/nes');
 
 const client = new Nes.Client('ws://localhost');
 const start = async () => {
@@ -165,10 +165,10 @@ start();
 #### Server
 
 ```js
-const Hapi = require('hapi');
-const Basic = require('hapi-auth-basic');
+const Hapi = require('@hapi/hapi');
+const Basic = require('@hapi/basic');
 const Bcrypt = require('bcrypt');
-const Nes = require('nes');
+const Nes = require('@hapi/nes');
 
 const server = new Hapi.Server();
 
@@ -224,7 +224,7 @@ start();
 #### Client
 
 ```js
-const Nes = require('nes');
+const Nes = require('@hapi/nes');
 
 const client = new Nes.Client('ws://localhost');
 const start = async () => {
@@ -242,10 +242,10 @@ start();
 #### Server
 
 ```js
-const Hapi = require('hapi');
-const Basic = require('hapi-auth-basic');
+const Hapi = require('@hapi/hapi');
+const Basic = require('@hapi/basic');
 const Bcrypt = require('bcrypt');
-const Nes = require('nes');
+const Nes = require('@hapi/nes');
 
 const server = new Hapi.Server();
 
@@ -298,7 +298,7 @@ start();
 #### Client
 
 ```js
-const Nes = require('nes');
+const Nes = require('@hapi/nes');
 
 const client = new Nes.Client('ws://localhost');
 
@@ -321,6 +321,6 @@ start();
 
 ### Browser Client
 
-When you `require('nes')` it loads the full module and adds a lot of extra code that is not needed
+When you `require('@hapi/nes')` it loads the full module and adds a lot of extra code that is not needed
 for the browser. The browser will only need the **nes** client. If you are using CommonJS you can
-load the client with `require('nes/client')`.
+load the client with `require('@hapi/nes/client')`.

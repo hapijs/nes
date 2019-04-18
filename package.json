@@ -1,33 +1,29 @@
 {
-  "name": "nes",
+  "name": "@hapi/nes",
   "description": "WebSocket adapter plugin for hapi routes",
   "version": "10.0.2",
   "repository": "git://github.com/hapijs/nes",
   "main": "lib/index.js",
   "browser": "dist/client.js",
-  "keywords": [
-    "hapi",
-    "plugin",
-    "websocket"
-  ],
+  "keywords": ["hapi", "plugin", "websocket"],
   "dependencies": {
-    "boom": "7.x.x",
-    "bounce": "1.x.x",
-    "call": "5.x.x",
-    "cryptiles": "4.x.x",
-    "hoek": "6.x.x",
-    "iron": "5.x.x",
-    "joi": "14.x.x",
-    "teamwork": "3.x.x",
+    "@hapi/boom": "7.x.x",
+    "@hapi/bounce": "1.x.x",
+    "@hapi/call": "5.x.x",
+    "@hapi/cryptiles": "4.x.x",
+    "@hapi/hoek": "6.x.x",
+    "@hapi/iron": "5.x.x",
+    "@hapi/joi": "15.x.x",
+    "@hapi/teamwork": "3.x.x",
     "ws": "6.x.x"
   },
   "devDependencies": {
+    "@hapi/code": "5.x.x",
+    "@hapi/hapi": "18.x.x",
+    "@hapi/lab": "18.x.x",
     "babel-cli": "^6.26.0",
     "babel-preset-env": "^1.6.1",
     "babel-preset-minify": "^0.2.0",
-    "code": "5.x.x",
-    "hapi": "18.x.x",
-    "lab": "18.x.x",
     "mkdirp": "0.5.1"
   },
   "babel": {
@@ -37,9 +33,9 @@
   },
   "scripts": {
     "build-client": "mkdirp dist && babel lib/client.js --out-file dist/client.js",
-    "test": "npm run-script build-client && node node_modules/lab/bin/lab -a code -t 100 -L",
+    "test": "npm run-script build-client && lab -a @hapi/code -t 100 -L",
     "prepare": "npm run-script build-client",
-    "test-cov-html": "node node_modules/lab/bin/lab -a code -r html -o coverage.html"
+    "test-cov-html": "lab -a @hapi/code -r html -o coverage.html"
   },
   "license": "BSD-3-Clause"
 }
