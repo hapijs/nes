@@ -1,7 +1,7 @@
 {
   "name": "@hapi/nes",
   "description": "WebSocket adapter plugin for hapi routes",
-  "version": "11.0.0",
+  "version": "11.0.1",
   "repository": "git://github.com/hapijs/nes",
   "main": "lib/index.js",
   "keywords": [
