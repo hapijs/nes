@@ -717,6 +717,25 @@ describe('authentication', () => {
             await server.stop();
         });
 
+        it('fails authentication entity (app) with specifiec remoteAddress', async () => {
+
+            const server = Hapi.server();
+
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
+
+            await server.register({ plugin: Nes, options: { auth: { type: 'direct', password, index: true } } });
+
+            server.subscription('/', { auth: { entity: 'app' } });
+
+            await server.start();
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            await expect(client.connect({ auth: { headers: { authorization: 'Custom app remoteAddress' } } })).to.reject('remoteAddress is not in whitelist');
+            client.disconnect();
+            await server.stop();
+        });
+
         it('subscribes to a path', async () => {
 
             const server = Hapi.server();
@@ -1463,7 +1482,8 @@ internals.implementation = function (server, options) {
             scope: ['a', 'b', '5']
         },
         app: {
-            app: 'app'
+            app: 'app',
+            remoteAddress: '192.168.0.1'
         }
     };
 
@@ -1485,6 +1505,10 @@ internals.implementation = function (server, options) {
             const user = users[username];
             if (!user) {
                 throw Boom.unauthorized('Unknown user', 'Custom');
+            }
+
+            if (user.app && parts[2] === 'remoteAddress' && user.remoteAddress !== request.info.remoteAddress){
+                throw Boom.unauthorized('remoteAddress is not in whitelist');
             }
 
             return h.authenticated({ credentials: user, artifacts: { userArtifact: artifactsByUser[username], expires: Date.now() + internals.authExpiry } });
