@@ -323,4 +323,4 @@ start();
 
 When you `require('@hapi/nes')` it loads the full module and adds a lot of extra code that is not needed
 for the browser. The browser will only need the **nes** client. If you are using CommonJS you can
-load the client with `require('@hapi/nes/client')`.
+load the client with `require('@hapi/nes/lib/client')`.
