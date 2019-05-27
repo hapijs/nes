@@ -1672,7 +1672,7 @@ describe('Client', () => {
             const team = new Teamwork();
             server.eachSocket(async (socket) => {
 
-                await socket.revoke('/', null);
+                await socket.revoke('/', null, false);
                 await Hoek.wait(50);
 
                 expect(client.subscriptions()).to.equal([]);
@@ -1682,6 +1682,83 @@ describe('Client', () => {
 
             await team.work;
             client.disconnect();
+            await server.stop();
+        });
+
+        it('handles revocation on closed websocket when throwIfClosed is false', async () => {
+
+            const server = Hapi.server();
+            await server.register({ plugin: Nes, options: { auth: false } });
+
+            const onUnsubscribe = new Teamwork();
+            server.subscription('/', { onUnsubscribe: () => onUnsubscribe.work });
+
+            await server.start();
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            await client.connect();
+
+            let updated = false;
+            const handler = (update, flags) => {
+
+                updated = true;
+            };
+
+            await client.subscribe('/', handler);
+            expect(client.subscriptions()).to.equal(['/']);
+
+            const team = new Teamwork();
+            client.disconnect();
+            server.eachSocket(async (socket) => {
+
+                await socket.revoke('/', null, false);
+                await Hoek.wait(50);
+                team.attend();
+            });
+
+            await Hoek.wait(50);
+            onUnsubscribe.attend();
+
+            await team.work;
+            expect(updated).to.be.false();
+
+            await server.stop();
+        });
+
+        it('throws by default if revoking closed web socket', async () => {
+
+            const server = Hapi.server();
+            await server.register({ plugin: Nes, options: { auth: false } });
+
+            const onUnsubscribe = new Teamwork();
+            server.subscription('/', { onUnsubscribe: () => onUnsubscribe.work });
+
+            await server.start();
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+            await client.connect();
+
+            let updated = false;
+            const handler = (update, flags) => {
+
+                updated = true;
+            };
+
+            await client.subscribe('/', handler);
+            expect(client.subscriptions()).to.equal(['/']);
+
+            const team = new Teamwork();
+            client.disconnect();
+            server.eachSocket((socket) => {
+
+                expect(socket.revoke('/', null)).to.reject('Socket not open');
+                team.attend();
+            });
+
+            await Hoek.wait(50);
+            onUnsubscribe.attend();
+
+            await team.work;
+            expect(updated).to.be.false();
+
             await server.stop();
         });
 
