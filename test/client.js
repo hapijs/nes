@@ -931,7 +931,8 @@ describe('Client', () => {
             const a = { b: 1 };
             a.a = a;
 
-            const err = await expect(client.request({ method: 'POST', path: '/', payload: a })).to.reject('Converting circular structure to JSON');
+            const err = await expect(client.request({ method: 'POST', path: '/', payload: a })).to.reject();
+            expect(err.message).to.startWith('Converting circular structure to JSON');
             expect(err.type).to.equal('user');
             expect(err.isNes).to.equal(true);
             client.disconnect();
