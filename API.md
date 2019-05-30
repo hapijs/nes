@@ -15,7 +15,7 @@
     - [`socket.disconnect()`](#socketdisconnect)
     - [`await socket.send(message)`](#await-socketsendmessage)
     - [`await socket.publish(path, message)`](#await-socketpublishpath-message)
-    - [`await socket.revoke(path, message)`](#await-socketrevokepath-message)
+    - [`await socket.revoke(path, message, throwIfClosed)`](#await-socketrevokepath-message)
 - [Request](#request)
     - [`request.socket`](#requestsocket)
 - [Client](#client)
@@ -112,8 +112,8 @@ method. The plugin accepts the following optional registration options:
         - `maxConnectionsPerUser` - if specified, limits authenticated users to a maximum number of
           client connections. Requires the `index` option enabled. Defaults to `false`.
         - `minAuthVerifyInterval` - if specified, waits at least the specificed number of milliseconds
-          between calls to [`await server.auth.verify()`](https://hapijs.com/api#-await-serverauthverifyrequest) 
-          to check if credentials are still valid. Cannot be shorter than `heartbeat.interval`. 
+          between calls to [`await server.auth.verify()`](https://hapijs.com/api#-await-serverauthverifyrequest)
+          to check if credentials are still valid. Cannot be shorter than `heartbeat.interval`.
           Defaults to `heartbeat.interval` or `15000` if `heartbeat` is disabled.
 - `headers` - an optional array of header field names to include in server responses to the client.
   If set to `'*'` (without an array), allows all headers. Defaults to `null` (no headers).
@@ -289,6 +289,8 @@ Revokes a subscription and optionally includes a last update where:
 - `message` - an optional last subscription update sent to the client. Can be any type which can be
   safely converted to string using `JSON.stringify()`. Pass `null` to revoke the subscription without
   sending a last update.
+- `throwIfClosed` - flag indicating what should be done if a underlying websocket has been closed.
+  defaults to `true`.
 
 ## Request
 
@@ -437,21 +439,21 @@ the client is configured to automatically reconnect, where:
 
 Returns `true` if reconnection is enabled, otherwise `false` (in which case the method was ignored).
 
-Note: this will not update the credentials on the server - 
+Note: this will not update the credentials on the server -
 use [`client.reauthenticate()`](#await-clientreauthenticateauth).
 
 ### `await client.reauthenticate(auth)`
 
-Will issue the `reauth` message to the server with updated `auth` details and also 
-[override the reconnection information](#clientoverridereconnectionauthauth), if reconnection is enabled. 
-The server will respond with an error and drop the connection in case the new `auth` credentials are 
+Will issue the `reauth` message to the server with updated `auth` details and also
+[override the reconnection information](#clientoverridereconnectionauthauth), if reconnection is enabled.
+The server will respond with an error and drop the connection in case the new `auth` credentials are
 invalid.
 
 Rejects with `Error` if the request failed.
 
 Resolves with `true` if the request succeeds.
 
-Note: when authentication has a limited lifetime, `reauthenticate()` should be called early enough to avoid 
+Note: when authentication has a limited lifetime, `reauthenticate()` should be called early enough to avoid
 the server dropping the connection.
 
 ### Errors
