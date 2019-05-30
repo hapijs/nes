@@ -931,8 +931,7 @@ describe('Client', () => {
             const a = { b: 1 };
             a.a = a;
 
-            const err = await expect(client.request({ method: 'POST', path: '/', payload: a })).to.reject();
-            expect(err.message).to.startWith('Converting circular structure to JSON');
+            const err = await expect(client.request({ method: 'POST', path: '/', payload: a })).to.reject(/Converting circular structure to JSON/);
             expect(err.type).to.equal('user');
             expect(err.isNes).to.equal(true);
             client.disconnect();
@@ -1673,7 +1672,7 @@ describe('Client', () => {
             const team = new Teamwork();
             server.eachSocket(async (socket) => {
 
-                await socket.revoke('/', null, false);
+                await socket.revoke('/', null, { ignoreClose: true });
                 await Hoek.wait(50);
 
                 expect(client.subscriptions()).to.equal([]);
@@ -1711,7 +1710,7 @@ describe('Client', () => {
             client.disconnect();
             server.eachSocket(async (socket) => {
 
-                await socket.revoke('/', null, false);
+                await socket.revoke('/', null, { ignoreClose: true });
                 await Hoek.wait(50);
                 team.attend();
             });

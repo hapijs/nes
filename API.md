@@ -13,9 +13,10 @@
     - [`socket.server`](#socketserver)
     - [`socket.connection`](#socketconnection)
     - [`socket.disconnect()`](#socketdisconnect)
+    - [`socket.isOpen()`](socketisopen)
     - [`await socket.send(message)`](#await-socketsendmessage)
     - [`await socket.publish(path, message)`](#await-socketpublishpath-message)
-    - [`await socket.revoke(path, message, throwIfClosed)`](#await-socketrevokepath-message)
+    - [`await socket.revoke(path, message, [options])`](#await-socketrevokepath-message-options)
 - [Request](#request)
     - [`request.socket`](#requestsocket)
 - [Client](#client)
@@ -267,6 +268,10 @@ The socket's connection reference.
 
 Closes a client connection.
 
+### `socket.isOpen()`
+
+Returns `true` is the socket connection is in ready state, otherwise `false`.
+
 ### `await socket.send(message)`
 
 Sends a custom message to the client where:
@@ -281,7 +286,7 @@ Sends a subscription update to a specific client where:
 - `message` - the message sent to the client. Can be any type which can be safely converted to
   string using `JSON.stringify()`.
 
-### `await socket.revoke(path, message)`
+### `await socket.revoke(path, message, [options])`
 
 Revokes a subscription and optionally includes a last update where:
 - `path` - the subscription string. Note that if the client is not subscribe to the provided `path`,
@@ -289,8 +294,8 @@ Revokes a subscription and optionally includes a last update where:
 - `message` - an optional last subscription update sent to the client. Can be any type which can be
   safely converted to string using `JSON.stringify()`. Pass `null` to revoke the subscription without
   sending a last update.
-- `throwIfClosed` - flag indicating what should be done if a underlying websocket has been closed.
-  defaults to `true`.
+- `options` - optional settings:
+    - `ignoreClosed` - ignore errors if the underlying websocket has been closed. Defaults to `false`.
 
 ## Request
 
