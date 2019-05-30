@@ -1,4 +1,4 @@
-# 11.0.x API Reference
+# 11.2.x API Reference
 
 - [Registration](#registration)
 - [Server](#server)
