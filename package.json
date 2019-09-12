@@ -16,7 +16,7 @@
     "@hapi/cryptiles": "4.x.x",
     "@hapi/hoek": "8.x.x",
     "@hapi/iron": "5.x.x",
-    "@hapi/joi": "15.x.x",
+    "@hapi/joi": "16.x.x",
     "@hapi/teamwork": "3.x.x",
     "ws": "6.x.x"
   },

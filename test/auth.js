@@ -717,7 +717,7 @@ describe('authentication', () => {
             await server.stop();
         });
 
-        it('fails authentication entity (app) with specifiec remoteAddress', async () => {
+        it('fails authentication entity (app) with specified remoteAddress', async () => {
 
             const server = Hapi.server();
 
@@ -732,6 +732,33 @@ describe('authentication', () => {
             await server.start();
             const client = new Nes.Client('http://localhost:' + server.info.port);
             await expect(client.connect({ auth: { headers: { authorization: 'Custom app remoteAddress' } } })).to.reject('remoteAddress is not in whitelist');
+            client.disconnect();
+            await server.stop();
+        });
+
+        it('handles optional auth on auth endpoint', async () => {
+
+            const server = Hapi.server();
+
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
+
+            await server.register({ plugin: Nes, options: { auth: { type: 'direct', password, route: { mode: 'optional' } } } });
+
+            server.route({
+                method: 'GET',
+                path: '/',
+                handler: () => 'hello'
+            });
+
+            await server.start();
+            const client = new Nes.Client('http://localhost:' + server.info.port);
+
+            await client.connect({ auth: {} });
+            const err = await expect(client.request('/')).to.reject('Missing authentication');
+            expect(err.statusCode).to.equal(401);
+
             client.disconnect();
             await server.stop();
         });
