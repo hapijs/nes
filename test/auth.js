@@ -1329,12 +1329,12 @@ describe('authentication', () => {
 
             const server = Hapi.server();
 
-            const scheme = internals.implementation();
+            const scheme = internals.implementation({ authExpiry: 1000 });
             server.auth.scheme('custom', () => scheme);
             server.auth.strategy('default', 'custom');
             server.auth.default('default');
 
-            await server.register({ plugin: Nes, options: { auth: { minAuthVerifyInterval: 100 }, heartbeat: { interval: 50, timeout: 30 } } });
+            await server.register({ plugin: Nes, options: { auth: { minAuthVerifyInterval: 400 }, heartbeat: { interval: 200, timeout: 120 } } });
             await server.start();
 
             const client = new Nes.Client('http://localhost:' + server.info.port);
@@ -1386,7 +1386,7 @@ describe('authentication', () => {
 
             const server = Hapi.server();
 
-            const scheme = internals.implementation();
+            const scheme = internals.implementation({ authExpiry: 300 });
             server.auth.scheme('custom', () => scheme);
             server.auth.strategy('default', 'custom');
             server.auth.default('default');
@@ -1403,7 +1403,7 @@ describe('authentication', () => {
             const client = new Nes.Client('http://localhost:' + server.info.port);
             await client.connect({ reconnect: false, auth: { headers: { authorization: 'Custom john' } } });
 
-            await Hoek.wait(internals.authExpiry + 1);
+            await Hoek.wait(301);
 
             const team = new Teamwork();
             client.onDisconnect = () => {
@@ -1438,7 +1438,7 @@ describe('authentication', () => {
 
             const server = Hapi.server();
 
-            const scheme = internals.implementation();
+            const scheme = internals.implementation({ authExpiry: 300 });
             server.auth.scheme('custom', () => scheme);
             server.auth.strategy('default', 'custom');
             server.auth.default('default');
@@ -1455,7 +1455,7 @@ describe('authentication', () => {
                 team.attend();
             };
 
-            await Hoek.wait(internals.authExpiry / 2);
+            await Hoek.wait(150);
 
             await client.reauthenticate({ headers: { authorization: 'Custom ed' } });
 
@@ -1494,10 +1494,7 @@ describe('authentication', () => {
 });
 
 
-internals.authExpiry = 300;
-
-
-internals.implementation = function (server, options) {
+internals.implementation = function (options = { authExpiry: 300 }) {
 
     const users = {
         john: {
@@ -1538,7 +1535,7 @@ internals.implementation = function (server, options) {
                 throw Boom.unauthorized('remoteAddress is not in whitelist');
             }
 
-            return h.authenticated({ credentials: user, artifacts: { userArtifact: artifactsByUser[username], expires: Date.now() + internals.authExpiry } });
+            return h.authenticated({ credentials: user, artifacts: { userArtifact: artifactsByUser[username], expires: Date.now() + options.authExpiry } });
         },
 
         verified: [],
