@@ -638,13 +638,13 @@ describe('authentication', () => {
 
             expect(c).to.equal(0);
             expect(e).to.equal(0);
-            await client.connect({ delay: 10, auth: { headers: { authorization: 'Custom john' } } });
+            await client.connect({ delay: 100, auth: { headers: { authorization: 'Custom john' } } });
 
             expect(c).to.equal(1);
             expect(e).to.equal(0);
 
             client._ws.close();
-            await Hoek.wait(40);
+            await Hoek.wait(300);
 
             expect(c).to.equal(2);
             expect(e).to.equal(0);
