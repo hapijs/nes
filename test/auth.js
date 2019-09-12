@@ -1415,7 +1415,8 @@ describe('authentication', () => {
 
             await team.work;
 
-            // only one message exchange between server/client, therefore a single verification
+            // Only one message exchange between server/client, therefore a single verification
+
             expect(scheme.verified).to.equal(['abc']);
 
             await server.stop();
@@ -1438,12 +1439,12 @@ describe('authentication', () => {
 
             const server = Hapi.server();
 
-            const scheme = internals.implementation({ authExpiry: 300 });
+            const scheme = internals.implementation({ authExpiry: 1200 });
             server.auth.scheme('custom', () => scheme);
             server.auth.strategy('default', 'custom');
             server.auth.default('default');
 
-            await server.register({ plugin: Nes, options: { auth: { minAuthVerifyInterval: 100 }, heartbeat: { interval: 50, timeout: 30 } } });
+            await server.register({ plugin: Nes, options: { auth: { minAuthVerifyInterval: 400 }, heartbeat: { interval: 200, timeout: 120 } } });
             await server.start();
 
             const client = new Nes.Client('http://localhost:' + server.info.port);
@@ -1455,7 +1456,7 @@ describe('authentication', () => {
                 team.attend();
             };
 
-            await Hoek.wait(150);
+            await Hoek.wait(600);
 
             await client.reauthenticate({ headers: { authorization: 'Custom ed' } });
 
