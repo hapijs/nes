@@ -166,14 +166,14 @@ describe('Listener', () => {
         it('pauses heartbeat timeout while replying to client', async () => {
 
             const server = Hapi.server();
-            await server.register({ plugin: Nes, options: { auth: false, heartbeat: { interval: 50, timeout: 45 } } });
+            await server.register({ plugin: Nes, options: { auth: false, heartbeat: { interval: 200, timeout: 180 } } });
 
             server.route({
                 method: 'GET',
                 path: '/',
                 handler: async () => {
 
-                    await Hoek.wait(110);
+                    await Hoek.wait(440);
                     return 'hello';
                 }
             });
@@ -194,15 +194,15 @@ describe('Listener', () => {
             client.onDisconnect = (willReconnect, log) => ++d;
 
             await client.connect();
-            expect(client._heartbeatTimeout).to.equal(95);
+            expect(client._heartbeatTimeout).to.equal(380);
 
             await client.request('/');
-            await Hoek.wait(130);
+            await Hoek.wait(520);
 
             expect(d).to.equal(0);
 
             client._onMessage = Hoek.ignore;            // Stop processing messages
-            await Hoek.wait(120);
+            await Hoek.wait(480);
 
             expect(d).to.equal(1);
 
