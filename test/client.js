@@ -89,6 +89,49 @@ describe('Client', () => {
 
     describe('connect()', () => {
 
+        it('reconnects when server initially down', async () => {
+
+            const server1 = Hapi.server();
+            await server1.register({ plugin: Nes, options: { auth: false } });
+            await server1.start();
+            const port = server1.info.port;
+            await server1.stop();
+
+            const client = new Nes.Client('http://localhost:' + port);
+            client.onError = Hoek.ignore;
+
+            const team = new Teamwork({ meetings: 2 });
+
+            client.onConnect = () => {
+
+                team.attend();
+            };
+
+            let reconnecting = false;
+            client.onDisconnect = (willReconnect, log) => {
+
+                reconnecting = willReconnect;
+                team.attend();
+            };
+
+            await expect(client.connect({ delay: 10 })).to.reject('Connection terminated while waiting to connect');
+
+            const server2 = Hapi.server({ port });
+            server2.route({ path: '/', method: 'GET', handler: () => 'ok' });
+            await server2.register({ plugin: Nes, options: { auth: false } });
+            await server2.start();
+
+            await team.work;
+
+            expect(reconnecting).to.be.true();
+
+            const res = await client.request('/');
+            expect(res.payload).to.equal('ok');
+
+            client.disconnect();
+            await server2.stop();
+        });
+
         it('fails to connect', async () => {
 
             const client = new Nes.Client('http://0');
