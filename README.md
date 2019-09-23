@@ -1,6 +1,6 @@
 <a href="http://hapijs.com"><img src="https://raw.githubusercontent.com/hapijs/assets/master/images/family.png" width="180px" align="right" /></a>
 
-# nes
+# @hapi/nes
 
 **nes** adds native WebSocket support to [**hapi**](https://github.com/hapijs/hapi)-based application
 servers. Instead of treating the WebSocket connections as a separate platform with its own security
