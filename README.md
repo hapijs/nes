@@ -12,5 +12,6 @@
 
 - [Documentation and API](https://hapi.dev/family/nes/)
 - [Version status](https://hapi.dev/resources/status/#nes) (builds, dependencies, node versions, licenses, eol)
+- [Changelog](https://hapi.dev/family/nes/changelog/)
 - [Project policies](https://hapi.dev/policies/)
 - [Free and commercial support options](https://hapi.dev/support/)
