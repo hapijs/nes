@@ -42,7 +42,7 @@ describe('authentication', () => {
         client._hello = () => Promise.resolve();
         client.onError = Hoek.ignore;
 
-        const team = new Teamwork();
+        const team = new Teamwork.Team();
         client.onDisconnect = () => team.attend();
 
         await client.connect({ auth: { headers: { authorization: 'Custom john' } } });
@@ -779,7 +779,7 @@ describe('authentication', () => {
             const client = new Nes.Client('http://localhost:' + server.info.port);
             await client.connect({ auth: { headers: { authorization: 'Custom john' } } });
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             const handler = (update) => {
 
                 expect(client.subscriptions()).to.equal(['/']);
@@ -816,7 +816,7 @@ describe('authentication', () => {
             const client = new Nes.Client('http://localhost:' + server.info.port);
             await client.connect({ auth: { headers: { authorization: 'Custom john' } } });
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             const handler = (update) => {
 
                 expect(update).to.equal('john');
@@ -869,7 +869,7 @@ describe('authentication', () => {
             const client = new Nes.Client('http://localhost:' + server.info.port);
             await client.connect();
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             const handler = (update) => {
 
                 expect(update).to.equal('heya');
@@ -902,7 +902,7 @@ describe('authentication', () => {
             const client = new Nes.Client('http://localhost:' + server.info.port);
             await client.connect();
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             const handler = (update) => {
 
                 expect(update).to.equal('heya');
@@ -935,7 +935,7 @@ describe('authentication', () => {
             const client = new Nes.Client('http://localhost:' + server.info.port);
             await client.connect({ auth: { headers: { authorization: 'Custom john' } } });
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             const handler = (update) => {
 
                 expect(update).to.equal('heya');
@@ -968,7 +968,7 @@ describe('authentication', () => {
             const client = new Nes.Client('http://localhost:' + server.info.port);
             await client.connect({ auth: { headers: { authorization: 'Custom app' } } });
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             const handler = (update) => {
 
                 expect(update).to.equal('heya');
@@ -1047,7 +1047,7 @@ describe('authentication', () => {
             const client = new Nes.Client('http://localhost:' + server.info.port);
             await client.connect({ auth: { headers: { authorization: 'Custom john' } } });
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             const handler = (update) => {
 
                 expect(update).to.equal('heya');
@@ -1080,7 +1080,7 @@ describe('authentication', () => {
             const client = new Nes.Client('http://localhost:' + server.info.port);
             await client.connect({ auth: { headers: { authorization: 'Custom john' } } });
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             const handler = (update) => {
 
                 expect(update).to.equal('heya');
@@ -1113,7 +1113,7 @@ describe('authentication', () => {
             const client = new Nes.Client('http://localhost:' + server.info.port);
             await client.connect({ auth: { headers: { authorization: 'Custom ed' } } });
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             const handler = (update) => {
 
                 expect(update).to.equal('heya');
@@ -1146,7 +1146,7 @@ describe('authentication', () => {
             const client = new Nes.Client('http://localhost:' + server.info.port);
             await client.connect({ auth: { headers: { authorization: 'Custom ed' } } });
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             const handler = (update) => {
 
                 expect(update).to.equal('heya');
@@ -1179,7 +1179,7 @@ describe('authentication', () => {
             const client = new Nes.Client('http://localhost:' + server.info.port);
             await client.connect({ auth: { headers: { authorization: 'Custom ed' } } });
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             const handler = (update) => {
 
                 expect(update).to.equal('heya');
@@ -1312,7 +1312,7 @@ describe('authentication', () => {
             const client = new Nes.Client('http://localhost:' + server.info.port);
             await client.connect({ reconnect: false, auth: { headers: { authorization: 'Custom john' } } });
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             client.onDisconnect = () => {
 
                 team.attend();
@@ -1340,7 +1340,7 @@ describe('authentication', () => {
             const client = new Nes.Client('http://localhost:' + server.info.port);
             await client.connect({ reconnect: false, auth: { headers: { authorization: 'Custom john' } } });
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             client.onDisconnect = () => {
 
                 team.attend();
@@ -1368,7 +1368,7 @@ describe('authentication', () => {
             const client = new Nes.Client('http://localhost:' + server.info.port);
             await client.connect({ reconnect: false, auth: { headers: { authorization: 'Custom john' } } });
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             client.onDisconnect = () => {
 
                 team.attend();
@@ -1405,7 +1405,7 @@ describe('authentication', () => {
 
             await Hoek.wait(301);
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             client.onDisconnect = () => {
 
                 team.attend();
@@ -1450,7 +1450,7 @@ describe('authentication', () => {
             const client = new Nes.Client('http://localhost:' + server.info.port);
             await client.connect({ reconnect: false, auth: { headers: { authorization: 'Custom john' } } });
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             client.onDisconnect = () => {
 
                 team.attend();
@@ -1532,7 +1532,7 @@ internals.implementation = function (options = { authExpiry: 300 }) {
                 throw Boom.unauthorized('Unknown user', 'Custom');
             }
 
-            if (user.app && parts[2] === 'remoteAddress' && user.remoteAddress !== request.info.remoteAddress){
+            if (user.app && parts[2] === 'remoteAddress' && user.remoteAddress !== request.info.remoteAddress) {
                 throw Boom.unauthorized('remoteAddress is not in whitelist');
             }
 

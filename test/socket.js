@@ -54,7 +54,7 @@ describe('Socket', () => {
 
     it('includes socket info', async () => {
 
-        const team = new Teamwork();
+        const team = new Teamwork.Team();
         const server = Hapi.server();
 
         const onConnection = (socket) => {
@@ -87,7 +87,7 @@ describe('Socket', () => {
             await server.start();
             const client = new Nes.Client('http://localhost:' + server.info.port);
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             client.onDisconnect = () => team.attend();
 
             await client.connect();
@@ -110,7 +110,7 @@ describe('Socket', () => {
             await server.start();
             const client = new Nes.Client('http://localhost:' + server.info.port);
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             client.onUpdate = (message) => {
 
                 expect(message).to.equal('goodbye');
@@ -139,7 +139,7 @@ describe('Socket', () => {
             await server.start();
             const client = new Nes.Client('http://localhost:' + server.info.port);
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             client.onUpdate = (message) => {
 
                 expect(message).to.equal('goodbye');
@@ -178,7 +178,7 @@ describe('Socket', () => {
             const client = new Nes.Client('http://localhost:' + server.info.port);
             await client.connect();
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             const each = (update) => {
 
                 expect(update).to.equal('Initial state');
@@ -214,7 +214,7 @@ describe('Socket', () => {
             const client = new Nes.Client('http://localhost:' + server.info.port);
             await client.connect();
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
 
             let count = 0;
             const each = (update) => {
@@ -332,7 +332,7 @@ describe('Socket', () => {
             const client = new Nes.Client('http://localhost:' + server.info.port);
             const text = 'this is a message longer than 5 bytes';
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             client.onUpdate = (message) => {
 
                 expect(message).to.equal(text);
@@ -356,7 +356,7 @@ describe('Socket', () => {
             const client = new Nes.Client('http://localhost:' + server.info.port);
             const text = 'this is a message shorter than 100 bytes';
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             client.onUpdate = (message) => {
 
                 expect(message).to.equal(text);
@@ -413,7 +413,7 @@ describe('Socket', () => {
             const client = new Nes.Client('http://localhost:' + server.info.port);
             await client.connect();
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             const handler = (update) => {
 
                 team.attend();
@@ -523,7 +523,7 @@ describe('Socket', () => {
             const client = new Ws('http://localhost:' + server.info.port);
             client.onerror = Hoek.ignore;
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             client.on('message', (data) => {
 
                 const message = JSON.parse(data);
@@ -580,7 +580,7 @@ describe('Socket', () => {
             const client = new Ws('http://localhost:' + server.info.port);
             client.onerror = Hoek.ignore;
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             client.on('message', (data) => {
 
                 const message = JSON.parse(data);
@@ -617,7 +617,7 @@ describe('Socket', () => {
             const client = new Ws('http://localhost:' + server.info.port);
             client.onerror = Hoek.ignore;
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             client.on('message', (data) => {
 
                 const message = JSON.parse(data);
@@ -648,7 +648,7 @@ describe('Socket', () => {
             const client = new Ws('http://localhost:' + server.info.port);
             client.onerror = Hoek.ignore;
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             client.on('message', (data) => {
 
                 const message = JSON.parse(data);
@@ -690,7 +690,7 @@ describe('Socket', () => {
             const client = new Ws('http://localhost:' + server.info.port);
             client.onerror = Hoek.ignore;
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             client.on('message', (data) => {
 
                 const message = JSON.parse(data);
@@ -732,7 +732,7 @@ describe('Socket', () => {
             const client = new Ws('http://localhost:' + server.info.port);
             client.onerror = Hoek.ignore;
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             client.on('message', (data) => {
 
                 const message = JSON.parse(data);
@@ -768,7 +768,7 @@ describe('Socket', () => {
             const client = new Ws('http://localhost:' + server.info.port);
             client.onerror = Hoek.ignore;
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             client.on('message', (data) => {
 
                 const message = JSON.parse(data);
@@ -798,7 +798,7 @@ describe('Socket', () => {
             const client = new Ws('http://localhost:' + server.info.port);
             client.onerror = Hoek.ignore;
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             client.on('message', (data) => {
 
                 const message = JSON.parse(data);
@@ -828,7 +828,7 @@ describe('Socket', () => {
             const client = new Ws('http://localhost:' + server.info.port);
             client.onerror = Hoek.ignore;
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             client.on('message', (data) => {
 
                 const message = JSON.parse(data);
@@ -863,7 +863,7 @@ describe('Socket', () => {
 
             await client.subscribe('/5', Hoek.ignore);
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             const handler = async (update) => {
 
                 client.unsubscribe('/5', null, Hoek.ignore);
@@ -899,7 +899,7 @@ describe('Socket', () => {
             client.onError = Hoek.ignore;
             await client.connect();
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             const handler = async (update) => {
 
                 await client.unsubscribe('/6', null);

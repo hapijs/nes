@@ -44,7 +44,7 @@ describe('Listener', () => {
         server.subscription('/', { onUnsubscribe });
         await server.start();
 
-        const team = new Teamwork({ meetings: 20 });
+        const team = new Teamwork.Team({ meetings: 20 });
 
         const clients = [];
         for (let i = 0; i < 20; ++i) {
@@ -136,7 +136,7 @@ describe('Listener', () => {
             const client = new Nes.Client('http://localhost:' + server.info.port);
             client.onError = Hoek.ignore;
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             client.onDisconnect = () => team.attend();
 
             await client.connect();
@@ -221,7 +221,7 @@ describe('Listener', () => {
             await server.start();
             const client = new Nes.Client('http://localhost:' + server.info.port);
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             client.onUpdate = (message) => {
 
                 expect(message).to.equal('hello');
@@ -376,7 +376,7 @@ describe('Listener', () => {
                 client.disconnect();
             };
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             const onUnsubscribe = (socket, path, params) => {
 
                 expect(socket).to.exist();
@@ -411,7 +411,7 @@ describe('Listener', () => {
                 client.unsubscribe('/foo', null, Hoek.ignore);
             };
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             const onUnsubscribe = (socket, path, params) => {
 
                 expect(socket).to.exist();
@@ -498,7 +498,7 @@ describe('Listener', () => {
             const client = new Nes.Client('http://localhost:' + server.info.port);
             await client.connect();
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             const handler = (update) => {
 
                 expect(update).to.equal('2');
@@ -531,7 +531,7 @@ describe('Listener', () => {
             const client = new Nes.Client('http://localhost:' + server.info.port);
             await client.connect();
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             const handler = (update) => {
 
                 expect(update).to.equal({ a: 1 });
@@ -564,7 +564,7 @@ describe('Listener', () => {
             const client = new Nes.Client('http://localhost:' + server.info.port);
             await client.connect();
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             const handler = (update) => {
 
                 expect(update).to.equal({ a: 5 });
@@ -612,7 +612,7 @@ describe('Listener', () => {
 
             server.subscription('/updates', { filter });
 
-            const team = new Teamwork({ meetings: 2 });
+            const team = new Teamwork.Team({ meetings: 2 });
 
             const client1 = new Nes.Client('http://localhost:' + server.info.port);
             await client1.connect({ auth: { headers: { authorization: 'jane' } } });
@@ -701,7 +701,7 @@ describe('Listener', () => {
             const client = new Nes.Client('http://localhost:' + server.info.port);
             await client.connect();
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             const handler = (update) => {
 
                 expect(update).to.equal({ a: 5 });
@@ -758,7 +758,7 @@ describe('Listener', () => {
             const client = new Nes.Client('http://localhost:' + server.info.port);
             await client.connect();
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             const handler = (update) => {
 
                 expect(update).to.equal({ a: 1 });
@@ -1036,7 +1036,7 @@ describe('Listener', () => {
 
             await client.subscribe('/5', handler1);
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             const handler2 = async (update2) => {
 
                 expect(called).to.be.true();

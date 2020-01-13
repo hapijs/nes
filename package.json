@@ -4,26 +4,29 @@
   "version": "11.2.2",
   "repository": "git://github.com/hapijs/nes",
   "main": "lib/index.js",
+  "files": [
+    "lib"
+  ],
   "keywords": [
     "hapi",
     "plugin",
     "websocket"
   ],
   "dependencies": {
-    "@hapi/boom": "7.x.x",
-    "@hapi/bounce": "1.x.x",
-    "@hapi/call": "5.x.x",
-    "@hapi/cryptiles": "4.x.x",
-    "@hapi/hoek": "8.x.x",
-    "@hapi/iron": "5.x.x",
-    "@hapi/joi": "16.x.x",
-    "@hapi/teamwork": "3.x.x",
+    "@hapi/boom": "9.x.x",
+    "@hapi/bounce": "2.x.x",
+    "@hapi/call": "6.x.x",
+    "@hapi/cryptiles": "5.x.x",
+    "@hapi/hoek": "9.x.x",
+    "@hapi/iron": "6.x.x",
+    "@hapi/joi": "17.x.x",
+    "@hapi/teamwork": "4.x.x",
     "ws": "6.x.x"
   },
   "devDependencies": {
-    "@hapi/code": "6.x.x",
-    "@hapi/hapi": "18.x.x",
-    "@hapi/lab": "20.x.x",
+    "@hapi/code": "8.x.x",
+    "@hapi/hapi": "19.x.x",
+    "@hapi/lab": "22.x.x",
     "mkdirp": "0.5.1"
   },
   "scripts": {

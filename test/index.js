@@ -43,7 +43,7 @@ describe('register()', () => {
     it('calls onConnection callback', async () => {
 
         const server = Hapi.server();
-        const team = new Teamwork();
+        const team = new Teamwork.Team();
         const onConnection = (ws) => {
 
             expect(ws).to.exist();
@@ -69,7 +69,7 @@ describe('register()', () => {
     it('calls onDisconnection callback', async () => {
 
         const server = Hapi.server();
-        const team = new Teamwork();
+        const team = new Teamwork.Team();
         const onDisconnection = (ws) => {
 
             expect(ws).to.exist();

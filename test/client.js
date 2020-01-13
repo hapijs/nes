@@ -71,7 +71,7 @@ describe('Client', () => {
 
             const client = new Nes.Client('http://localhost:' + server.info.port);
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             const orig = console.error;
             console.error = (err) => {
 
@@ -100,7 +100,7 @@ describe('Client', () => {
             const client = new Nes.Client('http://localhost:' + port);
             client.onError = Hoek.ignore;
 
-            const team = new Teamwork({ meetings: 2 });
+            const team = new Teamwork.Team({ meetings: 2 });
 
             client.onConnect = () => {
 
@@ -182,7 +182,7 @@ describe('Client', () => {
             const client = new Nes.Client('http://localhost:' + server.info.port);
             await client.connect();
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             client.onError = Hoek.ignore;
             client.onDisconnect = (willReconnect, log) => {
 
@@ -246,7 +246,7 @@ describe('Client', () => {
             const client = new Nes.Client('http://localhost:' + server.info.port);
             client.onError = Hoek.ignore;
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             let c = 0;
             client.onConnect = async () => {
 
@@ -328,7 +328,7 @@ describe('Client', () => {
             const client = new Nes.Client('http://localhost:' + server.info.port);
             client.onError = Hoek.ignore;
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             let c = 0;
             client.onConnect = async () => {
 
@@ -505,7 +505,7 @@ describe('Client', () => {
             const client = new Nes.Client('http://localhost:' + server.info.port);
             await client.connect();
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             client.onDisconnect = (willReconnect, log) => {
 
                 expect(log.wasRequested).to.be.true();
@@ -528,7 +528,7 @@ describe('Client', () => {
             client.onError = Hoek.ignore;
             await client.connect();
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             client.onDisconnect = (willReconnect, log) => {
 
                 expect(log.wasRequested).to.be.false();
@@ -552,7 +552,7 @@ describe('Client', () => {
             client.disconnect();
             await client.connect();
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             client.onDisconnect = (willReconnect, log) => {
 
                 expect(log.wasRequested).to.be.false();
@@ -613,7 +613,7 @@ describe('Client', () => {
                 ++e;
             };
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
 
             let c = 0;
             client.onConnect = () => {
@@ -711,7 +711,7 @@ describe('Client', () => {
 
             let c = 0;
             const now = Date.now();
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             client.onConnect = () => {
 
                 ++c;
@@ -760,7 +760,7 @@ describe('Client', () => {
                 r += willReconnect ? 't' : 'f';
             };
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
 
             let c = 0;
             client.onConnect = () => {
@@ -897,7 +897,7 @@ describe('Client', () => {
             await server.start();
             const client = new Nes.Client('http://localhost:' + server.info.port);
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
 
             let c = 0;
             client.onConnect = async () => {
@@ -1013,7 +1013,7 @@ describe('Client', () => {
             [
                 {
                     testName: 'handles empty string, no content-type',
-                    handler: () => '',
+                    handler: (request, h) => h.response('').code(200),
                     expectedPayload: ''
                 },
                 {
@@ -1028,7 +1028,7 @@ describe('Client', () => {
                 },
                 {
                     testName: 'handles empty string, text/plain',
-                    handler: (request, h) => h.response('').type('text/plain'),
+                    handler: (request, h) => h.response('').type('text/plain').code(200),
                     expectedPayload: ''
                 },
                 {
@@ -1276,7 +1276,7 @@ describe('Client', () => {
             await server.start();
             const client = new Nes.Client('http://localhost:' + server.info.port);
 
-            const team = new Teamwork({ meetings: 2 });
+            const team = new Teamwork.Team({ meetings: 2 });
 
             const logged = [];
             client.onError = (err) => {
@@ -1339,7 +1339,7 @@ describe('Client', () => {
             const client = new Nes.Client('http://localhost:' + server.info.port);
             await client.connect();
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             const handler = (update, flags) => {
 
                 expect(client.subscriptions()).to.equal(['/']);
@@ -1367,7 +1367,7 @@ describe('Client', () => {
             await server.start();
             const client = new Nes.Client('http://localhost:' + server.info.port);
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             client.onDisconnect = async (willReconnect, log) => {
 
                 expect(log.wasRequested).to.be.false();
@@ -1409,7 +1409,7 @@ describe('Client', () => {
             await server.start();
             const client = new Nes.Client('http://localhost:' + server.info.port);
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             const handler = async (update, flags) => {
 
                 expect(update).to.equal('heya');
@@ -1443,7 +1443,7 @@ describe('Client', () => {
             await client1.connect();
             await client2.connect();
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             const handler = (update, flags) => {
 
                 expect(update).to.equal('heya');
@@ -1636,7 +1636,7 @@ describe('Client', () => {
             const client = new Nes.Client('http://localhost:' + server.info.port);
             await client.connect();
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             const handler1 = async (update1, flags1) => {
 
                 expect(client.subscriptions()).to.equal(['/']);
@@ -1673,7 +1673,7 @@ describe('Client', () => {
             const client = new Nes.Client('http://localhost:' + server.info.port);
             await client.connect();
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             const handler = (update, flags) => {
 
                 expect(client.subscriptions()).to.equal([]);
@@ -1712,7 +1712,7 @@ describe('Client', () => {
             await client.subscribe('/', handler);
             expect(client.subscriptions()).to.equal(['/']);
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             server.eachSocket(async (socket) => {
 
                 await socket.revoke('/', null, { ignoreClose: true });
@@ -1733,7 +1733,7 @@ describe('Client', () => {
             const server = Hapi.server();
             await server.register({ plugin: Nes, options: { auth: false } });
 
-            const onUnsubscribe = new Teamwork();
+            const onUnsubscribe = new Teamwork.Team();
             server.subscription('/', { onUnsubscribe: () => onUnsubscribe.work });
 
             await server.start();
@@ -1749,7 +1749,7 @@ describe('Client', () => {
             await client.subscribe('/', handler);
             expect(client.subscriptions()).to.equal(['/']);
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             client.disconnect();
             server.eachSocket(async (socket) => {
 
@@ -1772,7 +1772,7 @@ describe('Client', () => {
             const server = Hapi.server();
             await server.register({ plugin: Nes, options: { auth: false } });
 
-            const onUnsubscribe = new Teamwork();
+            const onUnsubscribe = new Teamwork.Team();
             server.subscription('/', { onUnsubscribe: () => onUnsubscribe.work });
 
             await server.start();
@@ -1788,7 +1788,7 @@ describe('Client', () => {
             await client.subscribe('/', handler);
             expect(client.subscriptions()).to.equal(['/']);
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             client.disconnect();
             server.eachSocket((socket) => {
 
@@ -1880,7 +1880,7 @@ describe('Client', () => {
             const client = new Nes.Client('http://localhost:' + server.info.port);
             client.onError = Hoek.ignore;
 
-            const team = new Teamwork({ meetings: 2 });
+            const team = new Teamwork.Team({ meetings: 2 });
 
             client.onHeartbeatTimeout = (willReconnect) => {
 
@@ -1911,7 +1911,7 @@ describe('Client', () => {
             const client = new Nes.Client('http://localhost:' + server.info.port);
             client.onError = Hoek.ignore;
 
-            const team = new Teamwork();
+            const team = new Teamwork.Team();
             client.onDisconnect = (willReconnect, log) => {
 
                 team.attend();
