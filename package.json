@@ -26,8 +26,7 @@
   "devDependencies": {
     "@hapi/code": "8.x.x",
     "@hapi/hapi": "19.x.x",
-    "@hapi/lab": "22.x.x",
-    "mkdirp": "0.5.1"
+    "@hapi/lab": "22.x.x"
   },
   "scripts": {
     "test": "lab -a @hapi/code -t 100 -L -m 10000",
