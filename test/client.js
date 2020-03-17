@@ -701,7 +701,7 @@ describe('Client', () => {
             await server.stop();
         });
 
-        it('overrides max delay', async () => {
+        it('overrides max delay', { retry: true }, async () => {
 
             const server = Hapi.server();
             await server.register({ plugin: Nes, options: { auth: false } });
