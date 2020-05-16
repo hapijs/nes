@@ -290,7 +290,7 @@ const client = new Nes.Client('ws://localhost');
 const start = async () => {
 
     await client.connect({ auth: { headers: { authorization: 'Basic am9objpzZWNyZXQ=' } } });
-    const handler = (err, update) => {
+    const handler = (update, flags) => {
 
         // First publish is not received (filtered due to updater key)
         // update -> { id: 6, status: 'initial', updater: 'steve' }
