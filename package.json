@@ -22,14 +22,14 @@
     "@hapi/cryptiles": "5.x.x",
     "@hapi/hoek": "9.x.x",
     "@hapi/iron": "6.x.x",
-    "@hapi/joi": "17.x.x",
-    "@hapi/teamwork": "4.x.x",
-    "ws": "6.x.x"
+    "@hapi/teamwork": "5.x.x",
+    "@hapi/validate": "1.x.x",
+    "ws": "^7.3.1"
   },
   "devDependencies": {
     "@hapi/code": "8.x.x",
     "@hapi/hapi": "19.x.x",
-    "@hapi/lab": "22.x.x"
+    "@hapi/lab": "23.x.x"
   },
   "scripts": {
     "test": "lab -a @hapi/code -t 100 -L -m 10000",
