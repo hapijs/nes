@@ -59,6 +59,7 @@ describe('Client', () => {
         };
 
         const client = new Nes.Client('http://localhost', { ws: { maxPayload: 1000 } });
+        console.log(client._isBrowser);
         client.onError = Hoek.ignore;
         await expect(client.connect()).to.reject();
         expect(length).to.equal(1);
