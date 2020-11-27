@@ -39,14 +39,7 @@ describe('Client', () => {
         let length;
         Nes.Client.WebSocket = function (...args) {
 
-            console.log(args);
-            console.log(WebSocket.toString());
-            console.log(global.WebSocket.toString());
             length = args.length;
-            return new Ws(...args);
-        };
-
-        flags.onCleanup = () => {
 
             if (orig) {
                 global.WebSocket = orig;
@@ -56,10 +49,11 @@ describe('Client', () => {
             }
 
             Nes.Client.WebSocket = Ws;
+
+            return new Ws(...args);
         };
 
         const client = new Nes.Client('http://localhost', { ws: { maxPayload: 1000 } });
-        console.log(client._isBrowser);
         client.onError = Hoek.ignore;
         await expect(client.connect()).to.reject();
         expect(length).to.equal(1);
