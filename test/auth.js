@@ -1329,7 +1329,7 @@ describe('authentication', () => {
 
             const server = Hapi.server();
 
-            const scheme = internals.implementation({ authExpiry: 1200 });
+            const scheme = internals.implementation({ authExpiry: 1100 });
             server.auth.scheme('custom', () => scheme);
             server.auth.strategy('default', 'custom');
             server.auth.default('default');
@@ -1439,7 +1439,7 @@ describe('authentication', () => {
 
             const server = Hapi.server();
 
-            const scheme = internals.implementation({ authExpiry: 1200 });
+            const scheme = internals.implementation({ authExpiry: 1100 });
             server.auth.scheme('custom', () => scheme);
             server.auth.strategy('default', 'custom');
             server.auth.default('default');

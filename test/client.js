@@ -40,10 +40,6 @@ describe('Client', () => {
         Nes.Client.WebSocket = function (...args) {
 
             length = args.length;
-            return new Ws(...args);
-        };
-
-        flags.onCleanup = () => {
 
             if (orig) {
                 global.WebSocket = orig;
@@ -53,6 +49,8 @@ describe('Client', () => {
             }
 
             Nes.Client.WebSocket = Ws;
+
+            return new Ws(...args);
         };
 
         const client = new Nes.Client('http://localhost', { ws: { maxPayload: 1000 } });
