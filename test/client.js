@@ -39,6 +39,7 @@ describe('Client', () => {
         let length;
         Nes.Client.WebSocket = function (...args) {
 
+            console.log(args);
             length = args.length;
             return new Ws(...args);
         };
