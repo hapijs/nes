@@ -216,7 +216,7 @@ describe('Listener', () => {
             const server = Hapi.server();
             let disconnected = 0;
             const onDisconnection = () => disconnected++;
-            await server.register({ plugin: Nes, options: { onDisconnection, auth: false, heartbeat: { timeout: 15, interval: 16 } } });
+            await server.register({ plugin: Nes, options: { onDisconnection, auth: false, heartbeat: { timeout: 14, interval: 25 } } });
             await server.start();
 
             const client = new Nes.Client('http://localhost:' + server.info.port);
