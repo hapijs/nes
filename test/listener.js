@@ -248,18 +248,18 @@ describe('Listener', () => {
             // wait for the next ping
             await pingTeam.work;
 
-            await Hoek.wait(5);
+            await Hoek.wait(2);
             const connectPromise = client.connect().catch(Code.fail);
 
-            // client should not time out for another 50 milliseconds
+            // client should not time out for another 2 milliseconds
 
-            await Hoek.wait(5);
+            await Hoek.wait(2);
 
             // release "hello" message before the timeout hits
             helloTeam.attend();
             await connectPromise;
 
-            await Hoek.wait(5); // ping should have been answered and connection still active
+            await Hoek.wait(2); // ping should have been answered and connection still active
 
             expect(disconnected).to.equal(0);
 
