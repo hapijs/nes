@@ -216,7 +216,7 @@ describe('Listener', () => {
             const server = Hapi.server();
             let disconnected = 0;
             const onDisconnection = () => disconnected++;
-            await server.register({ plugin: Nes, options: { onDisconnection, auth: false, heartbeat: { timeout: 50, interval: 55 } } });
+            await server.register({ plugin: Nes, options: { onDisconnection, auth: false, heartbeat: { timeout: 10, interval: 15 } } });
             await server.start();
 
             const client = new Nes.Client('http://localhost:' + server.info.port);
@@ -248,18 +248,18 @@ describe('Listener', () => {
             // wait for the next ping
             await pingTeam.work;
 
-            await Hoek.wait(30);
+            await Hoek.wait(10);
             const connectPromise = client.connect().catch(Code.fail);
 
             // client should not time out for another 50 milliseconds
 
-            await Hoek.wait(30);
+            await Hoek.wait(10);
 
             // release "hello" message before the timeout hits
             helloTeam.attend();
             await connectPromise;
 
-            await Hoek.wait(60); // ping should have been answered and connection still active
+            await Hoek.wait(20); // ping should have been answered and connection still active
 
             expect(disconnected).to.equal(0);
 

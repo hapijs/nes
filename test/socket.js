@@ -526,6 +526,7 @@ describe('Socket', () => {
             const team = new Teamwork.Team();
             client.on('message', (data) => {
 
+                console.log(data);
                 const message = JSON.parse(data);
                 expect(message.payload).to.equal({
                     error: 'Bad Request',
