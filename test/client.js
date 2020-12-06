@@ -720,12 +720,12 @@ describe('Client', () => {
                     return;
                 }
 
-                expect(Date.now() - now).to.be.below(80);
+                expect(Date.now() - now).to.be.below(25);
 
                 team.attend();
             };
 
-            await client.connect({ delay: 10, maxDelay: 11 });
+            await client.connect({ delay: 2, maxDelay: 3 });
 
             await team.work;
             client.disconnect();

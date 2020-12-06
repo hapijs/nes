@@ -1444,7 +1444,7 @@ describe('authentication', () => {
             server.auth.strategy('default', 'custom');
             server.auth.default('default');
 
-            await server.register({ plugin: Nes, options: { auth: { minAuthVerifyInterval: 350 }, heartbeat: { interval: 200, timeout: 120 } } });
+            await server.register({ plugin: Nes, options: { auth: { minAuthVerifyInterval: 300 }, heartbeat: { interval: 200, timeout: 120 } } });
             await server.start();
 
             const client = new Nes.Client('http://localhost:' + server.info.port);
