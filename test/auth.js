@@ -1456,7 +1456,7 @@ describe('authentication', () => {
                 team.attend();
             };
 
-            await Hoek.wait(600);
+            await Hoek.wait(400);
 
             await client.reauthenticate({ headers: { authorization: 'Custom ed' } });
 

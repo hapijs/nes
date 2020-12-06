@@ -253,7 +253,7 @@ describe('Listener', () => {
 
             // client should not time out for another 50 milliseconds
 
-            await Hoek.wait(40);
+            await Hoek.wait(30);
 
             // release "hello" message before the timeout hits
             helloTeam.attend();

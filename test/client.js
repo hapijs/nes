@@ -720,7 +720,9 @@ describe('Client', () => {
                     return;
                 }
 
-                expect(Date.now() - now).to.be.below(25);
+                // The github mac test machine is very slow and requires
+                // this threshold to be increased
+                expect(Date.now() - now).to.be.below(50);
 
                 team.attend();
             };
