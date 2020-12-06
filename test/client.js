@@ -714,12 +714,13 @@ describe('Client', () => {
 
                 ++c;
 
-                if (c < 6) {
+                // only need to reconnect a few times to confirm override of wait
+                if (c < 3) {
                     client._ws.close();
                     return;
                 }
 
-                expect(Date.now() - now).to.be.below(150);
+                expect(Date.now() - now).to.be.below(80);
 
                 team.attend();
             };
