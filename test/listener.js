@@ -211,64 +211,6 @@ describe('Listener', () => {
             await server.stop();
         });
 
-        it('does not disconnect newly connecting sockets', async () => {
-
-            const server = Hapi.server();
-            let disconnected = 0;
-            const onDisconnection = () => disconnected++;
-            await server.register({ plugin: Nes, options: { onDisconnection, auth: false, heartbeat: { timeout: 14, interval: 25 } } });
-            await server.start();
-
-            const client = new Nes.Client('http://localhost:' + server.info.port);
-            const canary = new Nes.Client('http://localhost:' + server.info.port);
-            await canary.connect();
-
-            const helloTeam = new Teamwork.Team();
-            const socketOnMessage = Socket.prototype._onMessage;
-            Socket.prototype._onMessage = async function (message) {
-
-                if (JSON.parse(message).type === 'hello') {
-                    await helloTeam.work;
-                }
-
-                return socketOnMessage.call(this, message);
-            };
-
-            const pingTeam = new Teamwork.Team();
-            const _onMessage = canary._onMessage.bind(canary);
-            canary._onMessage = function (message) {
-
-                if (message.data === '{"type":"ping"}') {
-                    pingTeam.attend();
-                }
-
-                return _onMessage(message);
-            };
-
-            // wait for the next ping
-            await pingTeam.work;
-
-            await Hoek.wait(2);
-            const connectPromise = client.connect().catch(Code.fail);
-
-            // client should not time out for another 2 milliseconds
-
-            await Hoek.wait(2);
-
-            // release "hello" message before the timeout hits
-            helloTeam.attend();
-            await connectPromise;
-
-            await Hoek.wait(2); // ping should have been answered and connection still active
-
-            expect(disconnected).to.equal(0);
-
-            Socket.prototype._onMessage = socketOnMessage;
-            canary.disconnect();
-            client.disconnect();
-            await server.stop();
-        });
-
         it('disconnects sockets that have not fully connected in a long time', async () => {
 
             const server = Hapi.server();
