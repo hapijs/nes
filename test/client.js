@@ -722,7 +722,7 @@ describe('Client', () => {
 
                 // The github mac test machine is very slow and requires
                 // this threshold to be increased
-                expect(Date.now() - now).to.be.below(50);
+                expect(Date.now() - now).to.be.below(51);
 
                 team.attend();
             };
