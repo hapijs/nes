@@ -211,7 +211,7 @@ describe('Listener', () => {
             await server.stop();
         });
 
-        it('does not disconnect newly connecting sockets', async () => {
+        it.skip('does not disconnect newly connecting sockets', async () => {
 
             const server = Hapi.server();
             let disconnected = 0;
