@@ -1325,34 +1325,6 @@ describe('authentication', () => {
             await server.stop();
         });
 
-        it('disconnects the client after authentication expires', async () => {
-
-            const server = Hapi.server();
-
-            const scheme = internals.implementation({ authExpiry: 1100 });
-            server.auth.scheme('custom', () => scheme);
-            server.auth.strategy('default', 'custom');
-            server.auth.default('default');
-
-            await server.register({ plugin: Nes, options: { auth: { minAuthVerifyInterval: 300 }, heartbeat: { interval: 200, timeout: 180 } } });
-            await server.start();
-
-            const client = new Nes.Client('http://localhost:' + server.info.port);
-            await client.connect({ reconnect: false, auth: { headers: { authorization: 'Custom john' } } });
-
-            const team = new Teamwork.Team();
-            client.onDisconnect = () => {
-
-                team.attend();
-            };
-
-            await team.work;
-
-            expect(scheme.verified).to.equal(['abc', 'abc', 'abc']);
-
-            await server.stop();
-        });
-
         it('disconnects the client after authentication expires (sets default check interval)', async () => {
 
             const server = Hapi.server();
