@@ -34,7 +34,7 @@ jobs:
       matrix:
         os: [macos]
         node: ['*', '14']
-        hapi: ['20', '19']
+        hapi: ['20']
 
     runs-on: ${{ matrix.os }}-latest
     name: ${{ matrix.os }} node@${{ matrix.node }} hapi@${{ matrix.hapi }}
