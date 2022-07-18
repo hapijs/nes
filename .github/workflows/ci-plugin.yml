@@ -5,47 +5,11 @@ on:
     branches:
       - master
   pull_request:
+  workflow_dispatch:
 
 jobs:
   test:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu, windows]
-        node: ['*', '14', '12']
-        hapi: ['20', '19']
-
-    runs-on: ${{ matrix.os }}-latest
-    name: ${{ matrix.os }} node@${{ matrix.node }} hapi@${{ matrix.hapi }}
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
-        with:
-          node-version: ${{ matrix.node }}
-      - name: install
-        run: npm install
-      - name: install hapi
-        run: npm install @hapi/hapi@${{ matrix.hapi }}
-      - name: test
-        run: npm test
-  testmac:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [macos]
-        node: ['*', '14']
-        hapi: ['20']
-
-    runs-on: ${{ matrix.os }}-latest
-    name: ${{ matrix.os }} node@${{ matrix.node }} hapi@${{ matrix.hapi }}
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
-        with:
-          node-version: ${{ matrix.node }}
-      - name: install
-        run: npm install
-      - name: install hapi
-        run: npm install @hapi/hapi@${{ matrix.hapi }}
-      - name: test
-        run: npm test
+    uses: hapijs/.github/.github/workflows/ci-plugin.yml@master
+    with:
+      min-node-version: 14
+      min-hapi-version: 20
