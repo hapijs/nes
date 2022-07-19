@@ -1,5 +1,7 @@
 'use strict';
 
+const Url = require('url');
+
 const Code = require('@hapi/code');
 const Hapi = require('@hapi/hapi');
 const Lab = require('@hapi/lab');
@@ -16,6 +18,8 @@ const expect = Code.expect;
 
 describe('register()', () => {
 
+    const getUri = ({ protocol, address, port }) => Url.format({ protocol, hostname: address, port });
+
     it('adds websocket support', async () => {
 
         const server = Hapi.server();
@@ -26,9 +30,9 @@ describe('register()', () => {
             path: '/',
             handler: () => 'hello'
         });
-
         await server.start();
-        const client = new Nes.Client('http://localhost:' + server.info.port);
+
+        const client = new Nes.Client(getUri(server.info));
         await client.connect();
 
         const { payload, statusCode, headers } = await client.request('/');
@@ -60,7 +64,7 @@ describe('register()', () => {
         });
 
         await server.start();
-        const client = new Nes.Client('http://localhost:' + server.info.port);
+        const client = new Nes.Client(getUri(server.info));
         await client.connect();
         await team.work;
         await server.stop();
@@ -86,7 +90,7 @@ describe('register()', () => {
         });
 
         await server.start();
-        const client = new Nes.Client('http://localhost:' + server.info.port);
+        const client = new Nes.Client(getUri(server.info));
         await client.connect();
         client.disconnect();
         await team.work;

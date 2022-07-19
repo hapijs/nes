@@ -1,5 +1,7 @@
 'use strict';
 
+const Url = require('url');
+
 const Boom = require('@hapi/boom');
 const Code = require('@hapi/code');
 const Hapi = require('@hapi/hapi');
@@ -20,6 +22,7 @@ const expect = Code.expect;
 describe('authentication', () => {
 
     const password = 'some_not_random_password_that_is_also_long_enough';
+    const getUri = ({ protocol, address, port }) => Url.format({ protocol, hostname: address, port });
 
     it('times out when hello is delayed', async () => {
 
@@ -38,7 +41,7 @@ describe('authentication', () => {
         });
 
         await server.start();
-        const client = new Nes.Client('http://localhost:' + server.info.port);
+        const client = new Nes.Client(getUri(server.info));
         client._hello = () => Promise.resolve();
         client.onError = Hoek.ignore;
 
@@ -68,7 +71,7 @@ describe('authentication', () => {
         });
 
         await server.start();
-        const client = new Nes.Client('http://localhost:' + server.info.port);
+        const client = new Nes.Client(getUri(server.info));
         client._hello = () => Promise.resolve();
         client.onError = Hoek.ignore;
         const connecting = client.connect({ auth: { headers: { authorization: 'Custom john' } } });
@@ -103,7 +106,7 @@ describe('authentication', () => {
             const header = res.headers['set-cookie'][0];
             const cookie = header.match(/(?:[^\x00-\x20\(\)<>@\,;\:\\"\/\[\]\?\=\{\}\x7F]+)\s*=\s*(?:([^\x00-\x20\"\,\;\\\x7F]*))/);
 
-            const client = new Nes.Client('http://localhost:' + server.info.port, { ws: { headers: { cookie: 'nes=' + cookie[1] } } });
+            const client = new Nes.Client(getUri(server.info), { ws: { headers: { cookie: 'nes=' + cookie[1] } } });
             await client.connect();
 
             const { payload, statusCode } = await client.request('/');
@@ -137,10 +140,10 @@ describe('authentication', () => {
             const header = res.headers['set-cookie'][0];
             const cookie = header.match(/(?:[^\x00-\x20\(\)<>@\,;\:\\"\/\[\]\?\=\{\}\x7F]+)\s*=\s*(?:([^\x00-\x20\"\,\;\\\x7F]*))/);
 
-            const client = new Nes.Client('http://localhost:' + server.info.port, { ws: { headers: { cookie: 'nes=' + cookie[1] } } });
+            const client = new Nes.Client(getUri(server.info), { ws: { headers: { cookie: 'nes=' + cookie[1] } } });
             await client.connect();
 
-            const client2 = new Nes.Client('http://localhost:' + server.info.port, { ws: { headers: { cookie: 'nes=' + cookie[1] } } });
+            const client2 = new Nes.Client(getUri(server.info), { ws: { headers: { cookie: 'nes=' + cookie[1] } } });
             await expect(client2.connect()).to.reject('Too many connections for the authenticated user');
 
             client.disconnect();
@@ -171,13 +174,13 @@ describe('authentication', () => {
             const header = res.headers['set-cookie'][0];
             const cookie = header.match(/(?:[^\x00-\x20\(\)<>@\,;\:\\"\/\[\]\?\=\{\}\x7F]+)\s*=\s*(?:([^\x00-\x20\"\,\;\\\x7F]*))/);
 
-            const client = new Nes.Client('http://localhost:' + server.info.port, { ws: { headers: { cookie: 'nes=' + cookie[1] } } });
+            const client = new Nes.Client(getUri(server.info), { ws: { headers: { cookie: 'nes=' + cookie[1] } } });
             await client.connect();
 
-            const client2 = new Nes.Client('http://localhost:' + server.info.port, { ws: { headers: { cookie: 'nes=' + cookie[1] } } });
+            const client2 = new Nes.Client(getUri(server.info), { ws: { headers: { cookie: 'nes=' + cookie[1] } } });
             await client2.connect();
 
-            const client3 = new Nes.Client('http://localhost:' + server.info.port, { ws: { headers: { cookie: 'nes=' + cookie[1] } } });
+            const client3 = new Nes.Client(getUri(server.info), { ws: { headers: { cookie: 'nes=' + cookie[1] } } });
             await expect(client3.connect()).to.reject('Too many connections for the authenticated user');
 
             client.disconnect();
@@ -211,7 +214,7 @@ describe('authentication', () => {
             const header = res.headers['set-cookie'][0];
             const cookie = header.match(/(?:[^\x00-\x20\(\)<>@\,;\:\\"\/\[\]\?\=\{\}\x7F]+)\s*=\s*(?:([^\x00-\x20\"\,\;\\\x7F]*))/);
 
-            const client = new Nes.Client('http://localhost:' + server.info.port, { ws: { headers: { cookie: 'nes=' + cookie[1] } } });
+            const client = new Nes.Client(getUri(server.info), { ws: { headers: { cookie: 'nes=' + cookie[1] } } });
             await client.connect();
 
             const { payload, statusCode } = await client.request('/');
@@ -242,7 +245,7 @@ describe('authentication', () => {
             const res = await server.inject('/nes/auth');
             expect(res.result.status).to.equal('unauthenticated');
 
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect();
 
             const err = await expect(client.request('/')).to.reject('Missing authentication');
@@ -272,7 +275,7 @@ describe('authentication', () => {
             const res = await server.inject('/nes/auth');
             expect(res.result.status).to.equal('unauthenticated');
 
-            const client = new Nes.Client('http://localhost:' + server.info.port, { ws: { headers: { cookie: 'xnes=123' } } });
+            const client = new Nes.Client(getUri(server.info), { ws: { headers: { cookie: 'xnes=123' } } });
             await client.connect();
 
             const err = await expect(client.request('/')).to.reject('Missing authentication');
@@ -304,7 +307,7 @@ describe('authentication', () => {
             const header = res.headers['set-cookie'][0];
             const cookie = header.match(/(?:[^\x00-\x20\(\)<>@\,;\:\\"\/\[\]\?\=\{\}\x7F]+)\s*=\s*(?:([^\x00-\x20\"\,\;\\\x7F]*))/);
 
-            const client = new Nes.Client('http://localhost:' + server.info.port, { ws: { headers: { cookie: 'nes=' + cookie[1] } } });
+            const client = new Nes.Client(getUri(server.info), { ws: { headers: { cookie: 'nes=' + cookie[1] } } });
             const err = await expect(client.connect({ auth: 'something' })).to.reject('Connection already authenticated');
             expect(err.statusCode).to.equal(400);
 
@@ -329,7 +332,7 @@ describe('authentication', () => {
             });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port, { ws: { headers: { cookie: '"' } } });
+            const client = new Nes.Client(getUri(server.info), { ws: { headers: { cookie: '"' } } });
             await expect(client.connect()).to.reject('Invalid nes authentication cookie');
             client.disconnect();
             await server.stop();
@@ -382,7 +385,7 @@ describe('authentication', () => {
             expect(res.result.status).to.equal('authenticated');
             expect(res.result.token).to.exist();
 
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect({ auth: res.result.token });
             const { payload, statusCode } = await client.request('/');
 
@@ -425,7 +428,7 @@ describe('authentication', () => {
             expect(res.result.status).to.equal('authenticated');
             expect(res.result.token).to.exist();
 
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect({ auth: res.result.token });
             const { payload, statusCode } = await client.request('/');
             expect(payload).to.equal('hello');
@@ -452,7 +455,7 @@ describe('authentication', () => {
             });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             const err = await expect(client.connect({ auth: 'abc' })).to.reject('Invalid token');
             expect(err.statusCode).to.equal(401);
 
@@ -477,7 +480,7 @@ describe('authentication', () => {
             });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             const err = await expect(client.connect({ auth: '' })).to.reject('Connection requires authentication');
             expect(err.statusCode).to.equal(401);
 
@@ -512,7 +515,7 @@ describe('authentication', () => {
             expect(res.result.status).to.equal('authenticated');
             expect(res.result.token).to.exist();
 
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect({ auth: res.result.token });
             const err = await expect(client._hello(res.result.token)).to.reject('Connection already initialized');
             expect(err.statusCode).to.equal(400);
@@ -541,7 +544,7 @@ describe('authentication', () => {
             });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect({ auth: { headers: { authorization: 'Custom john' } } });
             const { payload, statusCode } = await client.request('/');
             expect(payload).to.equal('hello');
@@ -568,10 +571,10 @@ describe('authentication', () => {
             });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect({ auth: { headers: { authorization: 'Custom john' } } });
 
-            const client2 = new Nes.Client('http://localhost:' + server.info.port);
+            const client2 = new Nes.Client(getUri(server.info));
             await expect(client2.connect({ auth: { headers: { authorization: 'Custom john' } } })).to.reject('Too many connections for the authenticated user');
 
             client.disconnect();
@@ -596,7 +599,7 @@ describe('authentication', () => {
             });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect({ auth: { headers: { authorization: 'Custom john' } } });
 
             const { payload, statusCode } = await client.request('/');
@@ -624,7 +627,7 @@ describe('authentication', () => {
             });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
 
             let e = 0;
             client.onError = (err) => {
@@ -667,7 +670,7 @@ describe('authentication', () => {
 
             await server.register({ plugin: Nes, options: { auth: { type: 'direct', password } } });
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
 
             let c = 0;
             client.onConnect = () => ++c;
@@ -694,7 +697,7 @@ describe('authentication', () => {
             await server.register({ plugin: Nes, options: { auth: { type: 'direct', password } } });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await expect(client.connect({ auth: { headers: { authorization: 'Custom steve' } } })).to.reject('Unknown user');
             client.disconnect();
             await server.stop();
@@ -711,7 +714,7 @@ describe('authentication', () => {
             await server.register({ plugin: Nes, options: { auth: { type: 'direct', password } } });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await expect(client.connect({ auth: '' })).to.reject('Connection requires authentication');
             client.disconnect();
             await server.stop();
@@ -730,7 +733,7 @@ describe('authentication', () => {
             server.subscription('/', { auth: { entity: 'app' } });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await expect(client.connect({ auth: { headers: { authorization: 'Custom app remoteAddress' } } })).to.reject('remoteAddress is not in whitelist');
             client.disconnect();
             await server.stop();
@@ -753,7 +756,7 @@ describe('authentication', () => {
             });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
 
             await client.connect({ auth: {} });
             const err = await expect(client.request('/')).to.reject('Missing authentication');
@@ -776,7 +779,7 @@ describe('authentication', () => {
             server.subscription('/');
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect({ auth: { headers: { authorization: 'Custom john' } } });
 
             const team = new Teamwork.Team();
@@ -813,7 +816,7 @@ describe('authentication', () => {
             server.subscription('/', { filter });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect({ auth: { headers: { authorization: 'Custom john' } } });
 
             const team = new Teamwork.Team();
@@ -844,7 +847,7 @@ describe('authentication', () => {
             server.subscription('/', { auth: { mode: 'required' } });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect();
 
             await expect(client.subscribe('/', Hoek.ignore)).to.reject('Authentication required to subscribe');
@@ -866,7 +869,7 @@ describe('authentication', () => {
             server.subscription('/');
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect();
 
             const team = new Teamwork.Team();
@@ -899,7 +902,7 @@ describe('authentication', () => {
             server.subscription('/');
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect();
 
             const team = new Teamwork.Team();
@@ -932,7 +935,7 @@ describe('authentication', () => {
             server.subscription('/', { auth: { entity: 'user' } });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect({ auth: { headers: { authorization: 'Custom john' } } });
 
             const team = new Teamwork.Team();
@@ -965,7 +968,7 @@ describe('authentication', () => {
             server.subscription('/', { auth: { entity: 'app' } });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect({ auth: { headers: { authorization: 'Custom app' } } });
 
             const team = new Teamwork.Team();
@@ -998,7 +1001,7 @@ describe('authentication', () => {
             server.subscription('/', { auth: { entity: 'app' } });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect({ auth: { headers: { authorization: 'Custom john' } } });
 
             await expect(client.subscribe('/', Hoek.ignore)).to.reject('User credentials cannot be used on an application subscription');
@@ -1021,7 +1024,7 @@ describe('authentication', () => {
             server.subscription('/', { auth: { entity: 'user' } });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect({ auth: { headers: { authorization: 'Custom app' } } });
 
             await expect(client.subscribe('/', Hoek.ignore)).to.reject('Application credentials cannot be used on a user subscription');
@@ -1044,7 +1047,7 @@ describe('authentication', () => {
             server.subscription('/', { auth: { scope: 'a' } });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect({ auth: { headers: { authorization: 'Custom john' } } });
 
             const team = new Teamwork.Team();
@@ -1077,7 +1080,7 @@ describe('authentication', () => {
             server.subscription('/', { auth: { scope: ['x', 'a'] } });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect({ auth: { headers: { authorization: 'Custom john' } } });
 
             const team = new Teamwork.Team();
@@ -1110,7 +1113,7 @@ describe('authentication', () => {
             server.subscription('/', { auth: { scope: 'a' } });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect({ auth: { headers: { authorization: 'Custom ed' } } });
 
             const team = new Teamwork.Team();
@@ -1143,7 +1146,7 @@ describe('authentication', () => {
             server.subscription('/', { auth: { scope: ['b', 'a'] } });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect({ auth: { headers: { authorization: 'Custom ed' } } });
 
             const team = new Teamwork.Team();
@@ -1176,7 +1179,7 @@ describe('authentication', () => {
             server.subscription('/{id}', { auth: { scope: ['{params.id}'] } });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect({ auth: { headers: { authorization: 'Custom ed' } } });
 
             const team = new Teamwork.Team();
@@ -1209,7 +1212,7 @@ describe('authentication', () => {
             server.subscription('/', { auth: { scope: 'b' } });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect({ auth: { headers: { authorization: 'Custom john' } } });
 
             await expect(client.subscribe('/', Hoek.ignore)).to.reject('Insufficient scope to subscribe, expected any of: b');
@@ -1232,7 +1235,7 @@ describe('authentication', () => {
             server.subscription('/', { auth: { scope: 'x' } });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect({ auth: { headers: { authorization: 'Custom ed' } } });
 
             await expect(client.subscribe('/', Hoek.ignore)).to.reject('Insufficient scope to subscribe, expected any of: x');
@@ -1255,7 +1258,7 @@ describe('authentication', () => {
             server.subscription('/', { auth: { scope: 'x' } });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect({ auth: { headers: { authorization: 'Custom app' } } });
 
             await expect(client.subscribe('/', Hoek.ignore)).to.reject('Insufficient scope to subscribe, expected any of: x');
@@ -1282,7 +1285,7 @@ describe('authentication', () => {
             await server.register(Nes);
             await server.start();
 
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect({ reconnect: false, auth: { headers: { authorization: 'Custom john' } } });
 
             const res1 = await client.request('/');
@@ -1309,7 +1312,7 @@ describe('authentication', () => {
             await server.register(Nes);
             await server.start();
 
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect({ reconnect: false, auth: { headers: { authorization: 'Custom john' } } });
 
             const team = new Teamwork.Team();
@@ -1337,7 +1340,7 @@ describe('authentication', () => {
             await server.register({ plugin: Nes, options: { auth: { minAuthVerifyInterval: 300 }, heartbeat: { interval: 200, timeout: 180 } } });
             await server.start();
 
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect({ reconnect: false, auth: { headers: { authorization: 'Custom john' } } });
 
             const team = new Teamwork.Team();
@@ -1365,7 +1368,7 @@ describe('authentication', () => {
             await server.register({ plugin: Nes, options: { heartbeat: { interval: 100, timeout: 30 } } });
             await server.start();
 
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect({ reconnect: false, auth: { headers: { authorization: 'Custom john' } } });
 
             const team = new Teamwork.Team();
@@ -1400,7 +1403,7 @@ describe('authentication', () => {
             await server.register({ plugin: Nes, options: { heartbeat: false, auth: { minAuthVerifyInterval: 100 } } });
             await server.start();
 
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect({ reconnect: false, auth: { headers: { authorization: 'Custom john' } } });
 
             await Hoek.wait(301);
@@ -1447,7 +1450,7 @@ describe('authentication', () => {
             await server.register({ plugin: Nes, options: { auth: { minAuthVerifyInterval: 300 }, heartbeat: { interval: 200, timeout: 120 } } });
             await server.start();
 
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect({ reconnect: false, auth: { headers: { authorization: 'Custom john' } } });
 
             const team = new Teamwork.Team();
@@ -1481,7 +1484,7 @@ describe('authentication', () => {
             await server.register({ plugin: Nes, options: { auth: { minAuthVerifyInterval: 100 }, heartbeat: { interval: 50, timeout: 30 } } });
             await server.start();
 
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect({ reconnect: false, auth: { headers: { authorization: 'Custom john' } } });
 
             await Hoek.wait(200);

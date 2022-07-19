@@ -1,5 +1,7 @@
 'use strict';
 
+const Url = require('url');
+
 const Boom = require('@hapi/boom');
 const Code = require('@hapi/code');
 const Hapi = require('@hapi/hapi');
@@ -17,6 +19,8 @@ const expect = Code.expect;
 
 
 describe('Client', () => {
+
+    const getUri = ({ protocol, address, port }) => Url.format({ protocol, hostname: address, port });
 
     it('defaults options.ws.maxPayload to zero (node)', () => {
 
@@ -67,7 +71,7 @@ describe('Client', () => {
             await server.register({ plugin: Nes, options: { auth: false } });
             await server.start();
 
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
 
             const team = new Teamwork.Team();
             const orig = console.error;
@@ -93,9 +97,10 @@ describe('Client', () => {
             await server1.register({ plugin: Nes, options: { auth: false } });
             await server1.start();
             const port = server1.info.port;
+            const uri = getUri(server1.info);
             await server1.stop();
 
-            const client = new Nes.Client('http://localhost:' + port);
+            const client = new Nes.Client(uri);
             client.onError = Hoek.ignore;
 
             const team = new Teamwork.Team({ meetings: 2 });
@@ -146,7 +151,7 @@ describe('Client', () => {
             await server.register({ plugin: Nes, options: { auth: false } });
             await server.start();
 
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
 
             await client.connect({ reconnect: false });
             await expect(client.connect()).to.reject('Already connected');
@@ -160,7 +165,7 @@ describe('Client', () => {
             await server.register({ plugin: Nes, options: { auth: false } });
             await server.start();
 
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
 
             await client.connect();
             await expect(client.connect()).to.reject('Cannot connect while client attempts to reconnect');
@@ -177,7 +182,7 @@ describe('Client', () => {
             await server.register({ plugin: Nes, options: { auth: false } });
             await server.start();
 
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect();
 
             const team = new Teamwork.Team();
@@ -241,7 +246,7 @@ describe('Client', () => {
             await server.register(Nes);
             await server.start();
 
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             client.onError = Hoek.ignore;
 
             const team = new Teamwork.Team();
@@ -323,7 +328,7 @@ describe('Client', () => {
             await server.register(Nes);
             await server.start();
 
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             client.onError = Hoek.ignore;
 
             const team = new Teamwork.Team();
@@ -402,7 +407,7 @@ describe('Client', () => {
             await server.register(Nes);
             await server.start();
 
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             client.onError = Hoek.ignore;
 
             await client.connect({ delay: 10 });
@@ -427,7 +432,7 @@ describe('Client', () => {
             await server.register({ plugin: Nes, options: { auth: false } });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect();
 
             client.disconnect();
@@ -442,7 +447,7 @@ describe('Client', () => {
             await server.register({ plugin: Nes, options: { auth: false } });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect();
 
             client._ws.close();
@@ -456,7 +461,7 @@ describe('Client', () => {
             await server.register({ plugin: Nes, options: { auth: false } });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
 
             const orig = client._connect;
             client._connect = (...args) => {
@@ -478,7 +483,7 @@ describe('Client', () => {
             await server.register({ plugin: Nes, options: { auth: false } });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect();
 
             let disconnected = 0;
@@ -500,7 +505,7 @@ describe('Client', () => {
             await server.register({ plugin: Nes, options: { auth: false } });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect();
 
             const team = new Teamwork.Team();
@@ -522,7 +527,7 @@ describe('Client', () => {
             await server.register({ plugin: Nes, options: { auth: false } });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             client.onError = Hoek.ignore;
             await client.connect();
 
@@ -545,7 +550,7 @@ describe('Client', () => {
             await server.register({ plugin: Nes, options: { auth: false } });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             client.onError = Hoek.ignore;
             client.disconnect();
             await client.connect();
@@ -575,7 +580,7 @@ describe('Client', () => {
             });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect();
 
             await client.request('/');
@@ -602,7 +607,7 @@ describe('Client', () => {
             await server.register({ plugin: Nes, options: { auth: false } });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
 
             let e = 0;
             client.onError = (err) => {
@@ -643,7 +648,7 @@ describe('Client', () => {
             await server.register({ plugin: Nes, options: { auth: false } });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             client.onError = Hoek.ignore;
 
             let c = 0;
@@ -665,7 +670,7 @@ describe('Client', () => {
             await server.register({ plugin: Nes, options: { auth: false } });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
 
             let e = 0;
             client.onError = (err) => {
@@ -705,7 +710,7 @@ describe('Client', () => {
             await server.register({ plugin: Nes, options: { auth: false } });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
 
             let c = 0;
             const now = Date.now();
@@ -740,7 +745,7 @@ describe('Client', () => {
             await server.register({ plugin: Nes, options: { auth: false } });
 
             await server.start();
-            const url = 'http://localhost:' + server.info.port;
+            const url = getUri(server.info);
             const client = new Nes.Client(url);
 
             let e = 0;
@@ -752,7 +757,7 @@ describe('Client', () => {
                 expect(err.isNes).to.equal(true);
 
                 ++e;
-                client._url = 'http://localhost:' + server.info.port;
+                client._url = getUri(server.info);
             };
 
             let r = '';
@@ -808,7 +813,7 @@ describe('Client', () => {
             });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect();
 
             const request = client.request('/');
@@ -827,7 +832,7 @@ describe('Client', () => {
 
             await server.start();
 
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             const orig = client._connect;
             client._connect = (...args) => {
 
@@ -865,7 +870,7 @@ describe('Client', () => {
             await server.register({ plugin: Nes, options: { auth: false } });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
 
             let c = 0;
             client.onConnect = () => {
@@ -896,7 +901,7 @@ describe('Client', () => {
             await server.register({ plugin: Nes, options: { auth: false } });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
 
             const team = new Teamwork.Team();
 
@@ -936,7 +941,7 @@ describe('Client', () => {
             });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect();
 
             const { payload, statusCode, headers } = await client.request({ path: '/' });
@@ -969,7 +974,7 @@ describe('Client', () => {
             });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect();
 
             const a = { b: 1 };
@@ -994,7 +999,7 @@ describe('Client', () => {
             });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect();
 
             client._ws.send = () => {
@@ -1051,7 +1056,7 @@ describe('Client', () => {
                     });
 
                     await server.start();
-                    const client = new Nes.Client('http://localhost:' + server.info.port);
+                    const client = new Nes.Client(getUri(server.info));
                     await client.connect();
 
                     const { payload } = await client.request({ path: '/' });
@@ -1078,7 +1083,7 @@ describe('Client', () => {
             await server.register({ plugin: Nes, options: { onMessage } });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port, { timeout: 20 });
+            const client = new Nes.Client(getUri(server.info), { timeout: 20 });
             await client.connect();
 
             const err = await expect(client.message('winning')).to.reject('Request timed out');
@@ -1100,7 +1105,7 @@ describe('Client', () => {
             await server.register({ plugin: Nes, options: { auth: false } });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect();
 
             client._ws.send = () => {
@@ -1122,7 +1127,7 @@ describe('Client', () => {
             await server.register({ plugin: Nes, options: { auth: false } });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             const connecting = client.connect();
             await expect(client.message('x')).to.reject();
 
@@ -1155,7 +1160,7 @@ describe('Client', () => {
             });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
 
             let logged;
             client.onError = (err) => {
@@ -1195,7 +1200,7 @@ describe('Client', () => {
             });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
 
             let logged;
             client.onError = (err) => {
@@ -1235,7 +1240,7 @@ describe('Client', () => {
             });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
 
             let logged;
             client.onError = (err) => {
@@ -1275,7 +1280,7 @@ describe('Client', () => {
             });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
 
             const team = new Teamwork.Team({ meetings: 2 });
 
@@ -1318,7 +1323,7 @@ describe('Client', () => {
             server.subscription('/', { onSubscribe });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect();
 
             await expect(client.subscribe('/', Hoek.ignore)).to.reject('Bad Request');
@@ -1337,7 +1342,7 @@ describe('Client', () => {
             server.subscription('/', {});
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect();
 
             const team = new Teamwork.Team();
@@ -1366,7 +1371,7 @@ describe('Client', () => {
             await server.register({ plugin: Nes, options: { auth: false, onConnection, onDisconnection } });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
 
             const team = new Teamwork.Team();
             client.onDisconnect = async (willReconnect, log) => {
@@ -1408,7 +1413,7 @@ describe('Client', () => {
             server.subscription('/', { onSubscribe });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
 
             const team = new Teamwork.Team();
             const handler = async (update, flags) => {
@@ -1438,8 +1443,8 @@ describe('Client', () => {
             server.subscription('/');
 
             await server.start();
-            const client1 = new Nes.Client('http://localhost:' + server.info.port);
-            const client2 = new Nes.Client('http://localhost:' + server.info.port);
+            const client1 = new Nes.Client(getUri(server.info));
+            const client2 = new Nes.Client(getUri(server.info));
 
             await client1.connect();
             await client2.connect();
@@ -1471,7 +1476,7 @@ describe('Client', () => {
             server.subscription('/');
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect();
 
             await client.subscribe('/', Hoek.ignore);
@@ -1490,7 +1495,7 @@ describe('Client', () => {
             await server.register({ plugin: Nes, options: { auth: false } });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect();
 
             const err = await expect(client.subscribe('/', Hoek.ignore)).to.reject('Subscription not found');
@@ -1506,7 +1511,7 @@ describe('Client', () => {
             await server.register({ plugin: Nes, options: { auth: false } });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect();
 
             const handler = (update, flags) => {
@@ -1529,7 +1534,7 @@ describe('Client', () => {
             await server.register({ plugin: Nes, options: { auth: false } });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect();
 
             const handler = (update, flags) => {
@@ -1592,7 +1597,7 @@ describe('Client', () => {
             server.subscription('/');
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect();
 
             client._ws.send = () => {
@@ -1634,7 +1639,7 @@ describe('Client', () => {
             server.subscription('/', {});
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect();
 
             const team = new Teamwork.Team();
@@ -1671,7 +1676,7 @@ describe('Client', () => {
             server.subscription('/', {});
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect();
 
             const team = new Teamwork.Team();
@@ -1701,7 +1706,7 @@ describe('Client', () => {
             server.subscription('/', {});
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect();
 
             let updated = false;
@@ -1738,7 +1743,7 @@ describe('Client', () => {
             server.subscription('/', { onUnsubscribe: () => onUnsubscribe.work });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect();
 
             let updated = false;
@@ -1777,7 +1782,7 @@ describe('Client', () => {
             server.subscription('/', { onUnsubscribe: () => onUnsubscribe.work });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             await client.connect();
 
             let updated = false;
@@ -1813,7 +1818,7 @@ describe('Client', () => {
             server.subscription('/', {});
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             const connecting = client.connect();
             await expect(client.subscribe('/', Hoek.ignore)).to.not.reject();
 
@@ -1878,7 +1883,7 @@ describe('Client', () => {
             await server.register({ plugin: Nes, options: { auth: false, heartbeat: { interval: 20, timeout: 10 } } });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             client.onError = Hoek.ignore;
 
             const team = new Teamwork.Team({ meetings: 2 });
@@ -1909,7 +1914,7 @@ describe('Client', () => {
             await server.register({ plugin: Nes, options: { auth: false, heartbeat: { interval: 20, timeout: 10 } } });
 
             await server.start();
-            const client = new Nes.Client('http://localhost:' + server.info.port);
+            const client = new Nes.Client(getUri(server.info));
             client.onError = Hoek.ignore;
 
             const team = new Teamwork.Team();
