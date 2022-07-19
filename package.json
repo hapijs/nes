@@ -33,7 +33,7 @@
   },
   "devDependencies": {
     "@hapi/code": "8.x.x",
-    "@hapi/eslint-plugin": "*",
+    "@hapi/eslint-plugin": "^5.0.0",
     "@hapi/hapi": "20.x.x",
     "@hapi/lab": "24.x.x"
   },
