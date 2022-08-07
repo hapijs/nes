@@ -890,6 +890,35 @@ describe('Client', () => {
             await server.stop();
         });
 
+        it('utilizes every connection retry attempt', async () => {
+
+            const team = new Teamwork.Team();
+            const client = new Nes.Client('http://0');
+
+            let errorCount = 0;
+            client.onError = (err) => {
+
+                errorCount++;
+
+                if (err.message === 'Socket error') {
+                    // This is the final error message once retry attempts have run-out
+                    team.attend();
+                }
+            };
+
+            try {
+                await client.connect({ delay: 1, retries: 5 });
+            }
+            catch {}
+
+            await team.work;
+
+            // Should see name number of errors as allowed retry attempts
+            expect(errorCount).to.equal(5);
+
+            client.disconnect();
+        });
+
         it('aborts reconnect if disconnect is called in between attempts', async () => {
 
             const server = Hapi.server();
