@@ -893,7 +893,7 @@ describe('Client', () => {
         it('utilizes every connection retry attempt', async () => {
 
             const team = new Teamwork.Team();
-            const client = new Nes.Client('http://doesnotexist');
+            const client = new Nes.Client('http://0');
 
             let errorCount = 0;
             client.onError = (err) => {
