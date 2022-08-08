@@ -3,9 +3,6 @@
   "description": "WebSocket adapter plugin for hapi routes",
   "version": "12.0.5",
   "repository": "git://github.com/hapijs/nes",
-  "engines": {
-    "node": ">=12.0.0"
-  },
   "main": "lib/index.js",
   "files": [
     "lib"
@@ -21,21 +18,21 @@
     ]
   },
   "dependencies": {
-    "@hapi/boom": "9.x.x",
-    "@hapi/bounce": "2.x.x",
-    "@hapi/call": "8.x.x",
-    "@hapi/cryptiles": "5.x.x",
-    "@hapi/hoek": "9.x.x",
-    "@hapi/iron": "6.x.x",
-    "@hapi/teamwork": "5.x.x",
-    "@hapi/validate": "1.x.x",
+    "@hapi/boom": "^10.x.x",
+    "@hapi/bounce": "^3.0.0",
+    "@hapi/call": "^9.0.0",
+    "@hapi/cryptiles": "^6.0.0",
+    "@hapi/hoek": "^10.0.0",
+    "@hapi/iron": "^7.0.0",
+    "@hapi/teamwork": "^6.0.0",
+    "@hapi/validate": "^2.0.0",
     "ws": "^7.3.1"
   },
   "devDependencies": {
-    "@hapi/code": "8.x.x",
-    "@hapi/eslint-plugin": "^5.0.0",
-    "@hapi/hapi": "20.x.x",
-    "@hapi/lab": "24.x.x"
+    "@hapi/code": "^9.0.0",
+    "@hapi/eslint-plugin": "*",
+    "@hapi/hapi": "^21.0.0-beta.1",
+    "@hapi/lab": "^25.0.1"
   },
   "scripts": {
     "test": "lab -a @hapi/code -t 100 -L -m 10000",
