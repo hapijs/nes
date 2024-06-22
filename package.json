@@ -1,9 +1,10 @@
 {
   "name": "@hapi/nes",
   "description": "WebSocket adapter plugin for hapi routes",
-  "version": "13.0.1",
+  "version": "13.0.3",
   "repository": "git://github.com/hapijs/nes",
   "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "files": [
     "lib"
   ],
@@ -26,16 +27,19 @@
     "@hapi/iron": "^7.0.1",
     "@hapi/teamwork": "^6.0.0",
     "@hapi/validate": "^2.0.1",
-    "ws": "^7.3.1"
+    "ws": "^8.17.1"
   },
   "devDependencies": {
     "@hapi/code": "^9.0.3",
     "@hapi/eslint-plugin": "*",
-    "@hapi/hapi": "^21.2.1",
-    "@hapi/lab": "^25.1.2"
+    "@hapi/hapi": "^21.3.9",
+    "@hapi/lab": "^25.2.0",
+    "@types/node": "^20.14.2",
+    "joi": "^17.13.3",
+    "typescript": "^5.4.5"
   },
   "scripts": {
-    "test": "lab -a @hapi/code -t 100 -L -m 10000",
+    "test": "lab -a @hapi/code -t 100 -L -m 10000 -Y",
     "test-cov-html": "lab -a @hapi/code -r html -o coverage.html -m 10000"
   },
   "license": "BSD-3-Clause"

@@ -2,6 +2,7 @@
 
 const Url = require('url');
 
+const Somever = require('@hapi/somever');
 const Boom = require('@hapi/boom');
 const Code = require('@hapi/code');
 const Hapi = require('@hapi/hapi');
@@ -38,6 +39,7 @@ describe('Client', () => {
 
         const orig = global.WebSocket;
         global.WebSocket = Hoek.ignore;
+        global.window = true;
 
         const Ws = Nes.Client.WebSocket;
         let length;
@@ -704,7 +706,7 @@ describe('Client', () => {
             await server.stop();
         });
 
-        it.skip('overrides max delay', { retry: true }, async () => {
+        it('overrides max delay', { retry: true }, async () => {
 
             const server = Hapi.server();
             await server.register({ plugin: Nes, options: { auth: false } });
@@ -1200,7 +1202,19 @@ describe('Client', () => {
             await client.connect();
 
             await client.request('/');
-            expect(logged.message).to.match(/Unexpected end of(?: JSON)? input/);
+
+
+            const nodeGte20 = Somever.range().above('19').match(process.versions.node);
+
+            let expectMsg = /Unexpected end of(?: JSON)? input/;
+
+            if (nodeGte20) {
+
+                expectMsg = /Expected property name .+JSON.+/;
+            }
+
+
+            expect(logged.message).to.match(expectMsg);
             expect(logged.type).to.equal('protocol');
             expect(logged.isNes).to.equal(true);
 

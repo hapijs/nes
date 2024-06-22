@@ -106,8 +106,15 @@ describe('Listener', () => {
         await server.register({ plugin: Nes, options: { auth: false, origin: ['http://localhost:12345'] } });
 
         await server.start();
+
+        // mimick a server connection because WebSocket in node 22
+        // does not work like it does in the browser
+        const orig = global.WebSocket;
+        delete global.WebSocket;
         const client = new Nes.Client(getUri(server.info), { ws: { origin: 'http://localhost:12345' } });
         await client.connect();
+
+        global.WebSocket = orig;
         client.disconnect();
         await server.stop();
     });
@@ -215,7 +222,7 @@ describe('Listener', () => {
             await server.stop();
         });
 
-        it.skip('does not disconnect newly connecting sockets', async () => {
+        it('does not disconnect newly connecting sockets', async () => {
 
             const server = Hapi.server();
             let disconnected = 0;

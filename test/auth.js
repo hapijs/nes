@@ -1328,7 +1328,7 @@ describe('authentication', () => {
             await server.stop();
         });
 
-        it.skip('disconnects the client after authentication expires', async () => {
+        it('disconnects the client after authentication expires', async () => {
 
             const server = Hapi.server();
 
@@ -1438,7 +1438,7 @@ describe('authentication', () => {
             expect(server.plugins.nes._listener._settings.auth.minAuthVerifyInterval).to.equal(15000);
         });
 
-        it.skip('uses updated authentication information when verifying', async () => {
+        it('uses updated authentication information when verifying', async () => {
 
             const server = Hapi.server();
 
