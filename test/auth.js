@@ -81,7 +81,7 @@ describe('authentication', () => {
         await connecting;
     });
 
-    describe('cookie', () => {
+    describe.only('cookie', () => {
 
         it('protects an endpoint', async () => {
 
