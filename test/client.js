@@ -37,9 +37,10 @@ describe('Client', () => {
 
     it('ignores options.ws in browser', async (flags) => {
 
-        const orig = global.WebSocket;
+        const origWebSocket = global.WebSocket;
         global.WebSocket = Hoek.ignore;
-        global.window = true;
+
+        const origIsBrowser = Nes.Client.isBrowser;
 
         const Ws = Nes.Client.WebSocket;
         let length;
@@ -47,19 +48,21 @@ describe('Client', () => {
 
             length = args.length;
 
-            if (orig) {
-                global.WebSocket = orig;
+            if (origWebSocket) {
+                global.WebSocket = origWebSocket;
             }
             else {
                 delete global.WebSocket;
             }
 
-            delete global.window;
-
             Nes.Client.WebSocket = Ws;
+
+            Nes.Client.isBrowser = origIsBrowser;
 
             return new Ws(...args);
         };
+
+        Nes.Client.isBrowser = () => true;
 
         const client = new Nes.Client('http://localhost', { ws: { maxPayload: 1000 } });
         client.onError = Hoek.ignore;
