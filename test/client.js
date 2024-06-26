@@ -54,6 +54,8 @@ describe('Client', () => {
                 delete global.WebSocket;
             }
 
+            delete global.window;
+
             Nes.Client.WebSocket = Ws;
 
             return new Ws(...args);
