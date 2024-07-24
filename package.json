@@ -5,6 +5,9 @@
   "repository": "git://github.com/hapijs/nes",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "files": [
     "lib"
   ],
