@@ -16,11 +16,6 @@
     "plugin",
     "websocket"
   ],
-  "eslintConfig": {
-    "extends": [
-      "plugin:@hapi/module"
-    ]
-  },
   "dependencies": {
     "@hapi/boom": "^10.0.1",
     "@hapi/bounce": "^3.0.1",
@@ -34,9 +29,9 @@
   },
   "devDependencies": {
     "@hapi/code": "^9.0.3",
-    "@hapi/eslint-plugin": "*",
+    "@hapi/eslint-plugin": "^7.0.0",
     "@hapi/hapi": "^21.3.9",
-    "@hapi/lab": "^25.2.0",
+    "@hapi/lab": "^26.0.0",
     "@types/node": "^20.14.2",
     "joi": "^17.13.3",
     "typescript": "^5.4.5"
