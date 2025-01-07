@@ -7,7 +7,13 @@ import { Client } from '../../lib/client';
 
 const init = () => {
 
-    const client = new Client('ws://localhost');
+    const client = new Client('ws://localhost', {
+        ws: { // optional
+            origin: 'http://localhost:12345',
+            maxPayload: 1000,
+            headers: { cookie: 'xnes=123' }
+        }
+    });
 
     client.connect()
 
