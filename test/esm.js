@@ -22,6 +22,7 @@ describe('import()', () => {
         expect(Object.keys(Nes)).to.equal([
             'Client',
             'default',
+            ...(process.version.match(/^v(\d+)/)[1] >= 23 ? ['module.exports'] : []),
             'plugin'
         ]);
     });
