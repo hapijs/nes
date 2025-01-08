@@ -1,3 +1,6 @@
+import type { ClientRequestArgs } from "http";
+import type { ClientOptions } from "ws";
+
 // Same as exported type in @hapi/hapi v20
 type HTTP_METHODS = 'ACL' | 'BIND' | 'CHECKOUT' | 'CONNECT' | 'COPY' | 'DELETE' | 'GET' | 'HEAD' | 'LINK' | 'LOCK' |
     'M-SEARCH' | 'MERGE' | 'MKACTIVITY' | 'MKCALENDAR' | 'MKCOL' | 'MOVE' | 'NOTIFY' | 'OPTIONS' | 'PATCH' | 'POST' |
@@ -173,7 +176,7 @@ export class Client {
     constructor(
         url: `ws://${string}` | `wss://${string}`,
         options?: {
-            ws?: string | string[];
+            ws?: ClientOptions | ClientRequestArgs;
             timeout?: number | boolean;
         });
 

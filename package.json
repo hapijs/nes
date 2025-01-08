@@ -25,6 +25,7 @@
     "@hapi/iron": "^7.0.1",
     "@hapi/teamwork": "^6.0.0",
     "@hapi/validate": "^2.0.1",
+    "@types/ws": "^8.5.13",
     "ws": "^8.18.0"
   },
   "devDependencies": {
