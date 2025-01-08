@@ -18,22 +18,22 @@
   ],
   "dependencies": {
     "@hapi/boom": "^10.0.1",
-    "@hapi/bounce": "^3.0.1",
+    "@hapi/bounce": "^3.0.2",
     "@hapi/call": "^9.0.1",
     "@hapi/cryptiles": "^6.0.1",
-    "@hapi/hoek": "^11.0.2",
+    "@hapi/hoek": "^11.0.7",
     "@hapi/iron": "^7.0.1",
     "@hapi/teamwork": "^6.0.0",
     "@hapi/validate": "^2.0.1",
     "@types/ws": "^8.5.13",
-    "ws": "^8.17.1"
+    "ws": "^8.18.0"
   },
   "devDependencies": {
     "@hapi/code": "^9.0.3",
     "@hapi/eslint-plugin": "^7.0.0",
-    "@hapi/hapi": "^21.3.9",
+    "@hapi/hapi": "^21.3.12",
     "@hapi/lab": "^26.0.0",
-    "@types/node": "^20.14.2",
+    "@types/node": "^20.17.12",
     "joi": "^17.13.3",
     "typescript": "^5.4.5"
   },
