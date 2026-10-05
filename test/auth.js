@@ -604,6 +604,111 @@ describe('authentication', () => {
             await server.stop();
         });
 
+        it('moves the socket to the new user when reauthenticating as a different user', async () => {
+
+            const server = Hapi.server();
+
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
+
+            await server.register({ plugin: Nes, options: { auth: { index: true, maxConnectionsPerUser: 1 } } });
+            await server.start();
+
+            const client = new Nes.Client(getUri(server.info));
+            const updates = [];
+            client.onUpdate = (update) => updates.push(update);
+            await client.connect({ reconnect: false, auth: { headers: { authorization: 'Custom john' } } });
+            await client.reauthenticate({ headers: { authorization: 'Custom ed' } });
+
+            server.broadcast('for john', { user: 'john' });
+            server.broadcast('for ed', { user: 'ed' });
+            await Hoek.wait(50);
+            expect(updates).to.equal(['for ed']);
+
+            // john's only slot is free again while the switched socket is still open
+            const client2 = new Nes.Client(getUri(server.info));
+            await client2.connect({ reconnect: false, auth: { headers: { authorization: 'Custom john' } } });
+
+            client.disconnect();
+            client2.disconnect();
+            await Hoek.wait(50);
+            expect(server.plugins.nes._listener._sockets._byUser).to.equal({});
+            await server.stop();
+        });
+
+        it('rejects reauthentication as a different user who is at the connections limit', async () => {
+
+            const server = Hapi.server();
+
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
+
+            await server.register({ plugin: Nes, options: { auth: { index: true, maxConnectionsPerUser: 1 } } });
+            await server.start();
+
+            const edClient = new Nes.Client(getUri(server.info));
+            const edUpdates = [];
+            edClient.onUpdate = (update) => edUpdates.push(update);
+            await edClient.connect({ reconnect: false, auth: { headers: { authorization: 'Custom ed' } } });
+
+            const client = new Nes.Client(getUri(server.info));
+            await client.connect({ reconnect: false, auth: { headers: { authorization: 'Custom john' } } });
+
+            const team = new Teamwork.Team();
+            client.onDisconnect = () => team.attend();
+
+            await expect(client.reauthenticate({ headers: { authorization: 'Custom ed' } })).to.reject('Too many connections for the authenticated user');
+            await team.work;
+            await Hoek.wait(50);
+
+            // The rejected socket stayed indexed under john until it closed, so john's slot is free again
+            const client2 = new Nes.Client(getUri(server.info));
+            await client2.connect({ reconnect: false, auth: { headers: { authorization: 'Custom john' } } });
+
+            server.broadcast('for ed', { user: 'ed' });
+            await Hoek.wait(50);
+            expect(edUpdates).to.equal(['for ed']);
+
+            edClient.disconnect();
+            client2.disconnect();
+            await Hoek.wait(50);
+            expect(server.plugins.nes._listener._sockets._byUser).to.equal({});
+            await server.stop();
+        });
+
+        it('updates the user index when reauthenticating to and from credentials without a user', async () => {
+
+            const server = Hapi.server();
+
+            server.auth.scheme('custom', internals.implementation);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
+
+            await server.register({ plugin: Nes, options: { auth: { index: true } } });
+            await server.start();
+
+            const client = new Nes.Client(getUri(server.info));
+            const updates = [];
+            client.onUpdate = (update) => updates.push(update);
+            await client.connect({ reconnect: false, auth: { headers: { authorization: 'Custom john' } } });
+
+            await client.reauthenticate({ headers: { authorization: 'Custom app' } });
+            server.broadcast('for john', { user: 'john' });
+            await Hoek.wait(50);
+            expect(updates).to.equal([]);
+            expect(server.plugins.nes._listener._sockets._byUser).to.equal({});
+
+            await client.reauthenticate({ headers: { authorization: 'Custom john' } });
+            server.broadcast('for john again', { user: 'john' });
+            await Hoek.wait(50);
+            expect(updates).to.equal(['for john again']);
+
+            client.disconnect();
+            await server.stop();
+        });
+
         it('protects an endpoint with prefix', async () => {
 
             const server = Hapi.server();

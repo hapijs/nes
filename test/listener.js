@@ -954,6 +954,119 @@ describe('Listener', () => {
             await server.stop();
         });
 
+        it('publishes to the new user after reauthenticating as a different user', async () => {
+
+            const server = Hapi.server();
+
+            const implementation = (srv, options) => {
+
+                return {
+                    authenticate: (request, h) => {
+
+                        const name = request.headers.authorization;
+                        return h.authenticated({ credentials: name === 'app' ? { app: name } : { user: name } });
+                    }
+                };
+            };
+
+            server.auth.scheme('custom', implementation);
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
+
+            await server.register({ plugin: Nes, options: { auth: { type: 'direct', index: true } } });
+            server.subscription('/item/{id}', { auth: { index: true } });
+            server.subscription('/plain');
+            server.subscription('/unindexed', { auth: { mode: 'required' } });
+
+            await server.start();
+            const edClient = new Nes.Client(getUri(server.info));
+            await edClient.connect({ auth: { headers: { authorization: 'ed' } } });
+            const edUpdates = [];
+            await edClient.subscribe('/item/1', (update) => edUpdates.push(update));
+
+            const client = new Nes.Client(getUri(server.info));
+            await client.connect({ auth: { headers: { authorization: 'john' } } });
+
+            const updates = [];
+            const handler = (update) => updates.push(update);
+            await client.subscribe('/item/1', handler);
+            await client.subscribe('/item/2', handler);
+            await client.subscribe('/plain', handler);
+            await client.subscribe('/unindexed', handler);
+
+            const subscribers = Object.values(server.plugins.nes._listener._sockets._items)[0]._subscriptions['/item/1'];
+
+            await client.reauthenticate({ headers: { authorization: 'john' } });
+            expect(subscribers._byUser.john).to.have.length(1);
+
+            await client.reauthenticate({ headers: { authorization: 'ed' } });
+
+            await server.publish('/item/1', 'for john', { user: 'john' });
+            await server.publish('/item/1', 'for ed', { user: 'ed' });
+            await server.publish('/plain', 'plain');
+            await server.publish('/unindexed', 'unindexed');
+            await Hoek.wait(50);
+            expect(updates).to.equal(['for ed', 'plain', 'unindexed']);
+            expect(edUpdates).to.equal(['for ed']);
+
+            await client.reauthenticate({ headers: { authorization: 'app' } });
+            await server.publish('/item/2', 'for ed after app', { user: 'ed' });
+            await Hoek.wait(50);
+            expect(subscribers._byUser.ed).to.have.length(1);
+
+            await client.reauthenticate({ headers: { authorization: 'john' } });
+            await server.publish('/item/2', 'for john again', { user: 'john' });
+            await Hoek.wait(50);
+            expect(updates).to.equal(['for ed', 'plain', 'unindexed', 'for john again']);
+
+            client.disconnect();
+            edClient.disconnect();
+            await Hoek.wait(50);
+            expect(subscribers._byUser).to.equal({});
+            await server.stop();
+        });
+
+        it('publishes to a subscriber that authenticated after subscribing', async () => {
+
+            const server = Hapi.server();
+
+            const implementation = (srv, options) => {
+
+                return {
+                    authenticate: (request, h) => {
+
+                        return h.authenticated({ credentials: { user: request.headers.authorization } });
+                    }
+                };
+            };
+
+            server.auth.scheme('custom', implementation);
+            server.auth.strategy('default', 'custom');
+            server.auth.default({ strategy: 'default', mode: 'optional' });
+
+            await server.register({ plugin: Nes, options: { auth: { type: 'direct', index: true } } });
+            server.subscription('/item/{id}', { auth: { mode: 'optional', index: true } });
+
+            await server.start();
+            const client = new Nes.Client(getUri(server.info));
+            await client.connect();
+
+            const updates = [];
+            await client.subscribe('/item/1', (update) => updates.push(update));
+            const subscribers = Object.values(server.plugins.nes._listener._sockets._items)[0]._subscriptions['/item/1'];
+            expect(subscribers._byUser).to.equal({});
+
+            await client.reauthenticate({ headers: { authorization: 'john' } });
+            await server.publish('/item/1', 'for john', { user: 'john' });
+            await Hoek.wait(50);
+            expect(updates).to.equal(['for john']);
+
+            client.disconnect();
+            await Hoek.wait(50);
+            expect(subscribers._byUser).to.equal({});
+            await server.stop();
+        });
+
         it('publishes to selected user (ignores non-user credentials)', async () => {
 
             const server = Hapi.server();
