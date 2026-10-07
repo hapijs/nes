@@ -678,6 +678,69 @@ describe('authentication', () => {
             await server.stop();
         });
 
+        it('does not index a socket whose reauthentication completes after it closed', async () => {
+
+            const server = Hapi.server();
+
+            const authEntered = new Teamwork.Team();
+            const authGate = new Teamwork.Team();
+            const unsubEntered = new Teamwork.Team();
+            const unsubGate = new Teamwork.Team();
+
+            server.auth.scheme('custom', () => ({
+                authenticate: async (request, h) => {
+
+                    const user = request.headers.authorization.split(' ')[1];
+                    if (user === 'ed') {
+                        authEntered.attend();
+                        await authGate.work;
+                    }
+
+                    return h.authenticated({ credentials: { user } });
+                }
+            }));
+
+            server.auth.strategy('default', 'custom');
+            server.auth.default('default');
+
+            await server.register({ plugin: Nes, options: { auth: { index: true } } });
+            server.subscription('/item', {
+                auth: { index: true },
+                onUnsubscribe: async () => {
+
+                    unsubEntered.attend();
+                    await unsubGate.work;
+                }
+            });
+
+            await server.start();
+
+            const client = new Nes.Client(getUri(server.info));
+            await client.connect({ reconnect: false, auth: { headers: { authorization: 'Custom john' } } });
+            await client.subscribe('/item', Hoek.ignore);
+
+            const listener = server.plugins.nes._listener;
+            const subscribers = Object.values(listener._sockets._items)[0]._subscriptions['/item'];
+
+            // Reauth is stuck in the auth scheme while the connection closes
+            const reauth = client.reauthenticate({ headers: { authorization: 'Custom ed' } }).catch(Hoek.ignore);
+            await authEntered.work;
+            client.disconnect();
+
+            // The close handler already removed the socket and is now awaiting onUnsubscribe
+            await unsubEntered.work;
+            authGate.attend();
+            await reauth;
+            await Hoek.wait(50);
+
+            unsubGate.attend();
+            await Hoek.wait(50);
+
+            expect(listener._sockets._byUser).to.equal({});
+            expect(subscribers._byUser).to.equal({});
+            await server.stop();
+        });
+
         it('updates the user index when reauthenticating to and from credentials without a user', async () => {
 
             const server = Hapi.server();
